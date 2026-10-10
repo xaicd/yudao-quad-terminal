@@ -28,7 +28,12 @@
     "speckit:tasks": "node scripts/speckit.cjs tasks",
     "speckit:task": "node scripts/speckit.cjs tasks",
     "speckit:check": "node scripts/speckit.cjs check",
-    "speckit:list": "node scripts/speckit.cjs list"
+    "speckit:list": "node scripts/speckit.cjs list",
+    "spec:new": "node scripts/speckit.cjs new",
+    "spec:build": "node scripts/speckit.cjs build",
+    "spec:tasks": "node scripts/speckit.cjs tasks",
+    "spec:check": "node scripts/speckit.cjs check",
+    "task:verify": "node scripts/speckit.cjs tasks"
   },
   "packageManager": "pnpm@9.15.4"
 }
