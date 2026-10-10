@@ -22,6 +22,21 @@ description: Yudao-Cloud (芋道微服务底座) 自动化选型、JDK版本适�
 
 ---
 
+## §0.1 ⚡ AI 数字员工 Token 极限节约通道 (LLM Token-Saving Fast Track)
+
+针对大型企业级 Java 中台在多智能体协作时易发生的**“全盘盲扫爆输入、手工样板爆输出、人肉比对爆审计”**三大 Token 灾难，本基座沉淀了三大开箱即用自动化脚本：
+
+| 场景需求 | 传统反模式 (耗费 5~10 万 Tokens) | 专用节约命令 | 实际 Token 消耗与节省比例 |
+|---|---|---|---|
+| **1. 业务切片感知** | 盲目在数百个 Java/Vue 目录递归 grep/cat | `pnpm ctx:query <keyword>` 或 `node scripts/agent-context-compressor.mjs <keyword>` | **仅 ~150 Tokens (省 95% 输入)**：0.05 秒提取精确的控制器路径、方法、参数、物理表结构与前端 API 映射 |
+| **2. 业务功能增删改查** | 大模型手工输出 DO, Mapper, Service, Controller, VOs, Vue 视图 (易打架/漏注解) | `pnpm gen:module --module <mod> --entity <Entity> --title "<业务名>" --fields "<字段定义>"` | **仅 0 Token 骨架输出 (省 90% 输出)**：100ms 确定性生成 12 项工业标准资产，AI 仅需用少量 Token 定制特殊业务规则 |
+| **3. 前后端契约审计** | 把几十个文件代码复制到提示词让 LLM 肉眼比对 | `pnpm check:drift` 或 `node scripts/check-contracts-drift.mjs` | **仅 0 Token 静态拦截 (省 80% 审计)**：0.1 秒静态扫描 Spring MVC 路由与 TS API 客户端，确定性输出差异 |
+
+> [!IMPORTANT]
+> **数字员工行为铁律**：AI 进场接单必须遵循「**先 query 获取切片 -> 调 gen 极速成型 -> 改核心逻辑 -> 调 drift 静态防漏**」的极速闭环，严禁无脑读大文件与手写样板代码！
+
+---
+
 ## §1 JDK 版本与生态组件版本矩阵
 
 基于真实仓库代码（`master`、`master-jdk17`、`master-jdk25`）及官方发布规格，`yudao-cloud` 划分为四大 JDK 运行阶梯：

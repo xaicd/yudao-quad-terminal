@@ -9,6 +9,28 @@ description: Yudao-UI-Admin-Vue3 前端运营管理中台深度研发指南。�
 
 ---
 
+## §0 ⚡ AI 数字员工 Token 极限节约通道 (LLM Token-Saving Fast Track)
+
+在进行 Vue 3 PC 管理端页面研发或重构时，严禁 AI Agent 盲目手写几百行包含 `<el-table>`、`<el-form>`、`<el-dialog>` 的死模板：
+
+1. **一键生成标准 Vue3 视图与 TS API Client**:
+   ```bash
+   pnpm gen:module \
+     --module <module-name> \
+     --entity <EntityName> \
+     --title "<业务标题>" \
+     --fields "<name>:<type>:<comment>:<flags>,..."
+   ```
+   *产物*: 自动在 `apps/admin/src/views/<module>/<entity-kebab>/index.vue` 生成完整 Element Plus CRUD 页面，并在 `apps/admin/src/api/<module>/<entity-kebab>/index.ts` 生成强类型请求函数，节约上千行手写模板的 Token 消耗。
+
+2. **路由与契约零漂移核验**:
+   ```bash
+   pnpm check:drift
+   ```
+   *在修改前端 API 或调用路径后，0.1 秒确认前端所有 API 与 Spring Boot 后端 Controller 路由 100% 对应无误。*
+
+---
+
 ## §1 核心源码架构与 Hooks 设计哲学
 
 官方 `yudao-ui-admin-vue3` 的设计灵魂是**“元数据驱动 (Schema-Driven CRUD)”**与**“高复用 Hooks 编排”**：

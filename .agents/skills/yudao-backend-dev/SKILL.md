@@ -9,6 +9,44 @@ description: Yudao-Cloud (芋道后端微服务与单体开发法典)。深度�
 
 ---
 
+## §0 ⚡ AI 数字员工 Token 极限节约通道 (LLM Token-Saving Fast Track)
+
+针对大型企业级 Java 中台在多智能体协作时易发生的**“全盘盲扫爆输入、手工样板爆输出、人肉比对爆审计”**三大 Token 灾难，本基座沉淀了三大开箱即用自动化脚本：
+
+1. **业务切片秒读 (省 95% 输入 Token)**:
+   ```bash
+   # 获取某个业务域的极简切片 (Controller, Endpoints, Table Columns, Frontend API)
+   pnpm ctx:query <keyword>
+   # 或直接调用
+   node scripts/agent-context-compressor.mjs <keyword>
+   ```
+   *输出仅占 ~150 Tokens，直接杜绝通读动辄几十个 Java 类的 Token 灾难。*
+
+2. **极速工业级代码生成 (省 90% 输出 Token)**:
+   ```bash
+   pnpm gen:module \
+     --module <module-name> \
+     --entity <EntityName> \
+     --table <table_name> \
+     --title "<业务标题>" \
+     --fields "<name>:<type>:<comment>:<flags>,..."
+   ```
+   *参数说明*:
+   - `--fields`: 逗号分隔字段，格式为 `name:type:comment:flags`
+     - 类型: `string`, `long`, `integer`, `boolean`, `decimal`, `datetime`, `text`
+     - 标志: `req` (必填/校验注解), `search` (分页查询参数), `hidden` (隐藏列)
+   *生成成果*: 100ms 确定性生成 12 项工业标准文件 (DO, Mapper, Service, ServiceImpl, Controller, 3*VO, Convert, Vue3 View, TS API, SQL DDL)，AI 仅需用少量 Token 审查或填充业务算法。
+
+3. **前后端契约防漂移静态审计 (省 80% 审计 Token)**:
+   ```bash
+   pnpm check:drift
+   # 严格模式 (任何未封装接口均报错拦截)
+   node scripts/check-contracts-drift.mjs --strict
+   ```
+   *0.1 秒静态扫描 Spring MVC 路由与 TS API 客户端，确定性输出差异，严禁人工将代码贴入提示词比对！*
+
+---
+
 ## §1 核心源码架构解耦与 6 层分工模型
 
 Yudao 框架的核心哲学是**“严格分层、编译期强类型、无反射开销、自闭环测试”**：

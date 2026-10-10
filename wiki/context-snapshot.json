@@ -1,0 +1,389 @@
+{
+  "timestamp": "2026-10-10T12:15:23.284Z",
+  "totalControllers": 3,
+  "totalEndpoints": 11,
+  "controllers": [
+    {
+      "file": "apps/backend/yudao-server/src/main/java/cn/iocoder/yudao/module/member/controller/admin/UserController.java",
+      "name": "UserController",
+      "basePath": "/admin-api/member/user",
+      "tag": "管理后台 - 会员用户",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/admin-api/member/user/create",
+          "summary": "创建会员用户",
+          "returnType": "CommonResult<Long>",
+          "methodName": "createUser",
+          "params": "@Validated @RequestBody UserSaveReqVO createReqVO"
+        },
+        {
+          "method": "PUT",
+          "path": "/admin-api/member/user/update",
+          "summary": "更新会员用户",
+          "returnType": "CommonResult<Boolean>",
+          "methodName": "updateUser",
+          "params": "@Validated @RequestBody UserSaveReqVO updateReqVO"
+        },
+        {
+          "method": "DELETE",
+          "path": "/admin-api/member/user/delete",
+          "summary": "删除会员用户",
+          "returnType": "CommonResult<Boolean>",
+          "methodName": "deleteUser",
+          "params": "@RequestParam(\"id\") Long id"
+        },
+        {
+          "method": "GET",
+          "path": "/admin-api/member/user/get",
+          "summary": "获得会员用户",
+          "returnType": "CommonResult<UserRespVO>",
+          "methodName": "getUser",
+          "params": "@RequestParam(\"id\") Long id"
+        },
+        {
+          "method": "GET",
+          "path": "/admin-api/member/user/page",
+          "summary": "获得会员用户分页",
+          "returnType": "CommonResult<PageResult<UserRespVO>>",
+          "methodName": "getUserPage",
+          "params": "@Validated UserPageReqVO pageReqVO"
+        }
+      ]
+    },
+    {
+      "file": "apps/backend/yudao-server/src/main/java/cn/iocoder/yudao/module/trade/controller/admin/OrderController.java",
+      "name": "OrderController",
+      "basePath": "/admin-api/trade/order",
+      "tag": "管理后台 - 商城订单",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/admin-api/trade/order/create",
+          "summary": "创建商城订单",
+          "returnType": "CommonResult<Long>",
+          "methodName": "createOrder",
+          "params": "@Validated @RequestBody OrderSaveReqVO createReqVO"
+        },
+        {
+          "method": "PUT",
+          "path": "/admin-api/trade/order/update",
+          "summary": "更新商城订单",
+          "returnType": "CommonResult<Boolean>",
+          "methodName": "updateOrder",
+          "params": "@Validated @RequestBody OrderSaveReqVO updateReqVO"
+        },
+        {
+          "method": "DELETE",
+          "path": "/admin-api/trade/order/delete",
+          "summary": "删除商城订单",
+          "returnType": "CommonResult<Boolean>",
+          "methodName": "deleteOrder",
+          "params": "@RequestParam(\"id\") Long id"
+        },
+        {
+          "method": "GET",
+          "path": "/admin-api/trade/order/get",
+          "summary": "获得商城订单",
+          "returnType": "CommonResult<OrderRespVO>",
+          "methodName": "getOrder",
+          "params": "@RequestParam(\"id\") Long id"
+        },
+        {
+          "method": "GET",
+          "path": "/admin-api/trade/order/page",
+          "summary": "获得商城订单分页",
+          "returnType": "CommonResult<PageResult<OrderRespVO>>",
+          "methodName": "getOrderPage",
+          "params": "@Validated OrderPageReqVO pageReqVO"
+        }
+      ]
+    },
+    {
+      "file": "apps/backend/yudao-server/src/main/java/cn/iocoder/yudao/server/controller/HealthController.java",
+      "name": "HealthController",
+      "basePath": "/admin-api/infra",
+      "tag": "",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/admin-api/infra/health",
+          "summary": "",
+          "returnType": "Map<String, Object>",
+          "methodName": "health",
+          "params": ""
+        }
+      ]
+    }
+  ],
+  "tables": [
+    {
+      "file": "apps/backend/scripts/sql/init-schema.sql",
+      "tableName": "system_tenant",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "comment": "租户编号"
+        },
+        {
+          "name": "name",
+          "type": "varchar(64)",
+          "comment": "租户名"
+        },
+        {
+          "name": "contact_name",
+          "type": "varchar(64)",
+          "comment": "联系人"
+        },
+        {
+          "name": "contact_mobile",
+          "type": "varchar",
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "file": "apps/backend/scripts/sql/init-schema.sql",
+      "tableName": "system_users",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "comment": "用户ID"
+        },
+        {
+          "name": "username",
+          "type": "varchar(30)",
+          "comment": "用户账号"
+        },
+        {
+          "name": "password",
+          "type": "varchar(100)",
+          "comment": "密码"
+        },
+        {
+          "name": "nickname",
+          "type": "varchar(30)",
+          "comment": "用户昵称"
+        },
+        {
+          "name": "remark",
+          "type": "varchar",
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "file": "apps/backend/scripts/sql/init-schema.sql",
+      "tableName": "system_role",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "comment": "角色ID"
+        },
+        {
+          "name": "name",
+          "type": "varchar(30)",
+          "comment": "角色名称"
+        },
+        {
+          "name": "code",
+          "type": "varchar(100)",
+          "comment": "角色权限字符串"
+        },
+        {
+          "name": "sort",
+          "type": "int",
+          "comment": "显示顺序"
+        },
+        {
+          "name": "data_scope",
+          "type": "tinyint",
+          "comment": "数据范围（1：全部数据权限 2：自定数据权限 3：本部门数据权限 4：本部门及以下数据权限 5：仅本人数据权限）"
+        },
+        {
+          "name": "data_scope_dept_ids",
+          "type": "varchar(500)",
+          "comment": "数据范围(指定部门id)"
+        },
+        {
+          "name": "status",
+          "type": "tinyint",
+          "comment": "角色状态（0正常 1停用）"
+        },
+        {
+          "name": "type",
+          "type": "tinyint",
+          "comment": "角色类型(1内置 2自定义)"
+        },
+        {
+          "name": "remark",
+          "type": "varchar",
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "file": "apps/backend/scripts/sql/init-schema.sql",
+      "tableName": "system_menu",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "comment": "菜单ID"
+        },
+        {
+          "name": "name",
+          "type": "varchar(50)",
+          "comment": "菜单名称"
+        },
+        {
+          "name": "permission",
+          "type": "varchar(100)",
+          "comment": "权限标识"
+        },
+        {
+          "name": "type",
+          "type": "tinyint",
+          "comment": "菜单类型（1目录 2菜单 3按钮）"
+        },
+        {
+          "name": "sort",
+          "type": "int",
+          "comment": "显示顺序"
+        },
+        {
+          "name": "parent_id",
+          "type": "bigint",
+          "comment": "父菜单ID"
+        },
+        {
+          "name": "path",
+          "type": "varchar",
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "file": "apps/backend/scripts/sql/member_user.sql",
+      "tableName": "member_user",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "comment": "编号"
+        },
+        {
+          "name": "nickname",
+          "type": "VARCHAR(255)",
+          "comment": "用户昵称"
+        },
+        {
+          "name": "mobile",
+          "type": "VARCHAR(255)",
+          "comment": "手机号"
+        },
+        {
+          "name": "avatar",
+          "type": "VARCHAR",
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "file": "apps/backend/scripts/sql/trade_order.sql",
+      "tableName": "trade_order",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "comment": "编号"
+        },
+        {
+          "name": "order_no",
+          "type": "VARCHAR(255)",
+          "comment": "订单流水号"
+        },
+        {
+          "name": "user_id",
+          "type": "BIGINT",
+          "comment": "买家用户编号"
+        },
+        {
+          "name": "total_price",
+          "type": "INT",
+          "comment": "实付总金额(分)"
+        },
+        {
+          "name": "status",
+          "type": "INT",
+          "comment": "订单状态"
+        },
+        {
+          "name": "pay_time",
+          "type": "DATETIME",
+          "comment": "支付时间"
+        },
+        {
+          "name": "remark",
+          "type": "VARCHAR",
+          "comment": ""
+        }
+      ]
+    }
+  ],
+  "frontendApis": [
+    {
+      "file": "apps/admin/src/api/member/user/index.ts",
+      "routes": [
+        {
+          "fnName": "getUserPageApi",
+          "url": "/admin-api/member/user/page"
+        },
+        {
+          "fnName": "getUserApi",
+          "url": "/admin-api/member/user/get"
+        },
+        {
+          "fnName": "createUserApi",
+          "url": "/admin-api/member/user/create"
+        },
+        {
+          "fnName": "updateUserApi",
+          "url": "/admin-api/member/user/update"
+        },
+        {
+          "fnName": "deleteUserApi",
+          "url": "/admin-api/member/user/delete"
+        }
+      ]
+    },
+    {
+      "file": "apps/admin/src/api/trade/order/index.ts",
+      "routes": [
+        {
+          "fnName": "getOrderPageApi",
+          "url": "/admin-api/trade/order/page"
+        },
+        {
+          "fnName": "getOrderApi",
+          "url": "/admin-api/trade/order/get"
+        },
+        {
+          "fnName": "createOrderApi",
+          "url": "/admin-api/trade/order/create"
+        },
+        {
+          "fnName": "updateOrderApi",
+          "url": "/admin-api/trade/order/update"
+        },
+        {
+          "fnName": "deleteOrderApi",
+          "url": "/admin-api/trade/order/delete"
+        }
+      ]
+    }
+  ]
+}
