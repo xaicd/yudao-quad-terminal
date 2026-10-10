@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # 轻量级本地开发 MySQL 8.0 (预置 Yudao 核心表结构与初始种子数据)
+  yudao-mysql:
+    image: mysql:8.0.36
+    container_name: yudao-mysql-dev
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+      - --max_connections=500
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ruoyi-vue-pro
+      TZ: Asia/Shanghai
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+      - ./apps/backend/scripts/sql/init-schema.sql:/docker-entrypoint-initdb.d/init-schema.sql:ro
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # 轻量级本地开发 Redis 7.2 (超低内存占用，启动仅需 0.5 秒)
+  yudao-redis:
+    image: redis:7.2-alpine
+    container_name: yudao-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ""
+    volumes:
+      - ./data/redis:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
