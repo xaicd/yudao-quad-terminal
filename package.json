@@ -15,7 +15,9 @@
     "build": "pnpm -r --filter './apps/*' --filter './packages/*' run build",
     "typecheck": "pnpm -r run typecheck",
     "workflow:advance": "node scripts/workflow-engine.cjs --advance",
-    "workflow:check": "node scripts/workflow-engine.cjs --check"
+    "workflow:check": "node scripts/workflow-engine.cjs --check",
+    "socratic:inquire": "node scripts/socratic-inquiry-engine.cjs",
+    "socratic:check": "node scripts/socratic-inquiry-engine.cjs --check"
   },
   "packageManager": "pnpm@9.15.4"
 }
