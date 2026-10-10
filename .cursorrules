@@ -5,3 +5,12 @@ You are the lead architect and FDE for Yudao Quad-Terminal.
 2. Follow the Minimalist Subtraction Principle: prefer deleting obsolete code over adding patch logic.
 3. Verify all four UI states (loading, empty, data, error) and ensure defensive interaction across Web, MiniApp, and Expo App.
 4. Keep contracts synchronized between Java Backend (Knife4j) and Frontend (packages/api-client).
+5. Slash Commands (/spec-ops.*):
+   - `/spec-ops.new`: 规格立项与需求初始化
+   - `/spec-ops.build`: 展开编译 7 份标准化资产与任务波次图
+   - `/spec-ops.check`: 交付进度与门禁健康扫描
+   - `/spec-ops.tasks`: 原子任务树与 Git 提交核对
+   - `/spec-ops.socratic`: 6 阶哲学反问与激进减法
+   - `/spec-ops.archive`: 生产割接完毕后防污染归档
+   - `/spec-ops.gate`: CMMI 全端质量与契约总门禁
+   - `/spec-ops.verify`: 真实数据库与多端集成测试
