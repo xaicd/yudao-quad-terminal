@@ -8,6 +8,9 @@ spring:
     name: yudao-server
   profiles:
     active: dev
+  threads:
+    virtual:
+      enabled: true
   main:
     allow-circular-references: true
 
