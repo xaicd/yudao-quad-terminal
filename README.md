@@ -9,7 +9,19 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 > 🚀 **工业级 AI 原生商业软件四位一体超级基座 (Integrated Quad-Terminal Foundry Base)**  
-> 统一收拢 **Java 微服务后端 (Spring Cloud / JDK17) + PC 运营管理后台 (Vue3 Element Plus) + 微信生态端 (Uni-App 小程序) + 原生移动客户端 (Expo SDK 52 / React Native 0.76)** 四大终端形态，内置 CMMI 01~09 全生命周期工程真资产与 OpenWiki 知识大脑。
+> 统一收拢 **Java 微服务后端 (Spring Cloud / JDK 8/17/21) + PC 运营管理后台 (Vue3 Element Plus) + 微信生态端 (Uni-App 小程序) + 原生移动客户端 (Expo SDK 52 / React Native 0.76)** 四大终端形态，内置 CMMI 01~09 全生命周期工程真资产与 OpenWiki 知识大脑。
+
+---
+
+## 🌿 JDK 多版本分支矩阵 (JDK Version Branches)
+
+针对企业客户的不同技术基线，本基座提供三大 JDK 分支，**三端代码 (Vue3/UniApp/Expo) 与 CMMI 资产完全通用，后端底层自由切换**：
+
+| 分支名 | JDK 版本 | Spring Boot | 核心特性 | 适用交付场景 |
+| :--- | :--- | :--- | :--- | :--- |
+| **`main` / `master-jdk17`** *(默认)* | **JDK 17 (LTS)** | `3.5.15` (Spring Boot 3) | Jakarta EE 10 / 原生集成 Spring AI / Knife4j 4.5+ | **现代商业交付首选**（默认工业黄金标准） |
+| **`master-jdk8`** | **JDK 8** | `2.7.18` (Spring Boot 2) | Java EE javax.* / 经典持久层与全套旧版中间件 | **政企 / 国企专网**（存量 CentOS 7 等老基座） |
+| **`master-jdk21`** | **JDK 21 (LTS)** | `3.5.15` (Spring Boot 3) | Project Loom 虚拟线程 / 分代 ZGC 超低延时 | **新一代高并发 / AI 流式智算平台** |
 
 ---
 
