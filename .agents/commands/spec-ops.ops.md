@@ -1,1 +1,0 @@
-speckit.ops.md

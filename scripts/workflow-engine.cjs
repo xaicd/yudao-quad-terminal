@@ -312,9 +312,9 @@ function handleRun(flags, positional) {
   };
 
   const firstStep = recipe.steps[0];
-  if (firstStep && (firstStep.id === "scaffold" || firstStep.prompt.includes("spec:new") || firstStep.prompt.includes("spec-ops"))) {
+  if (firstStep && (firstStep.id === "scaffold" || firstStep.prompt.includes("spec:new") || firstStep.prompt.includes("speckit"))) {
     console.log(`\n⚡ [自动执行第 1 步: 脚手架生成] -> @${firstStep.agent} (${resolveFleetRole(firstStep.agent)})`);
-    const cmd = `node scripts/spec-ops.cjs new --name ${vars.name} --domain ${vars.domain} --title "${vars.title}" --type ${vars.type}`;
+    const cmd = `node scripts/speckit.cjs new --name ${vars.name} --domain ${vars.domain} --title "${vars.title}" --type ${vars.type}`;
     console.log(`$ ${cmd}`);
     try {
       execSync(cmd, { cwd: ROOT, stdio: "inherit" });
@@ -340,7 +340,7 @@ function handleRun(flags, positional) {
     const fleetRole = resolveFleetRole(s.agent);
     console.log(`   - 步骤 ${i + 1} [${s.id}]: 由 \x1b[33m@${s.agent}\x1b[0m (${fleetRole}) 驱动`);
   }
-  console.log(`\n可运行 \x1b[32mnode scripts/spec-ops.cjs check --spec ${vars.name}\x1b[0m 实时监控规格完成度。\n`);
+  console.log(`\n可运行 \x1b[32mnode scripts/speckit.cjs check --spec ${vars.name}\x1b[0m 实时监控规格完成度。\n`);
 }
 
 function handleNew(flags, positional) {

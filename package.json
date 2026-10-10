@@ -17,7 +17,16 @@
     "workflow:advance": "node scripts/workflow-engine.cjs --advance",
     "workflow:check": "node scripts/workflow-engine.cjs --check",
     "socratic:inquire": "node scripts/socratic-inquiry-engine.cjs",
-    "socratic:check": "node scripts/socratic-inquiry-engine.cjs --check"
+    "socratic:check": "node scripts/socratic-inquiry-engine.cjs --check",
+    "speckit": "node scripts/speckit.cjs",
+    "speckit:init": "node scripts/speckit.cjs init",
+    "speckit:constitution": "node scripts/speckit.cjs constitution",
+    "speckit:new": "node scripts/speckit.cjs new",
+    "speckit:specify": "node scripts/speckit.cjs new",
+    "speckit:build": "node scripts/speckit.cjs build",
+    "speckit:plan": "node scripts/speckit.cjs build",
+    "speckit:check": "node scripts/speckit.cjs check",
+    "speckit:list": "node scripts/speckit.cjs list"
   },
   "packageManager": "pnpm@9.15.4"
 }

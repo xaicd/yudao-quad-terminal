@@ -1,1 +1,0 @@
-speckit.specify.md
