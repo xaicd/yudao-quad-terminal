@@ -5,17 +5,19 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>cn.iocoder.boot</groupId>
     <artifactId>yudao</artifactId>
-    <version>2026.09-SNAPSHOT</version>
+    <version>2026.09-jdk8-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>yudao-cloud-backend</name>
-    <description>Yudao-Cloud Spring Cloud Alibaba Microservices Backend (JDK 17)</description>
+    <description>Yudao-Cloud Spring Cloud Alibaba Microservices Backend (JDK 8 Gov/Legacy Compatible)</description>
 
     <properties>
-        <java.version>17</java.version>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <java.version>1.8</java.version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring.boot.version>3.5.15</spring.boot.version>
+        <spring.boot.version>2.7.18</spring.boot.version>
+        <spring.cloud.version>2021.0.9</spring.cloud.version>
+        <spring.cloud.alibaba.version>2021.0.6.2</spring.cloud.alibaba.version>
     </properties>
 
     <modules>

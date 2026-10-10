@@ -6,17 +6,17 @@
     <parent>
         <groupId>cn.iocoder.boot</groupId>
         <artifactId>yudao</artifactId>
-        <version>2026.09-SNAPSHOT</version>
+        <version>2026.09-jdk8-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>yudao-server</artifactId>
     <packaging>jar</packaging>
     <name>yudao-server</name>
-    <description>Yudao-Cloud Monolithic Dev & Standalone Runner</description>
+    <description>Yudao-Cloud Monolithic Dev & Standalone Runner (JDK 8)</description>
 
     <dependencies>
-        <!-- Spring Boot Web Starter -->
+        <!-- Spring Boot Web Starter (Spring Boot 2.7.18) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -30,10 +30,10 @@
             <version>${spring.boot.version}</version>
         </dependency>
 
-        <!-- Knife4j / OpenAPI 3 Starter for Spring Boot 3 -->
+        <!-- Knife4j / OpenAPI 3 Starter for Spring Boot 2 (javax) -->
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
-            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+            <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
             <version>4.5.0</version>
         </dependency>
     </dependencies>
