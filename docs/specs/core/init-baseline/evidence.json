@@ -1,0 +1,7 @@
+{
+  "feature": "init-baseline",
+  "domain": "core",
+  "type": "feature",
+  "created": "2026-10-10T10:45:32Z",
+  "trace": { "brief": "brief.json" }
+}

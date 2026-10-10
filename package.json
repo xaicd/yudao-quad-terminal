@@ -1,0 +1,17 @@
+{
+  "name": "yudao-quad-terminal",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:admin": "pnpm --filter @yudao-quad-terminal/admin dev",
+    "dev:miniapp": "pnpm --filter @yudao-quad-terminal/miniapp dev:mp-weixin",
+    "dev:app": "pnpm --filter @yudao-quad-terminal/app start",
+    "backend:run": "cd apps/backend/yudao-server && mvn spring-boot:run -Dspring-boot.run.profiles=local",
+    "gen:api-sdk": "bash packages/api-client/scripts/gen-api-sdk.sh",
+    "build": "pnpm -r --filter './apps/*' --filter './packages/*' run build",
+    "typecheck": "pnpm -r run typecheck",
+    "workflow:advance": "node scripts/workflow-engine.cjs --advance",
+    "workflow:check": "node scripts/workflow-engine.cjs --check"
+  },
+  "packageManager": "pnpm@9.15.4"
+}

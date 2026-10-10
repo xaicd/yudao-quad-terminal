@@ -1,0 +1,40 @@
+# Node & PNPM
+node_modules/
+.pnpm-store/
+dist/
+dist-preview/
+.next/
+*.tsbuildinfo
+
+# Java & Maven
+target/
+*.class
+*.jar
+*.war
+.flattened-pom.xml
+
+# Expo & React Native
+.expo/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Environment & Sensitive
+.env.local
+.env.*.local
+data/
+*.db
+*.sqlite
+
+# IDEs & OS
+.DS_Store
+.idea/
+*.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.log
+*.tmp

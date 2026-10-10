@@ -1,0 +1,32 @@
+{
+  "name": "init-baseline",
+  "domain": "core",
+  "title": "项目初始基础地基与多租户基线",
+  "type": "feature",
+  "goal": "完成 Yudao Quad-Terminal Master Base 系统的工程地基搭建与全生命周期规范初始化",
+  "roles": [
+    { "role": "掌柜/交付总监", "can": "在移动端驾驶舱实时检视工程资产与两字审批" },
+    { "role": "前线 FDE 工程师", "can": "基于 CMMI 01~09 资产与 OpenAPI 契约高效交付" }
+  ],
+  "stories": [
+    { "priority": "P0", "text": "搭建多企业租户物理隔离地基与数据库访问层" },
+    { "priority": "P0", "text": "固化统一 OpenAPI 契约与静态 TypeScript 编译守卫" },
+    { "priority": "P1", "text": "配置端到端集成测试套件与自动化门禁" }
+  ],
+  "constraints": [
+    "多租户隔离：严禁跨企业租户数据穿透。",
+    "反假 Mock：必须使用真实数据库 WAL 事务测试。"
+  ],
+  "acceptance": [
+    { "check": "npm run check 0 报错" },
+    { "check": "全生命周期 CMMI 01~09 资产齐全在位" }
+  ],
+  "invariants": [
+    { "name": "多租户数据强隔离", "how": "所有业务查询强制注入 company_id 过滤" }
+  ],
+  "tasks": [
+    { "id": "T1", "parent": "main", "title": "初始化数据库结构与多租户审计字段", "files": ["-"] },
+    { "id": "T2", "parent": "T1", "title": "建立核心服务 API 契约与 DTO", "files": ["-"] },
+    { "id": "T3", "parent": "main", "title": "执行门禁校验与首期基线发布", "files": ["-"] }
+  ]
+}

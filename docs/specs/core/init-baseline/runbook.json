@@ -1,0 +1,8 @@
+{
+  "feature": "init-baseline",
+  "domain": "core",
+  "windowMinutes": 10,
+  "steps": [
+    { "name": "门禁自检", "command": "npm run check" }
+  ]
+}

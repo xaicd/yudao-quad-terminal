@@ -1,0 +1,10 @@
+{
+  "project": "yudao-quad-terminal",
+  "version": "1.0.0",
+  "rollbackWindowMinutes": 5,
+  "steps": [
+    { "order": 1, "action": "切流至上一备份健康镜像", "command": "docker compose -f docker-compose.prod.yml down && docker compose -f docker-compose.backup.yml up -d" },
+    { "order": 2, "action": "回滚数据库迁移版本", "command": "npm run db:migrate:down" },
+    { "order": 3, "action": "线上健康拨测验证", "command": "curl -f http://127.0.0.1:3300/api/health" }
+  ]
+}

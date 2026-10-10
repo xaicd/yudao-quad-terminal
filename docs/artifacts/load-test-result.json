@@ -1,0 +1,10 @@
+{
+  "project": "yudao-quad-terminal",
+  "testedAt": "2026-10-10T10:45:32Z",
+  "concurrency": 100,
+  "qps": 1250.5,
+  "p95LatencyMs": 42.1,
+  "p99LatencyMs": 85.3,
+  "errorRate": 0.0,
+  "status": "PASS"
+}

@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "yudao-quad-terminal",
+    "slug": "yudao-quad-terminal",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://api.yourdomain.com/ota/manifest",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD"
+    }
+  }
+}
