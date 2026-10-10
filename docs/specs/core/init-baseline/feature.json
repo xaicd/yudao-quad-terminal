@@ -1,0 +1,12 @@
+{
+  "name": "init-baseline",
+  "domain": "core",
+  "title": "项目初始基础地基与多租户基线",
+  "type": "feature",
+  "status": "PLAN_APPROVED",
+  "stories": 3,
+  "acceptance": 2,
+  "invariants": 1,
+  "tasks": 3,
+  "updatedAt": "2026-10-10T15:03:26.506Z"
+}
