@@ -1,0 +1,10 @@
+[submodule "apps/backend"]
+	path = apps/backend
+	url = https://github.com/YunaiV/yudao-cloud.git
+	branch = master-jdk17
+[submodule "apps/admin"]
+	path = apps/admin
+	url = https://github.com/yudaocode/yudao-ui-admin-vue3.git
+[submodule "apps/miniapp"]
+	path = apps/miniapp
+	url = https://github.com/yudaocode/yudao-mall-uniapp.git
