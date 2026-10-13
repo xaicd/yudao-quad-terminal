@@ -1,6 +1,6 @@
 {
   "name": "yudao-quad-terminal",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "dev:admin": "pnpm --filter yudao-ui-admin-vue3 dev",
