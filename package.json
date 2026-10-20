@@ -3,6 +3,9 @@
   "version": "1.1.0",
   "private": true,
   "scripts": {
+    "all": "node scripts/run-all.cjs",
+    "dev": "node scripts/run-all.cjs",
+    "check:readiness": "node scripts/run-all.cjs --check",
     "dev:admin": "pnpm --filter yudao-ui-admin-vue3 dev",
     "dev:miniapp": "pnpm --filter shopro dev",
     "dev:app": "pnpm --filter @yudao-quad-terminal/app start",
