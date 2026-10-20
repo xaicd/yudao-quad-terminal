@@ -5,6 +5,10 @@
   "scripts": {
     "all": "node scripts/run-all.cjs",
     "dev": "node scripts/run-all.cjs",
+    "init:all": "bash scripts/lifecycle.sh . install",
+    "test:all": "bash scripts/lifecycle.sh . test",
+    "lifecycle:build": "bash scripts/lifecycle.sh . build",
+    "start": "bash scripts/lifecycle.sh . start",
     "check:readiness": "node scripts/run-all.cjs --check",
     "dev:admin": "pnpm --filter yudao-ui-admin-vue3 dev",
     "dev:miniapp": "pnpm --filter shopro dev",
