@@ -12,7 +12,7 @@
 |---|---|---|
 | 数据库 | **嵌入式真 PostgreSQL 18.4** | npm `embedded-postgres`，进程内启动；直接执行**官方** `apps/backend/sql/postgresql/*.sql`，零 DDL 移植 |
 | 缓存 | **嵌入式真 Redis 7.4.1** | 从 Maven 制品 `com.github.lansheng228:embedded-redis:7.4.1` 抽取预编译二进制；真 Redis 语义，非 jedis-mock 模拟器 |
-| 配置 | `deploy/lite/application-lite.yaml` | 外置覆盖，经 `--spring.config.additional-location` 注入；**子模块零改动** |
+| 配置 | `deploy/lite/application-lite.yaml` | 外置覆盖，经 `--spring.config.additional-location` 注入；子模块差异收敛于 `deploy/patches/` |
 | 编排 | `scripts/lite-up.mjs` | 预检 → 起双引擎 → 导官方 SQL → 注入凭据 → 起应用 → 探活 |
 | 凭据 | `.commandcode/lite/credentials.env` | CSPRNG 生成，权限 600，已 gitignore |
 

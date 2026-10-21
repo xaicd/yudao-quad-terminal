@@ -76,6 +76,8 @@ EOF_M2
 
   build)
     echo "🏗️ [yudao-quad-terminal] 阶段 4: 生产构建 (Spring Boot Fat Jar + Vue3 Dist)..."
+    echo "  ▸ 注入子模块补丁（差异收敛于 deploy/patches）"
+    node scripts/submodule-patches.mjs --apply --quiet
     if [ -d "apps/backend/server" ]; then
       (cd apps/backend/server && mvn clean package -DskipTests)
       echo "  ✅ Spring Boot Jar 构建完成: apps/backend/server/target/yudao-server.jar"

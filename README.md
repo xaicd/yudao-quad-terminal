@@ -104,8 +104,9 @@ pnpm gen:api-sdk
 | 能力 | 一条命令 | 说明 | 详见 |
 | :--- | :--- | :--- | :--- |
 | **lite 零 Docker 档** | `pnpm lite:up` / `pnpm lite:down` | 嵌入式**真** PostgreSQL 18.4 + 嵌入式**真** Redis，无需 Docker、无需外部数据库/缓存服务 | [`deploy/lite/README.md`](deploy/lite/README.md) |
-| **端到端验收** | `pnpm lite:verify` | 登录 200 + accessToken、**连续登录 3 次回归防护**、弱默认凭据反证、子模块零改动复验 | 同上 |
-| **统一门禁** | `pnpm gate:fast` / `pnpm gate:full` | `blocking` 才阻塞；`advisory` 如实展示；fast 13 项 / full 15 项（追加后端单测与 lite e2e） | [`scripts/gate-check.mjs`](scripts/gate-check.mjs) |
+| **端到端验收** | `pnpm lite:verify` | 登录 200 + accessToken、**连续登录 3 次回归防护**、弱默认凭据反证、**子模块差异收敛复验**（改动必须恰好等于 deploy/patches 声明的补丁） | 同上 |
+| **子模块差异补丁** | `pnpm patch:status` / `patch:apply` / `patch:check` | 代码级差异收敛于 `deploy/patches/`，子模块指针保持**纯上游提交** → 别人 clone 得到完整可用基座 | [`deploy/patches/README.md`](deploy/patches/README.md) |
+| **统一门禁** | `pnpm gate:fast` / `pnpm gate:full` | `blocking` 才阻塞；`advisory` 如实展示；fast 15 项 / full 18 项（追加后端单测、前端构建与 lite e2e） | [`scripts/gate-check.mjs`](scripts/gate-check.mjs) |
 | **自有脚本单测** | `pnpm test:scripts` | 44 个 `node:test` 用例：裁剪闭包/冲突、规格资产、凭据与加解密、进程收割边界、门禁 CLI | [`scripts/tests/`](scripts/tests) |
 | **后端单测** | `pnpm test:all` | 脚本单测 + 类型 + `mvn test`（实测全绿约 72s）+ 就绪自检，**严格失败即退出** | [`scripts/lifecycle.sh`](scripts/lifecycle.sh) |
 | **生产构建** | `pnpm build:backend` | 两步 Maven：依赖用普通库 jar、只 repackage 服务端 → 189MB（已实测） | [`scripts/build-admin.mjs`](scripts/build-admin.mjs) |

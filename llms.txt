@@ -18,7 +18,7 @@
 pnpm install                 # 前端多端 + 共享包
 pnpm gate:fast               # 秒级门禁（无需构建/网络）
 pnpm lite:up                 # 零 Docker 起后端（嵌入式真 PG + 真 Redis），Ctrl-C 成对回收
-pnpm lite:verify             # 端到端验收（登录 200 + 弱凭据反证 + 子模块零改动）
+pnpm lite:verify             # 端到端验收（登录 200 + 弱凭据反证 + 子模块差异收敛复核）
 pnpm dev:admin               # PC 运营中台
 pnpm dev:miniapp             # 微信小程序
 pnpm dev:app                 # Expo 原生 App
@@ -52,14 +52,17 @@ pnpm lite:clean                               # 清理 PG 数据与抽出的二�
 ### 2.2 统一门禁 —— `scripts/gate-check.mjs`
 
 ```bash
-pnpm gate:fast     # 秒级 14 项：pkg-manager / openwiki / skills / typecheck / specs-health / workflow / scripts-tests / trim-cli / doc-commands / script-targets / ci-files / contract(advisory) / socratic(advisory)
-pnpm gate:full     # 16 项：追加 backend-tests（约 70s）、admin-build（vite，约 25s）与 lite 端到端验收
+pnpm gate:fast     # 秒级 15 项：pkg-manager / openwiki / skills / typecheck / specs-health / workflow / scripts-tests / trim-cli / doc-commands / script-targets / ci-files / contract(advisory) / socratic(advisory)
+pnpm gate:full     # 18 项：追加 backend-tests（约 70s）、admin-build（vite，约 25s）与 lite 端到端验收
 pnpm check         # = gate:fast
 pnpm specs:health  # 单独校验规格资产齐备性 + brief 8 要素 + 占位符残留
-pnpm test:scripts  # 62 个 node:test 用例（裁剪/规格/凭据/加解密/收割边界/门禁 CLI/JDK 变体）
+pnpm test:scripts  # 73 个 node:test 用例（裁剪/规格/凭据/加解密/收割边界/门禁 CLI/JDK 变体/子模块补丁）
 pnpm test:all      # 脚本单测 + typecheck + 后端 mvn test + 就绪自检（严格失败即退出）
 pnpm build:backend # 两步 Maven 构建（已实测 BUILD SUCCESS，189MB jar）
 pnpm build:admin   # vite 构建；解析真实 vite 入口以绕过 hoisted linker 的路径陷阱
+pnpm jdk:list      # JDK 变体矩阵（真实 ref + pom 实测值）
+pnpm patch:status  # 子模块差异补丁状态（差异收敛于 deploy/patches）
+pnpm patch:apply   # 幂等注入（lite:up / lifecycle build 自动调用）
 ```
 
 分级语义：只有 `blocking` 失败才非零退出；`advisory`（契约漂移、苏格拉底快照）如实展示不阻塞；`skipped ≠ pass`。

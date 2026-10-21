@@ -1,0 +1,13 @@
+diff --git a/src/api/login/index.ts b/src/api/login/index.ts
+index ba59769eb..32259de48 100644
+--- a/src/api/login/index.ts
++++ b/src/api/login/index.ts
+@@ -17,7 +17,7 @@ export const login = (data: UserLoginVO) => {
+     url: '/system/auth/login',
+     data,
+     headers: {
+-      isEncrypt: false
++      isEncrypt: true
+     }
+   })
+ }

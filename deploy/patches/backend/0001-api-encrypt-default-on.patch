@@ -1,0 +1,58 @@
+diff --git a/yudao-module-system/yudao-module-system-server/src/main/java/cn/iocoder/yudao/module/system/controller/admin/auth/AuthController.java b/yudao-module-system/yudao-module-system-server/src/main/java/cn/iocoder/yudao/module/system/controller/admin/auth/AuthController.java
+index 974585af3..7613ed7a1 100644
+--- a/yudao-module-system/yudao-module-system-server/src/main/java/cn/iocoder/yudao/module/system/controller/admin/auth/AuthController.java
++++ b/yudao-module-system/yudao-module-system-server/src/main/java/cn/iocoder/yudao/module/system/controller/admin/auth/AuthController.java
+@@ -1,4 +1,5 @@
+ package cn.iocoder.yudao.module.system.controller.admin.auth;
++import cn.iocoder.yudao.framework.encrypt.core.annotation.ApiEncrypt;
+ 
+ import cn.hutool.core.collection.CollUtil;
+ import cn.hutool.core.util.StrUtil;
+@@ -66,6 +67,7 @@ public class AuthController {
+     @PostMapping("/login")
+     @PermitAll
+     @Operation(summary = "使用账号密码登录")
++    @ApiEncrypt
+     public CommonResult<AuthLoginRespVO> login(@RequestBody @Valid AuthLoginReqVO reqVO) {
+         return success(authService.login(reqVO));
+     }
+diff --git a/yudao-module-system/yudao-module-system-server/src/main/resources/application.yaml b/yudao-module-system/yudao-module-system-server/src/main/resources/application.yaml
+index 0e25e5f9d..54a1592a4 100644
+--- a/yudao-module-system/yudao-module-system-server/src/main/resources/application.yaml
++++ b/yudao-module-system/yudao-module-system-server/src/main/resources/application.yaml
+@@ -138,7 +138,7 @@ aj:
+     type: blockPuzzle # 验证码类型 default 三种都实例化。blockPuzzle 滑块拼图、clickWord 文字点选、pictureWord 文本输入
+     water-mark: 芋道源码 # 右下角水印文字(我的水印)，可使用 https://tool.chinaz.com/tools/unicode.aspx 中文转 Unicode，Linux 可能需要转 unicode
+     interference-options: 0 # 滑动干扰项(0/1/2)
+-    req-frequency-limit-enable: false # 接口请求次数一分钟限制是否开启 true|false
++    req-frequency-limit-enable: true # 接口请求次数一分钟限制是否开启 true|false
+     req-get-lock-limit: 5 # 验证失败5次，get接口锁定
+     req-get-lock-seconds: 10 # 验证失败后，锁定时间间隔
+     req-get-minute-limit: 30 # get 接口一分钟内请求数限制
+@@ -155,11 +155,11 @@ yudao:
+     admin-ui:
+       url: http://dashboard.yudao.iocoder.cn # Admin 管理后台 UI 的地址
+   xss:
+-    enable: false
++    enable: true
+     exclude-urls: # 如下 url，仅仅是为了演示，去掉配置也没关系
+       - ${management.endpoints.web.base-path}/** # 不处理 Actuator 的请求
+   api-encrypt:
+-    enable: false # 是否开启 API 加密。默认关闭，避免低版本 JDK 8（8u120 以下）启动时 bcprov 的 JCE 认证报错
++    enable: true # 是否开启 API 加密。默认关闭，避免低版本 JDK 8（8u120 以下）启动时 bcprov 的 JCE 认证报错
+     algorithm: AES # 加密算法，支持 AES、RSA 等
+     request-key: 52549111389893486934626385991395 # 【AES 案例】请求加密的秘钥，，必须 16、24、32 位
+     response-key: 96103715984234343991809655248883 # 【AES 案例】响应加密的秘钥，AES 案例，必须 16、24、32 位
+diff --git a/yudao-server/src/main/resources/application.yaml b/yudao-server/src/main/resources/application.yaml
+index b91567b6a..a52f208d5 100644
+--- a/yudao-server/src/main/resources/application.yaml
++++ b/yudao-server/src/main/resources/application.yaml
+@@ -315,7 +315,7 @@ yudao:
+     permit-all_urls:
+       - /admin-api/mp/open/** # 微信公众号开放平台，微信回调接口，不需要登录
+   api-encrypt:
+-    enable: false # 是否开启 API 加密。默认关闭，避免低版本 JDK 8（8u120 以下）启动时 bcprov 的 JCE 认证报错
++    enable: true # 是否开启 API 加密。默认关闭，避免低版本 JDK 8（8u120 以下）启动时 bcprov 的 JCE 认证报错
+     algorithm: AES # 加密算法，支持 AES、RSA 等
+     request-key: 52549111389893486934626385991395 # 【AES 案例】请求加密的秘钥，，必须 16、24、32 位
+     response-key: 96103715984234343991809655248883 # 【AES 案例】响应加密的秘钥，AES 案例，必须 16、24、32 位

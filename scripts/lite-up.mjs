@@ -442,6 +442,23 @@ async function main() {
   });
 
   try {
+    // --- 0. 子模块补丁注入（幂等）---
+    // ApiEncrypt 开箱即用等差异化改动收敛在主仓 deploy/patches/，子模块指针保持纯上游提交，
+    // 否则别人 clone 不到指向本地提交的 gitlink。这里在启动前注入。
+    console.log("🔧 注入子模块补丁（deploy/patches，幂等）…");
+    const patchRun = spawnSync(process.execPath, [path.join(ROOT, "scripts/submodule-patches.mjs"), "--apply", "--quiet"], {
+      cwd: ROOT,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    if (patchRun.status !== 0) {
+      throw new Error(
+        `子模块补丁注入失败（exit=${patchRun.status}）：\n${(patchRun.stdout || "") + (patchRun.stderr || "")}`
+      );
+    }
+    const patchOut = (patchRun.stdout || "").trim();
+    console.log(patchOut ? patchOut.split("\n").map((l) => `   ${l.trim()}`).join("\n") : "   已是最新，无需注入");
+
     // --- 1. Redis ---
     console.log(`🐘 启动嵌入式真 Redis（端口 ${opts.redisPort}，变体 ${redisVariant.id}）…`);
     redisHandle = await redisRuntime.startRedis(ROOT, {
@@ -618,16 +635,20 @@ async function main() {
         if (!okOne) break;
       }
 
-      console.log("🧪 验收：子模块零改动复核");
-      const sub = spawnSync("git", ["-C", path.join(ROOT, "apps/backend"), "status", "--porcelain"], {
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "ignore"],
-      });
-      const clean = (sub.stdout || "").trim() === "";
-      console.log(`   git -C apps/backend status --porcelain → ${clean ? "✅ 空（零改动）" : "❌ 存在改动"}`);
+      console.log("🧪 验收：子模块差异收敛复核（改动必须恰好等于 deploy/patches 声明的补丁）");
+      const patchCheck = spawnSync(
+        process.execPath,
+        [path.join(ROOT, "scripts/submodule-patches.mjs"), "--check"],
+        { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }
+      );
+      const patchesOk = patchCheck.status === 0;
+      console.log(
+        `   submodule-patches --check → ${patchesOk ? "✅ 合法（无未声明改动）" : "❌ 存在未声明改动或补丁冲突"}`
+      );
+      if (!patchesOk) console.log((patchCheck.stdout || "").split("\n").map((l) => `     ${l}`).join("\n"));
 
       console.log("----------------------------------------------------------------");
-      const passed = probe.ok && repeatOk && weakRejected && clean;
+      const passed = probe.ok && repeatOk && weakRejected && patchesOk;
       console.log(passed ? "✅ 验收全部通过" : "❌ 验收未通过");
       await shutdown();
       process.exit(passed ? EXIT_OK : EXIT_RUNTIME);

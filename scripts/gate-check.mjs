@@ -385,6 +385,13 @@ const GATES = [
     inline: checkScriptTargets,
   },
   {
+    id: "submodule-patches",
+    label: "子模块差异收敛（改动 == deploy/patches 声明）",
+    tier: "fast",
+    severity: "blocking",
+    spawn: { cmd: process.execPath, args: ["scripts/submodule-patches.mjs", "--check"] },
+  },
+  {
     id: "jdk-variants",
     label: "JDK 变体可执行性（变体 ref + 文档 ref 真实性）",
     tier: "fast",

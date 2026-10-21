@@ -76,7 +76,11 @@
     "test:scripts": "node --test scripts/tests/*.test.mjs",
     "jdk:list": "node scripts/jdk-variants.mjs --list",
     "jdk:status": "node scripts/jdk-variants.mjs --status",
-    "jdk:use": "node scripts/jdk-variants.mjs --use"
+    "jdk:use": "node scripts/jdk-variants.mjs --use",
+    "patch:status": "node scripts/submodule-patches.mjs --status",
+    "patch:check": "node scripts/submodule-patches.mjs --check",
+    "patch:apply": "node scripts/submodule-patches.mjs --apply",
+    "patch:revert": "node scripts/submodule-patches.mjs --revert"
   },
   "packageManager": "pnpm@9.15.4"
 }

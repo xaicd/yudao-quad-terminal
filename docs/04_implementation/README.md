@@ -35,6 +35,18 @@ pnpm lite:up                          # 零 Docker 起后端（真 PG + 真 Redi
 pnpm build:backend                    # 两步 Maven 构建（已验证）
 ```
 
+## 子模块差异如何落主仓（方案 B）
+
+`apps/{backend,admin}` 是第三方只读子模块。**代码级差异不得提交在子模块里**：那会把主仓 gitlink 钉到远端不存在的提交，别人 `git clone --recursive` 直接失败。
+
+```bash
+pnpm patch:status   # 看差异现状
+pnpm patch:apply    # 幂等注入（lite:up 与 lifecycle build 自动调用）
+pnpm patch:check    # 门禁：子模块改动必须恰好等于 deploy/patches 声明的补丁
+```
+
+真源：`deploy/patches/<submodule>/*.patch` + `deploy/patches/README.md`；逻辑：`scripts/submodule-patches.mjs`。
+
 ## 现存缺口（如实登记）
 
 - **后端单测已实测可跑并纳入 `gate:full`**：`mvn -B test -pl yudao-server -am` → BUILD SUCCESS / 约 72s，

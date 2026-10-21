@@ -32,6 +32,7 @@
 
 1. **pnpm 唯一**：只用 pnpm；禁止任何 npm 操作（run / install / exec / ci 四类），由门禁 `pkg-manager` 拦截。
 2. **`apps/backend` / `apps/admin` / `apps/miniapp` 是第三方 git submodule（只读）**：严禁修改其中任何文件；所有差异一律落主仓（`deploy/`、`scripts/`、`.agents/`、`docs/`）。
+   对子模块的**代码级差异**收敛为 `deploy/patches/<submodule>/*.patch`，由 `pnpm patch:apply` 注入（`lite:up` 与 `lifecycle build` 会自动调用）；**子模块指针只钉远端真实存在的上游提交**，否则别人 clone 不到指向本地提交的 gitlink。新不变式由门禁 `submodule-patches` 强制：子模块工作区改动必须**恰好等于**声明的补丁。
 3. **禁止弱默认凭据**（`admin` / `admin123` 之类）：引导凭据由 CSPRNG 生成，写入 gitignored 的凭据文件（0600）。
 4. **声明必须可执行**：文档里的命令必须真实存在；`pnpm check` 通过才算完工（No Artifact, No Done）。
 
@@ -39,9 +40,10 @@
 
 | 能力 | 命令 | 何时用 | 真源 |
 |---|---|---|---|
-| 统一门禁 | `pnpm gate:fast` / `pnpm gate:full` | 任何改动后自证；fast 14 项 / full 16 项（full 另含后端单测与 lite e2e） | `scripts/gate-check.mjs` |
+| 统一门禁 | `pnpm gate:fast` / `pnpm gate:full` | 任何改动后自证；fast 15 项 / full 18 项（full 另含后端单测与 lite e2e） | `scripts/gate-check.mjs` |
 | 类型检查 | `pnpm typecheck` | 自有包（app / shared-types / api-client）TS 0 报错 | 各包 `tsconfig.json` |
 | 生产构建 | `pnpm build:backend` / `pnpm build:admin` / `pnpm build` | 后端两步 Maven（已验证 189MB jar）+ 前端 vite 构建（已验证 24.6MB dist） | `scripts/build-admin.mjs` |
+| 子模块差异补丁 | `pnpm patch:status` / `patch:apply` / `patch:check` / `patch:revert` | 差异收敛于 `deploy/patches/`，指针保持纯上游（可 clone） | `deploy/patches/README.md` |
 | JDK 变体矩阵 | `pnpm jdk:list` / `jdk:status` / `jdk:use <id>` | 四档变体的真实 ref 与切换；门禁防"文档写不存在的分支" | `scripts/lib/jdk-variants.mjs` |
 | 自有脚本单测 | `pnpm test:scripts` | 62 个 `node:test` 用例（裁剪/规格/凭据/加解密/门禁 CLI） | `scripts/tests/` |
 | 全栈验证 | `pnpm test:all` | 脚本单测 + 类型 + 后端单测（实测 72s）+ 就绪自检，**严格失败即退出** | `scripts/lifecycle.sh` test 阶段 |
