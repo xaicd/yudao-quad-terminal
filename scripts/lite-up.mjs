@@ -40,7 +40,40 @@ const EXIT_OK = 0;
 const EXIT_RUNTIME = 1;
 const EXIT_USAGE = 2;
 
-const FAT_JAR = "apps/backend/yudao-server/target/yudao-server.jar";
+function findFatJar() {
+  const candidates = [
+    "apps/backend/yudao-server/target/yudao-server.jar",
+    "apps/backend/server/target/yudao-server.jar",
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(path.join(ROOT, c))) return c;
+  }
+  const backendDir = path.join(ROOT, "apps/backend");
+  if (fs.existsSync(backendDir)) {
+    for (const sub of fs.readdirSync(backendDir)) {
+      const targetDir = path.join(backendDir, sub, "target");
+      if (fs.existsSync(targetDir)) {
+        const jars = fs.readdirSync(targetDir).filter(
+          (f) =>
+            f.endsWith(".jar") &&
+            !f.endsWith("-sources.jar") &&
+            !f.endsWith("-javadoc.jar") &&
+            !f.startsWith("original-")
+        );
+        if (jars.length > 0) {
+          const sorted = jars.sort(
+            (a, b) =>
+              fs.statSync(path.join(targetDir, b)).size -
+              fs.statSync(path.join(targetDir, a)).size
+          );
+          return path.join("apps/backend", sub, "target", sorted[0]);
+        }
+      }
+    }
+  }
+  return "apps/backend/yudao-server/target/yudao-server.jar";
+}
+let FAT_JAR = findFatJar();
 const DRIVER_LIB_DIR = "deploy/lite/lib";
 const PG_DRIVER_HINT = "mvn -B -q dependency:get -Dartifact=org.postgresql:postgresql:42.7.11";
 
@@ -110,6 +143,7 @@ const BUILD_RECIPE = `  cd apps/backend
   mvn -B package -DskipTests -pl yudao-server`;
 
 function checkFatJar() {
+  FAT_JAR = findFatJar();
   const abs = path.join(ROOT, FAT_JAR);
   if (!fs.existsSync(abs)) {
     return { ok: false, hint: `未找到 fat jar。请用两步构建：\n${BUILD_RECIPE}` };
