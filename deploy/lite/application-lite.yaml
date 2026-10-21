@@ -56,8 +56,11 @@ spring:
         test-while-idle: true
         test-on-borrow: false
         test-on-return: false
-        pool-prepared-statements: true
-        max-pool-prepared-statement-per-connection-size: 20
+        # ⚠️ PostgreSQL 下必须关闭 Druid 的 PreparedStatement 池：
+        # PG 的扩展查询协议会关闭 statement，而 Druid 会复用已关闭的句柄，
+        # 表现为 `PSQLException: 这个 statement 已经被关闭` → MyBatis 参数绑定失败 → 登录 500。
+        # 现象具有欺骗性：只登录一次能成功，连续登录会交替失败。
+        pool-prepared-statements: false
       primary: master
       datasource:
         master:

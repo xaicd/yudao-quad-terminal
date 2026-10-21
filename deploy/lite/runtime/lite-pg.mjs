@@ -45,7 +45,7 @@ export function isInstalled() {
 
 export function installHint(rootDir) {
   const rel = path.relative(rootDir, PG_RUNTIME_DIR) || ".";
-  return `cd ${rel} && npm install`;
+  return `cd ${rel} && pnpm install`;
 }
 
 function requireFromRuntime(id) {

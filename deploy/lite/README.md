@@ -23,7 +23,7 @@
 - 安装 lite 运行时依赖：
 
 ```bash
-cd deploy/lite/runtime && npm install
+cd deploy/lite/runtime && pnpm install
 ```
 
 ## 3. ⚠️ 先构建 fat jar（必须两步）
@@ -46,14 +46,29 @@ mvn -B package -DskipTests -pl yudao-server
 
 `scripts/lifecycle.sh build` 与 `pnpm lifecycle:build` 已改用上述两步法。
 
+### 构建入口
+
+```bash
+pnpm build:backend   # 两步 Maven 构建（已实测）：普通库 jar + 只 repackage yudao-server → 189MB
+pnpm build:admin     # 前端构建；解析真实 vite 入口（hoisted 布局），缺依赖才显式 SKIP
+pnpm build           # 两者串联
+```
+
+> ✅ `pnpm build:admin` **已实测通过**（`✓ built in 23.56s`，产物 `apps/admin/dist` 24.6MB）：
+> 子模块 `apps/admin` 已 rebase 到上游 `master`（`36ede93e9`）并重放本仓的 ApiEncrypt 本地提交，
+> 上游缺失的 `src/views/oa/utils/*` 已到位。前端构建现为 `gate:full` 的 blocking 项 `admin-build`。
+
 ## 4. 启动
 
 ```bash
 pnpm lite:up          # 拉起并常驻；Ctrl-C 成对回收 Redis 与 java
 pnpm lite:verify      # 跑完整验收（含弱默认凭据反证）后退出
+pnpm lite:down        # 收割残留（node 非优雅退出后 redis/PG/java 会占着端口）
 node scripts/lite-up.mjs --dry-run         # 只看计划与预检
 node scripts/lite-up.mjs --rotate-credentials
 node scripts/lite-up.mjs --pg-port 55433 --redis-port 63800   # 换端口
+node scripts/lite-up.mjs --redis-variant redis-6.2.6-bsd      # 切 BSD-3 变体（可随交付物分发）
+pnpm gate:full        # 门禁 full 档会自动跑 lite:verify（缺前置条件标 skipped，不算通过）
 ```
 
 首次启动会回显一次生成的账号与口令；其后只从 `.commandcode/lite/credentials.env` 读取。
@@ -92,4 +107,5 @@ lite 档的 Redis 为 **7.4.1**，许可为 **RSALv2 / SSPLv1**（source-availab
 | `api-encrypt.requestKey 未取到` | `apps/backend/yudao-server/src/main/resources/application.yaml` 的 `yudao.api-encrypt` 块被改动；可用 `LITE_API_ENCRYPT_REQUEST_KEY` 覆盖 |
 | `账号格式为数字以及字母` | 手改了凭据文件且账号含非法字符；删掉 `.commandcode/lite/credentials.env` 让其重新生成 |
 | 端口被占用 | 用 `--pg-port/--redis-port/--server-port` 换端口 |
+| 登录**间歇性** 500（日志含「这个 statement 已经被关闭」） | PostgreSQL 下**不要**开 Druid 的 PreparedStatement 池：`pool-prepared-statements: false`（本档已默认关闭）。该缺陷只在连续登录时暴露，`lite:verify` 已内置连续登录回归防护 |
 | PG 数据目录损坏 | `pnpm lite:clean` 后重启（会重新 initdb 并重导官方脚本） |

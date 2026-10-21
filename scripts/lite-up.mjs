@@ -417,10 +417,28 @@ async function main() {
     await pgRuntime.stopPostgres(pgHandle);
   };
 
-  process.on("SIGINT", async () => {
-    console.log("\n🛑 收到中断，正在成对回收进程…");
-    await shutdown();
-    process.exit(EXIT_OK);
+  // SIGINT(Ctrl-C) / SIGTERM(docker stop、CI 取消) / SIGHUP(终端关闭) 统一走优雅回收
+  for (const sig of ["SIGINT", "SIGTERM", "SIGHUP"]) {
+    process.on(sig, async () => {
+      console.log(`\n🛑 收到 ${sig}，正在成对回收进程…`);
+      await shutdown();
+      process.exit(EXIT_OK);
+    });
+  }
+
+  // 兜底：任何退出路径都尽力同步关掉 java 与 redis。
+  // PG 由 embedded-postgres 在进程退出时自清理；若 node 被 SIGKILL，则需 `pnpm lite:down` 兜底。
+  process.on("exit", () => {
+    try {
+      if (app && !app.killed) app.kill("SIGTERM");
+    } catch {
+      /* ignore */
+    }
+    try {
+      redisRuntime.stopRedis(redisHandle);
+    } catch {
+      /* ignore */
+    }
   });
 
   try {
@@ -529,14 +547,27 @@ async function main() {
       }
     );
 
+    // 应用日志同时落盘：否则失败后只能看到内存里最后 80 行，无法复盘（如间歇性 500）
+    const logDir = path.join(ROOT, ".commandcode/lite/logs");
+    fs.mkdirSync(logDir, { recursive: true });
+    const appLogFile = path.join(logDir, `yudao-server-${new Date().toISOString().replace(/[:.]/g, "-")}.log`);
+    const appLogStream = fs.createWriteStream(appLogFile, { flags: "a" });
+
     const appLog = [];
     let appExited = null;
     const pushLog = (line) => {
       appLog.push(line);
       if (appLog.length > 400) appLog.shift();
     };
-    app.stdout.on("data", (b) => String(b).split("\n").forEach((l) => l.trim() && pushLog(l)));
-    app.stderr.on("data", (b) => String(b).split("\n").forEach((l) => l.trim() && pushLog(l)));
+    const onChunk = (b) => {
+      appLogStream.write(b);
+      String(b)
+        .split("\n")
+        .forEach((l) => l.trim() && pushLog(l));
+    };
+    app.stdout.on("data", onChunk);
+    app.stderr.on("data", onChunk);
+    app.on("exit", () => appLogStream.end());
     app.on("exit", (code) => {
       appExited = { code };
       console.error(`\n❌ [app] 进程已退出 code=${code} —— 立即打印应用日志尾部（不再空等探活超时）`);
@@ -573,6 +604,20 @@ async function main() {
           (weakRejected ? "✅ 已拒绝（未签发 token）" : "❌ 竟然登录成功！")
       );
 
+      console.log("🧪 验收：连续登录（回归防护——只登录一次会漏掉连接池类缺陷）");
+      // 真实教训：Druid + PostgreSQL 的 PreparedStatement 池会导致「首次成功、后续交替 500」，
+      // 只做一次登录的验收完全发现不了。这里连续登录 3 次，全部成功才算过。
+      let repeatOk = true;
+      for (let i = 1; i <= 3; i++) {
+        const r = await probeLogin(opts.serverPort, creds.username, creds.password, encryptConfig);
+        const okOne = r.status === 200 && r.hasToken;
+        if (!okOne) repeatOk = false;
+        console.log(
+          `   第 ${i} 次连续登录 → HTTP ${r.status}${okOne ? " + accessToken ✅" : ` ❌ code=${r.code} msg=${String(r.msg).slice(0, 60)}`}`
+        );
+        if (!okOne) break;
+      }
+
       console.log("🧪 验收：子模块零改动复核");
       const sub = spawnSync("git", ["-C", path.join(ROOT, "apps/backend"), "status", "--porcelain"], {
         encoding: "utf8",
@@ -582,7 +627,7 @@ async function main() {
       console.log(`   git -C apps/backend status --porcelain → ${clean ? "✅ 空（零改动）" : "❌ 存在改动"}`);
 
       console.log("----------------------------------------------------------------");
-      const passed = probe.ok && weakRejected && clean;
+      const passed = probe.ok && repeatOk && weakRejected && clean;
       console.log(passed ? "✅ 验收全部通过" : "❌ 验收未通过");
       await shutdown();
       process.exit(passed ? EXIT_OK : EXIT_RUNTIME);
@@ -600,6 +645,7 @@ async function main() {
     console.log(`   登录: 使用 ${path.relative(ROOT, creds.file)} 中的 LITE_ADMIN_USERNAME / LITE_ADMIN_PASSWORD`);
     console.log(`   数据库: jdbc:postgresql://127.0.0.1:${opts.pgPort}/ruoyi-vue-pro`);
     console.log(`   Redis : 127.0.0.1:${opts.redisPort}（requirepass 见凭据文件）`);
+    console.log(`   应用日志: ${path.relative(ROOT, appLogFile)}`);
     console.log("   Ctrl-C 将成对回收 Redis 与 java 进程");
     console.log("================================================================");
   } catch (e) {

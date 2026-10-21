@@ -1,0 +1,2 @@
+# 让 pnpm 把本目录当作独立 workspace 根，避免向上合并进主仓根 workspace
+packages: []
