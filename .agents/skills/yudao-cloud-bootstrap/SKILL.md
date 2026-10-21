@@ -176,162 +176,70 @@ graph LR
 
 ---
 
-## §5 工业级模块裁剪命令模板集 (Trim Command Templates)
+## §5 工业级模块裁剪（真实工具链）
 
-裁剪核心遵循三步走：
-1. **物理目录清除**：`rm -rf yudao-module-{...}`
-2. **根 `pom.xml` 同步清理**：剔除 `<modules>` 下对应行
-3. **网关路由与 SQL 清理**：若使用 Gateway，移除对应路由块；执行数据库菜单与字典清理 SQL。
+裁剪已工具化：唯一真源为 `scripts/lib/module-catalog.mjs`，执行器为 `scripts/trim-modules.mjs`。
 
-### 模板一：典型生活服务 / 轻量级 C 端运营平台
-> **保留 5 大核心业务模块**：`system` + `infra` + `member` + `pay` + `report`  
-> **剔除 14 个无关模块**：`bpm`, `crm`, `erp`, `mes`, `fms`, `hrm`, `im`, `iot`, `mall`, `mp`, `oa`, `pms`, `wms`, `ai`  
-> **实测战果**：Java 源文件由 **7,347 缩减至 1,593 个（减少 78.3%）**，冷编译时间缩短 65%。
+> ⚠️ **本节历史内容已废弃**。此前文档中的三份人肉 bash 模板（`rm -rf` + `python3` 改 pom）与
+> `scripts/trim-modules.sh` **从未落盘**；且旧脚本用 `-biz` 匹配本仓实际为 `-server` 的依赖后缀，会静默失效。
+> **禁止再手写 rm/sed/python 裁剪**。
 
 ```bash
-#!/usr/bin/env bash
-# ==============================================================================
-# Coolie 工坊 Yudao-Cloud 裁剪脚本 - 模板一：生活服务/轻资产交付 (保留 5 模块)
-# ==============================================================================
-set -euo pipefail
+# 1) 先预览：删哪些目录、改哪些 pom 行、Java 文件数变化
+node scripts/trim-modules.mjs --profile lite --dry-run
 
-TARGET_DIR="${1:-.}"
-cd "$TARGET_DIR"
+# 2) 确认后落地（--activate 同时反注释启用 yudao-server 中保留模块的依赖）
+node scripts/trim-modules.mjs --profile lite --apply --yes
 
-echo ">>> [1/3] 物理删除 14 个未选模块目录..."
-rm -rf yudao-module-{bpm,crm,erp,mes,fms,hrm,im,iot,mall,mp,oa,pms,wms,ai}
+# 3) 收敛校验（可作 CI 门禁：存在漂移则退出码 1）
+node scripts/trim-modules.mjs --check --profile lite
 
-echo ">>> [2/3] 从根 pom.xml 移除对应 <module> 节点..."
-python3 -c '
-import xml.etree.ElementTree as ET
-import re
-
-pom_path = "pom.xml"
-with open(pom_path, "r", encoding="utf-8") as f:
-    content = f.read()
-
-trimmed_modules = [
-    "bpm", "crm", "erp", "mes", "fms", "hrm", "im", "iot", "mall", "mp", "oa", "pms", "wms", "ai"
-]
-for mod in trimmed_modules:
-    pattern = rf"^\s*<module>yudao-module-{mod}</module>\s*\n"
-    content = re.sub(pattern, "", content, flags=re.MULTILINE)
-
-with open(pom_path, "w", encoding="utf-8") as f:
-    f.write(content)
-print("pom.xml 同步剔除完成！")
-'
-
-echo ">>> [3/3] 验证当前保留模块列表与 Java 文件总数..."
-ls -d yudao-module-*
-echo "剩余 Java 文件总数: $(find . -name '*.java' | wc -l)"
+# 4) 生成菜单/字典清理 SQL（只输出，不自动连库执行）
+node scripts/trim-modules.mjs --profile lite --sql
 ```
 
-### 模板二：企业协同办公与供应链进销存平台
-> **保留 10 大核心业务模块**：`system` + `infra` + `bpm` + `oa` + `erp` + `wms` + `crm` + `member` + `pay` + `report`  
-> **剔除 9 个专业垂直模块**：`mes`, `fms`, `hrm`, `im`, `iot`, `mall`, `mp`, `pms`, `ai`
+> ⚠️ **`apps/backend` 是 git submodule**（上游 `YunaiV/yudao-cloud`，branch `master-jdk17`）。
+> 因此裁剪属于「本地消费态」：`git submodule update` / `scripts/sync-upstream.sh` 会把它还原。
+> 备份写入主仓 `.commandcode/backups/`（不在子模块工作树留 `.bak`），逆操作为 `--recover`。
+
+### 1. 预设装配档 (profiles)
+
+| profile | 保留模块 | 适用场景 |
+|---|---|---|
+| `mini` | system, infra | 纯自研新业务，只需 RBAC / 租户 / 代码生成 |
+| `lite` | system, infra, member, pay, report | 生活服务 / 轻量 C 端运营平台（旧模板一；实测全后端 7,347 → 1,564 Java 文件，-78.7%） |
+| `full` | 全 19 模块 | 全能型业务航母 |
+
+### 2. 按场景自定义（等价于旧模板一 / 二 / 三）
 
 ```bash
-#!/usr/bin/env bash
-# ==============================================================================
-# Coolie 工坊 Yudao-Cloud 裁剪脚本 - 模板二：企业进销存与办公 (保留 10 模块)
-# ==============================================================================
-set -euo pipefail
+# 企业协同办公与供应链进销存（旧模板二：保留 10 模块）
+node scripts/trim-modules.mjs --keep system,infra,bpm,oa,erp,wms,crm,member,pay,report --dry-run
 
-TARGET_DIR="${1:-.}"
-cd "$TARGET_DIR"
+# Mini 基座按需扩充单个模块（旧模板三）：工具只负责 pom 接线，源码需从完整基座复制
+node scripts/trim-modules.mjs --keep system,infra,bpm --apply --yes
+cp -r <full-base>/yudao-module-bpm apps/backend/
 
-echo ">>> [1/3] 物理删除 9 个专业制造/物联网/AI等模块..."
-rm -rf yudao-module-{mes,fms,hrm,im,iot,mall,mp,pms,ai}
-
-echo ">>> [2/3] 从根 pom.xml 移除对应 <module> 节点..."
-python3 -c '
-import re
-pom_path = "pom.xml"
-with open(pom_path, "r", encoding="utf-8") as f:
-    content = f.read()
-
-trimmed = ["mes", "fms", "hrm", "im", "iot", "mall", "mp", "pms", "ai"]
-for mod in trimmed:
-    content = re.sub(rf"^\s*<module>yudao-module-{mod}</module>\s*\n", "", content, flags=re.MULTILINE)
-
-with open(pom_path, "w", encoding="utf-8") as f:
-    f.write(content)
-print("pom.xml 更新完成！")
-'
-
-echo ">>> [3/3] 验证保留模块..."
-ls -d yudao-module-*
-echo "剩余 Java 文件数: $(find . -name '*.java' | wc -l)"
+# 反向剔除：与保留模块存在强依赖时会被拒绝，并明确指出依赖链
+node scripts/trim-modules.mjs --remove mes,fms,hrm --dry-run
 ```
 
-### 模板三：精简版 (`yudao-cloud-mini`) 极速起步与按需扩充单个模块
-> **基于 Mini 基座（仅包含 system + infra，1,001 Java文件）**，按需从完整版单向搬迁 `yudao-module-bpm`（工作流）。
+**硬约束**：依赖闭包会自动补齐（保留 `mall` 会连带补齐 `member` + `pay`；保留 `hrm`/`fms`/`oa` 需 `bpm`）；
+`system` 与 `infra` 不可剔除；`--apply` 默认要求子模块工作区洁净并需二次确认（CI 用 `--yes`）。
+
+### 3. 数据库菜单与字典清理
+
+不再手抄 SQL。清理语句由工具生成，**只输出、不执行**：
 
 ```bash
-#!/usr/bin/env bash
-# ==============================================================================
-# Coolie 工坊 Yudao-Cloud 极速装配脚本 - 模板三：Mini 扩充单个模块 (以 BPM 为例)
-# ==============================================================================
-set -euo pipefail
-
-MINI_DIR="${1:-./yudao-mini-project}"
-FULL_PROBE="${2:-/tmp/yudao-cloud-probe}"
-
-echo ">>> [1/4] 从完整版克隆或复制 yudao-module-bpm 目录到 mini 工程..."
-cp -r "${FULL_PROBE}/yudao-module-bpm" "${MINI_DIR}/"
-
-echo ">>> [2/4] 在 mini 工程的根 pom.xml 中注册 <module>yudao-module-bpm</module>..."
-python3 -c '
-with open("pom.xml", "r", encoding="utf-8") as f:
-    text = f.read()
-target = "<module>yudao-module-infra</module>"
-replacement = target + "\n        <module>yudao-module-bpm</module>"
-if "<module>yudao-module-bpm</module>" not in text:
-    text = text.replace(target, replacement)
-    with open("pom.xml", "w", encoding="utf-8") as f:
-        f.write(text)
-print("根 pom.xml 已注册 yudao-module-bpm！")
-'
-
-echo ">>> [3/4] 若使用单体 yudao-server 启动调试，在 yudao-server/pom.xml 取消 bpm-server 依赖注释..."
-sed -i.bak 's/<!--        <dependency>-->/<!-- dependency -->/g' yudao-server/pom.xml 2>/dev/null || true
-
-echo ">>> [4/4] 验证 Mini 编译..."
-mvn clean compile -pl yudao-module-bpm -am -DskipTests
+node scripts/trim-modules.mjs --profile <档位> --sql              # 打印到 stdout
+node scripts/trim-modules.mjs --profile <档位> --sql > cleanup.sql # 落盘备审
 ```
 
-### 4. 数据库废弃菜单与字典自动化清理 SQL 模板
-
-当从项目中移除了某些模块后，必须执行以下 SQL 避免管理端出现死菜单和废弃字典：
-
-```sql
--- =============================================================================
--- Yudao-Cloud 模块裁剪后数据库清理脚本 (按需解开对应模块的注释)
--- =============================================================================
-
--- 1. 清理顶级菜单 (例如删除了 CRM、MES、商城等)
--- DELETE FROM system_menu WHERE name IN ('CRM 系统', 'MES 系统', '商城管理', '工作流', 'AI 大模型');
-
--- 2. 递归删除所有孤儿关联子菜单 (执行数次直至 Affected rows 为 0)
-DELETE FROM system_menu 
-WHERE parent_id NOT IN (SELECT id FROM (SELECT id FROM system_menu) AS TEMP) 
-  AND parent_id > 0;
-
--- 3. 清理角色与已删除菜单的映射关系
-DELETE FROM system_role_menu 
-WHERE menu_id NOT IN (SELECT id FROM system_menu);
-
--- 4. 清理废弃字典类型与字典数据 (以清理商城、ERP、MES 为例)
-DELETE FROM system_dict_data WHERE dict_type LIKE 'trade_%' OR dict_type LIKE 'product_%' OR dict_type LIKE 'promotion_%';
-DELETE FROM system_dict_type WHERE type LIKE 'trade_%' OR type LIKE 'product_%' OR type LIKE 'promotion_%';
-
-DELETE FROM system_dict_data WHERE dict_type LIKE 'erp_%';
-DELETE FROM system_dict_type WHERE type LIKE 'erp_%';
-
-DELETE FROM system_dict_data WHERE dict_type LIKE 'mes_%';
-DELETE FROM system_dict_type WHERE type LIKE 'mes_%';
-```
+生成内容：顶级菜单候选 SELECT、孤儿子菜单递归清理、`system_role_menu` 映射清理，
+以及**已登记字典前缀**（`trade_` / `product_` / `promotion_` / `erp_` / `mes_`）的字典清理。
+未登记前缀的模块会被明确列为「需人工核对 `system_dict_type`」——工具**不猜测菜单名**，
+避免把猜造数据当成交付资产。
 
 ---
 
@@ -674,93 +582,24 @@ child-concurrency=8
 
 ---
 
-### §8.5 trim-modules.sh 一键裁剪脚本实现
+### §8.5 模块裁剪：已落地为 scripts/trim-modules.mjs
 
-将以下生产级脚本落盘于 `scripts/trim-modules.sh`，用于在工程立项时对 `apps/backend` 目录中的 `yudao-cloud` 源码进行全自动物理裁剪与 POM 契约同步：
+本节原先给出一份 `scripts/trim-modules.sh` 参考实现，**该文件从未落盘，已废弃**。真实实现为：
 
-```bash
-#!/usr/bin/env bash
-# ==============================================================================
-# trim-modules.sh - Yudao-Cloud 后端业务模块一键物理裁剪与 POM 同步工具
-# 规范出处: Coolie Integrated Foundry §8.5
-# 默认动作: 保留 system, infra, member, pay, report，彻底剔除其余 13 个冗余垂直业务域
-# ==============================================================================
-set -euo pipefail
+| 文件 | 职责 |
+|---|---|
+| `scripts/lib/module-catalog.mjs` | 唯一真源：19 模块元数据（实测 Java 文件数）、强依赖闭包、装配档 profiles |
+| `scripts/trim-modules.mjs` | CLI：`--profile/--keep/--remove`、`--dry-run/--apply/--check/--sql`、`--recover` |
+| `scripts/mcp/yudao-mcp-server.cjs` | 同能力的 MCP 端点（`trim_preview` / `trim_apply` / `trim_check`） |
 
-# 1. 配置参数解析 (支持环境变量或命令行覆盖)
-JDK_VERSION="${JDK_VERSION:-17}"
-TARGET_DIR="${1:-apps/backend}"
+与旧 bash 参考实现的差异（均为修 bug）：
 
-# 默认保留的核心模块清单
-DEFAULT_KEEP=("system" "infra" "member" "pay" "report")
-# 默认剔除的冗余业务模块清单 (全量 18 模块中的非必需垂直模块)
-DEFAULT_REMOVE=("bpm" "crm" "erp" "mes" "fms" "hrm" "im" "iot" "mall" "mp" "oa" "pms" "wms" "ai")
+1. `yudao-server` 的依赖后缀是本仓实际的 `-server`，而非旧脚本写的 `-biz`；
+2. 不再用 `python3`/`sed` 改 pom，改为结构化解析依赖块（含注释态 `<!--        <dependency>-->`），避免误删与平台差异；
+3. 显式建模 `apps/backend` 作为 git submodule 的「本地消费态」语义：备份移出子模块，并提供 `--recover` 一键还原；
+4. 菜单/字典清理不再硬编码猜造的菜单名，改为「输出候选 SELECT + 确定性清理语句」，未知字典前缀如实标注需人工核对。
 
-KEEP_MODULES=("${KEEP_MODULES:-${DEFAULT_KEEP[@]}}")
-REMOVE_MODULES=("${REMOVE_MODULES:-${DEFAULT_REMOVE[@]}}")
-
-echo "======================================================================"
-echo "🚀 开始执行 Yudao-Cloud 后端模块物理裁剪"
-echo "工作路径: ${TARGET_DIR}"
-echo "目标 JDK: ${JDK_VERSION}"
-echo "保留模块: ${KEEP_MODULES[*]}"
-echo "剔除模块: ${REMOVE_MODULES[*]}"
-echo "======================================================================"
-
-if [ ! -d "${TARGET_DIR}" ]; then
-  echo "❌ 错误: 目标路径 ${TARGET_DIR} 不存在，请确认当前处于 Monorepo 根目录！"
-  exit 1
-fi
-
-cd "${TARGET_DIR}"
-
-# 2. 遍历物理目录执行删除
-DELETED_COUNT=0
-for mod in "${REMOVE_MODULES[@]}"; do
-  DIR_NAME="yudao-module-${mod}"
-  if [ -d "${DIR_NAME}" ]; then
-    echo "🗑️ 正在删除物理目录: ${DIR_NAME} ..."
-    rm -rf "${DIR_NAME}"
-    DELETED_COUNT=$((DELETED_COUNT + 1))
-  fi
-done
-
-# 3. 根 pom.xml 契约同步：删除 <module>yudao-module-xxx</module>
-if [ -f "pom.xml" ]; then
-  echo "📝 正在同步根 pom.xml 模块清单 ..."
-  cp pom.xml pom.xml.bak
-  for mod in "${REMOVE_MODULES[@]}"; do
-    # 兼容 Linux GNU sed 与 macOS BSD sed
-    sed -i.tmp "\#<module>yudao-module-${mod}</module>#d" pom.xml && rm -f pom.xml.tmp
-  done
-  echo "✅ 根 pom.xml 模块声明同步完毕！"
-fi
-
-# 4. 同步清理 yudao-server 本地调试聚合模块中的依赖声明
-SERVER_POM="yudao-server/pom.xml"
-if [ -f "${SERVER_POM}" ]; then
-  echo "📝 正在清理 ${SERVER_POM} 中的被裁剪模块依赖 ..."
-  cp "${SERVER_POM}" "${SERVER_POM}.bak"
-  for mod in "${REMOVE_MODULES[@]}"; do
-    # 匹配并删除整段包含 yudao-module-xxx-biz 的 dependency 声明
-    sed -i.tmp "\#<artifactId>yudao-module-${mod}-biz</artifactId>#d" "${SERVER_POM}" && rm -f "${SERVER_POM}.tmp"
-  done
-  echo "✅ yudao-server 依赖同步清理完毕！"
-fi
-
-# 5. 执行 Maven 增量编译验证 (跳过单元测试，验证契约闭环)
-echo "🔍 正在执行后端 Maven 语法与依赖树完整性校验 ..."
-if mvn clean compile -DskipTests -pl '!yudao-ui-admin-vue3' -am; then
-  echo "======================================================================"
-  echo "🎉 裁剪成功！物理删除模块数: ${DELETED_COUNT}"
-  echo "剩余模块: $(ls -d yudao-module-* 2>/dev/null | tr '\n' ' ')"
-  echo "剩余 Java 文件总数: $(find . -name '*.java' | wc -l | tr -d ' ')"
-  echo "======================================================================"
-else
-  echo "❌ 编译失败！已自动保留备份文件 pom.xml.bak，请排查是否有遗留的跨模块强引用！"
-  exit 1
-fi
-```
+使用方式见 §5；MCP 调用范式见 `.agents/skills/yudao-mcp-server/SKILL.md`。
 
 ---
 

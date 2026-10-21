@@ -1,0 +1,12 @@
+{
+  "name": "lite-runtime-profile",
+  "domain": "platform",
+  "title": "零 Docker 单机轻量运行档（嵌入式真 PostgreSQL + 嵌入式真 Redis，后端子模块零改动）",
+  "type": "feature",
+  "status": "PLAN_APPROVED",
+  "stories": 4,
+  "acceptance": 7,
+  "invariants": 5,
+  "tasks": 9,
+  "updatedAt": "2026-10-21T12:44:14.372Z"
+}

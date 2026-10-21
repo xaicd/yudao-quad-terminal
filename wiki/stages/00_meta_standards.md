@@ -1,7 +1,7 @@
 # 阶段交付百科：00 规范与元编程 (Meta & Standards)
 
 > **所属生命周期**：CMMI 截断阶段 00 | **主责数字员工**：墨斗 (FDA)  
-> **核心专属 Skills**：`skill-authoring`, `skill-creator`
+> **核心专属 Skills**：`cmmi-asset-authoring`
 
 ---
 
@@ -23,5 +23,5 @@
 ---
 
 ## 四、 关键实战指引与推荐工具
-- 优先加载 `skill-authoring` 展开具体施工；
+- 优先加载 `cmmi-asset-authoring` 展开具体施工；
 - 遵循 CMMI 规范要求，过程证据实时沉淀，杜绝先编码后补文档。

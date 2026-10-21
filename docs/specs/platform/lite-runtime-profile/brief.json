@@ -1,0 +1,283 @@
+{
+  "name": "lite-runtime-profile",
+  "domain": "platform",
+  "title": "零 Docker 单机轻量运行档（嵌入式真 PostgreSQL + 嵌入式真 Redis，后端子模块零改动）",
+  "type": "feature",
+  "goal": "让 yudao-server 在既不需要 Docker 也不需要任何外部服务的机器上单机跑起来：数据库用嵌入式真实 PostgreSQL（复用官方 PG 脚本），缓存用嵌入式真实 Redis 7.4.1（真二进制，非模拟器），全部差异落主仓 deploy/lite/，apps/backend 子模块一个字节都不改。",
+  "roles": [
+    {
+      "role": "交付 / 实施工程师",
+      "can": "在没装 Docker、没有 MySQL/Redis 服务的机器上一条命令拉起后端并用高熵引导凭据登录，用于现场演示与交付验证"
+    },
+    {
+      "role": "AI Agent",
+      "can": "无头拉起 lite 档并轮询探活，把后端纳入 E2E 与门禁自动化闭环"
+    },
+    {
+      "role": "安全 / 合规负责人",
+      "can": "确认引导账号不是弱默认凭据、凭据文件权限受控且未入库，并看清 lite 档所用组件的许可边界"
+    }
+  ],
+  "stories": [
+    {
+      "priority": "P0",
+      "text": "作为实施工程师，我要在 Docker 完全停止的情况下把 yudao-server 起来并成功登录，以便客户现场不依赖任何容器与外部服务。"
+    },
+    {
+      "priority": "P0",
+      "text": "作为 AI Agent，我要用一条命令拉起 lite 档并探活 /admin-api，以便把后端接进自动化测试与门禁。"
+    },
+    {
+      "priority": "P0",
+      "text": "作为安全负责人，我要 lite 档不出现 admin/admin123 这类弱默认凭据，引导账号的用户名与密码都由 CSPRNG 生成，以便不把可撞库的默认口令交付出去。"
+    },
+    {
+      "priority": "P1",
+      "text": "作为开发，我要 lite 档与生产使用同一数据库方言与同一份官方 DDL、以及真实 Redis 语义，以便不出现『开发跑得通、上生产才炸』的漂移。"
+    }
+  ],
+  "constraints": [
+    "apps/backend 是 git submodule（上游 YunaiV/yudao-cloud）：一律不得改动其中任何文件（含 pom.xml 与 application.yaml）。lite 的全部差异落在主仓 deploy/lite/。",
+    "数据库与缓存都必须使用真实引擎，禁止模拟器替身：PostgreSQL 用真 PG 二进制，Redis 用真 redis-server。jedis-mock / ioredis-mock 之类模拟器不得进入 lite 运行期（仅上游单测可用）。",
+    "零弱默认凭据：禁止 admin/admin123 这类弱用户名与弱密码；引导账号的用户名与密码均由 CSPRNG 生成高熵值，凭据文件权限 0600、位于 .gitignore 覆盖范围内、只回显一次；上游种子里的 admin 账号必须被改名并改写密码，其余弱演示账号一律置为禁用。",
+    "元件许可边界：lite 档采用的 Redis 7.4.1 为 RSALv2 / SSPLv1（source-available，非 copyleft，不传染工程代码）。lite 定位为本地开发/演示，严禁用于对外提供 Redis 兼容托管服务；一旦需要随交付物分发，必须切换到 BSD-3 方案（见 DAR-20261021）。",
+    "二进制不入库：RDB/RDB 二进制、PG 数据目录与引导凭据一律落在 .commandcode/lite/ 并由 .gitignore 排除，遵守三存三不存法则。",
+    "PG 运行时装在自包含目录 deploy/lite/runtime/，不污染根 pnpm workspace（实测 pnpm 在 node-linker=hoisted 下会静默跳过该可选平台二进制包）。"
+  ],
+  "acceptance": [
+    {
+      "check": "node scripts/lite-up.mjs --dry-run 退出码 0 且打印将执行的确切步骤（PG 端口/数据目录、Redis 端口、SQL 脚本路径、java 命令）"
+    },
+    {
+      "check": "本项目 docker-compose.local.yml 无任何容器运行时，lite 档启动后 curl /admin-api/system/auth/login（用生成的引导凭据）返回 200 且响应体含 accessToken"
+    },
+    {
+      "check": "用上游弱默认凭据 admin/admin123 调用同一登录接口必须失败（非 200），证明确实未沿用种子弱账号"
+    },
+    {
+      "check": "lite 档启动前后执行 git -C apps/backend status --porcelain 均为空（子模块零改动硬验证）"
+    },
+    {
+      "check": "引导凭据文件 .commandcode/lite/credentials.env 权限为 600 且 git status 不显示其任何痕迹（未入库）"
+    },
+    {
+      "check": "嵌入式 PG 导入官方 apps/backend/sql/postgresql/ruoyi-vue-pro.sql 后，public 表数为 60、序列数为 48（已实测基线）"
+    },
+    {
+      "check": "Redis 由本档自行拉起且为真引擎：redis-cli INFO server 报 redis_version 7.4.1，且 EVAL / SCRIPT LOAD / EVALSHA / XADD / PUBLISH 全部可用（命令数 250）"
+    }
+  ],
+  "nonGoals": [
+    "不改 apps/backend 任何文件（含 pom.xml、application.yaml、Java 源码）。",
+    "不做 H2 / SQLite 的 DDL 移植（DAR-20261021 已判定 ROI 不成立）。",
+    "不追求『去掉 Redis』：Redis 在本仓是结构性依赖（三条原文证据见 design.md），另立 spec 处理。",
+    "不使用 jedis-mock 等模拟器充当 lite 的运行期 Redis。",
+    "不把 lite 档当生产方案，也不随交付物对外分发（分发前须按 DAR 切换到 BSD-3 方案）。",
+    "不做多实例集群：lite 档面向单机开发 / 演示。"
+  ],
+  "architecture": "主仓交付物 → deploy/lite/runtime/（自包含 node 运行时：embedded-postgres 18.4 + pg + bcryptjs，含 lite-pg.mjs 与 lite-credentials.mjs）+ deploy/lite/application-lite.yaml（外置配置，经 --spring.config.additional-location=file:./deploy/lite/ 注入）+ scripts/lite-up.mjs（编排器）。启动链路：lite-up.mjs → ① 预检 PG 运行时与 fat jar ② 按平台从 Maven 制品抽取真 redis-server 二进制到 .commandcode/lite/bin/ 并拉起 ③ 拉起嵌入式 PG（数据目录 .commandcode/lite/pgdata）④ 建库并导入官方 apps/backend/sql/postgresql/{ruoyi-vue-pro,quartz}.sql ⑤ 读取/生成 CSPRNG 引导凭据并把 DB 内 id=1 账号改名改密、禁用其余弱演示账号 ⑥ 以 -cp '<fatjar>:<pg-driver.jar>' org.springframework.boot.loader.launch.JarLauncher 启动（PG 驱动为 optional，未打进 fat jar）⑦ 用生成的引导凭据探活登录。数据面：jdbc:postgresql://127.0.0.1:<port>/ruoyi-vue-pro；缓存面：redis://127.0.0.1:<port>（真 Redis 7.4.1）。id 策略：PG 被 IdTypeEnvironmentPostProcessor 自动置 INPUT，仓内 547 个文件已有 @KeySequence。",
+  "entities": [
+    {
+      "table": "全部 60 张表（复用官方 PG 脚本）",
+      "note": "直接执行 apps/backend/sql/postgresql/ruoyi-vue-pro.sql，不手写任何 DDL；实测 tables=60 / sequences=48 / system_users=21 / system_menu=2162"
+    },
+    {
+      "table": "system_users",
+      "note": "导入后立即改写：id=1 账号用户名与密码换成 CSPRNG 高熵值；id<>1 的种子弱演示账号 status 置 1（禁用）"
+    },
+    {
+      "table": "QRTZ_* 定时任务表",
+      "note": "来自 apps/backend/sql/postgresql/quartz.sql；lite 档关闭 xxl-job 但保留结构避免启动校验失败"
+    }
+  ],
+  "invariants": [
+    {
+      "name": "子模块零改动",
+      "how": "lite 全部差异落主仓 deploy/lite/ 与 scripts/；验收用『启动前后 git -C apps/backend status --porcelain 均为空』硬校验"
+    },
+    {
+      "name": "零弱默认凭据",
+      "how": "用户名与密码均由 CSPRNG 生成（拒绝采样消除取模偏置），bcrypt 哈希后写库；凭据文件 0600 且 gitignore；验收用『admin/admin123 登录必须失败』反证"
+    },
+    {
+      "name": "真实引擎而非替身",
+      "how": "PG 与 Redis 都必须是真的：PG 为 18.4 官方二进制，Redis 为真 redis-server 7.4.1；验收用 INFO 版本号与关键命令实测，禁止模拟器"
+    },
+    {
+      "name": "零 Docker 零外部服务",
+      "how": "两个依赖都在本进程生命周期内由编排器拉起并成对回收；验收在本项目 compose 无容器时执行"
+    },
+    {
+      "name": "二进制与凭据不入库",
+      "how": "redis 二进制、PG 数据目录、凭据文件全部落 .commandcode/lite/ 并被 .gitignore 排除"
+    }
+  ],
+  "ui": [
+    "无图形界面。交互面 = scripts/lite-up.mjs 的启动日志与探活输出。"
+  ],
+  "ops": [
+    "接入命令：pnpm lite:up（常驻，Ctrl-C 成对回收）/ pnpm lite:verify（完整验收后退出）/ pnpm lite:clean（清理 PG 数据与抽出的二进制）。",
+    "PG 端口默认 55432（避开其他项目已占用的 5433/3306 等）；Redis 端口默认 63799；均可用环境变量覆盖。",
+    "PG 数据持久化目录：.commandcode/lite/pgdata；Redis 不持久化（lite 档无状态化）。",
+    "首次运行需要 Maven 抽取 Redis 制品（与构建 fat jar 同源前置，不引入新工具链依赖），抽出后缓存于 .commandcode/lite/bin/。"
+  ],
+  "risks": [
+    {
+      "risk": "Redis 7.4.1 采用 RSALv2/SSPLv1，若 lite 运行时被随交付物对外分发或用于对外提供 Redis 兼容托管服务，将越界许可。",
+      "mitigation": "README 与脚本首屏声明适用范围；DAR 中明确记录此为『本地开发/演示』决策；分发前必须切换到 Redis 6.2.6（BSD-3）或 Valkey 并重开评审。"
+    },
+    {
+      "risk": "承载 Redis 二进制的上游仓库（lansheng228/embedded-redis）在 GitHub 上无法核验，存在供应链风险。",
+      "mitigation": "二进制不入库，运行时抽取；抽取后校验文件格式并实跑 --version 与关键命令；记录制品坐标供审计追溯。"
+    },
+    {
+      "risk": "嵌入式 redis-server 为 7.4.1，而生产 compose 为 redis:7.2，存在版本差。",
+      "mitigation": "只使用两版本共有的稳定命令族；lite 不启用持久化与集群特性；版本差记入 README 已知差异。"
+    },
+    {
+      "risk": "PG 驱动为 optional，未打进 fat jar，直接 java -jar 会因缺少驱动而失败。",
+      "mitigation": "编排器以 -cp '<fatjar>:<pg-driver.jar>' 配合 JarLauncher 启动，并显式预检驱动 jar 是否存在。"
+    },
+    {
+      "risk": "引导凭据文件被误提交或被同机其他用户读取。",
+      "mitigation": "写入时 mode 0600 并显式 chmod；目录 .commandcode/lite/ 已加入 .gitignore；验收含权限与未入库校验。"
+    }
+  ],
+  "screens": [],
+  "interactions": [
+    "启动脚本在 PG 运行时、Redis 二进制、fat jar、PG 驱动任一缺失时直接退出并给出可执行修复提示，不进入半启动状态。",
+    "探活失败时打印启动日志尾部，避免只报『启动失败』。",
+    "Ctrl-C 时成对回收 Redis 与 java 进程，不留孤儿。",
+    "凭据仅在首次生成时回显一次，其后只提示文件路径。"
+  ],
+  "states": [
+    "dry-run：打印将执行的确切步骤与依赖检查结果，不启动任何进程。",
+    "预检失败：明确列出缺失项（PG 运行时装未装 / Redis 制品不可抽取 / fat jar 不存在 / PG 驱动缺失）并退出。",
+    "启动中：输出 PG 端口与数据目录、Redis 端口、导入的 SQL 脚本路径、java 命令与 profile。",
+    "就绪：打印登录探活结果（200 + 是否含 accessToken）。",
+    "退出：Ctrl-C 触发 Redis 与 java 进程的成对清理。"
+  ],
+  "candidates": [
+    {
+      "name": "嵌入式真实 PostgreSQL（官方 PG DDL 复用）+ 嵌入式真实 Redis 7.4.1",
+      "type": "开源",
+      "license": "PostgreSQL License / Apache-2.0 (embedded-postgres) / RSALv2 或 SSPLv1 (Redis 7.4.1)",
+      "risk": "Redis 许可限本地开发用途；承载 Redis 二进制的上游仓库不可核验——均已记录并缓释"
+    },
+    {
+      "name": "嵌入式 PostgreSQL + redis:7-alpine 容器（前一版方案）",
+      "type": "开源",
+      "license": "PostgreSQL License / BSD-3-Clause (Redis 7.2)",
+      "risk": "许可干净但未达成零 Docker 目标；被 DAR-20261021 评为 3.85 分，退居对照"
+    },
+    {
+      "name": "H2 文件库 + 去 Redis（初版方案）",
+      "type": "开源",
+      "license": "MPL 2.0 / EPL",
+      "risk": "需手工移植并长期维护第二份 DDL；且『去 Redis』在不改子模块前提下不可达（三条硬依赖证据）"
+    },
+    {
+      "name": "MySQL 容器 + Redis 容器（现状对照）",
+      "type": "对照",
+      "license": "GPL (MySQL 社区版) / BSD-3 (Redis 7.2)",
+      "risk": "600MB 镜像 + 数百 MB 内存，客户现场与 CI 冷启动慢，与轻量目标冲突"
+    },
+    {
+      "name": "SQLite",
+      "type": "开源",
+      "license": "Public Domain",
+      "risk": "本仓无驱动、无 DbType、无 DDL，且存在 103 处 MySQL 专属 SQL，ROI 最低"
+    }
+  ],
+  "benchmarks": [
+    "同组织姊妹仓 xaicd/cooliebase-all：devDependencies 引入 embedded-postgres@18.4.0-beta.17，以 verify:real-db / smoke:login 实现『本机零容器可跑（嵌入式 Postgres）』；本规格与其选型思路一致，并进一步把 Redis 也内嵌。",
+    "本仓 yudao-cloud 原生支持 PostgreSQL：org.postgresql:postgresql 驱动、sql/postgresql 官方全量脚本（48 条 CREATE SEQUENCE）、DbTypeEnum.POSTGRE_SQL 方言、547 个已带 @KeySequence 的文件。",
+    "嵌入式 Redis 二进制来自 Maven 制品 com.github.lansheng228:embedded-redis:7.4.1，内含 darwin-arm64/amd64、linux-arm64/amd64 预编译 redis-server（另带 redis-cli、redis-sentinel），无需 Docker 亦无需自建编译。"
+  ],
+  "scan": [
+    "实测（本机 2026-10-21）：PG 18.4 起后导入官方 1.81MB 脚本耗时 0.2 秒，落地 60 表 / 48 序列；Redis 7.4.1 二进制实跑 250 条命令，EVAL/SCRIPT/Streams/PubSub 全通过。",
+    "Valkey 方案被降权：Maven Central 仅有 google-cloud-valkey 客户端 SDK，npm 无 valkey-server，无现成预编译嵌入式制品，需自建二进制流水线。",
+    "H2 方案被否：需移植 DDL 并长期维护第二份 schema，换来的是一个仍然需要 Redis 的档位。",
+    "SQLite 方案被否：需重写 DDL + 改造 103 处 MySQL 专属 SQL + 适配租户插件，代价最高。",
+    "jedis-mock 模拟器方案被否：虽能跑 Lua/Streams/PubSub，但非真实语义；既有真二进制方案，无必要退而求其次。"
+  ],
+  "licenseConclusion": "采用『嵌入式真 PostgreSQL + 嵌入式真 Redis 7.4.1』：零 Docker、零外部服务、与生产同方言；Redis 许可为 RSALv2/SSPLv1，严格限定于本地开发/演示用途，分发前须切换到 BSD-3 方案（完整权衡见 docs/01_management/dar/DAR-20261021-lite-runtime-dependencies.md）",
+  "tasks": [
+    {
+      "id": "T1",
+      "parent": "main",
+      "title": "deploy/lite/runtime 自包含 node 运行时（embedded-postgres + pg + bcryptjs + .gitignore）",
+      "files": [
+        "deploy/lite/runtime/package.json",
+        "deploy/lite/runtime/.gitignore"
+      ]
+    },
+    {
+      "id": "T2",
+      "parent": "T1",
+      "title": "lite-pg.mjs 嵌入式 PG 运行时封装（启动/建库/导入官方 SQL/对账/停止）",
+      "files": [
+        "deploy/lite/runtime/lite-pg.mjs"
+      ]
+    },
+    {
+      "id": "T3",
+      "parent": "T1",
+      "title": "lite-credentials.mjs 零弱默认凭据（CSPRNG 生成 + bcrypt + 禁用种子弱账号）",
+      "files": [
+        "deploy/lite/runtime/lite-credentials.mjs"
+      ]
+    },
+    {
+      "id": "T4",
+      "parent": "T1",
+      "title": "lite-redis.mjs 嵌入式真 Redis（从 Maven 制品按平台抽取二进制并托管进程）",
+      "files": [
+        "deploy/lite/runtime/lite-redis.mjs"
+      ]
+    },
+    {
+      "id": "T5",
+      "parent": "T4",
+      "title": "deploy/lite/application-lite.yaml 外置配置（PG 数据源 + 嵌入式 Redis 端口 + 关闭 xxl-job）",
+      "files": [
+        "deploy/lite/application-lite.yaml"
+      ]
+    },
+    {
+      "id": "T6",
+      "parent": "T5",
+      "title": "scripts/lite-up.mjs 编排器（预检 + 抽取驱动 + 拉起双引擎 + 注入凭据 + 探活 + 成对回收）",
+      "files": [
+        "scripts/lite-up.mjs"
+      ]
+    },
+    {
+      "id": "T7",
+      "parent": "T6",
+      "title": "package.json 接线 + yudao-local-stack 技能更新 lite 档依赖边界与许可范围",
+      "files": [
+        "package.json",
+        ".agents/skills/yudao-local-stack/SKILL.md"
+      ]
+    },
+    {
+      "id": "T8",
+      "parent": "main",
+      "title": "DAR 选型决策记录归档（数据库与 Redis 双决策加权矩阵）",
+      "files": [
+        "docs/01_management/dar/DAR-20261021-lite-runtime-dependencies.md"
+      ]
+    },
+    {
+      "id": "T9",
+      "parent": "main",
+      "title": "端到端验证：本项目 compose 零容器 → lite 启动 → 引导凭据登录 200 → admin/admin123 必须失败 → 子模块零改动复验（纯验证任务）",
+      "files": [
+        "-"
+      ]
+    }
+  ],
+  "dependencies": "T1 → {T2, T3, T4}；T4 → T5 → T6 → T7；T9 依赖 T1..T6",
+  "windowMinutes": 30
+}

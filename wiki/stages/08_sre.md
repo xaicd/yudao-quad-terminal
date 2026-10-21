@@ -1,7 +1,7 @@
 # 阶段交付百科：08_sre 可靠性保障与事故复盘 (SRE, SLO & Incident)
 
 > **所属生命周期**：CMMI 截断阶段 08 | **主责数字员工**：兜底渊 (SRE)  
-> **核心专属 Skills**：`cmmi-asset-authoring`, `sre-slo-manager`, `postmortem-analyzer`, `strix-penetration-testing`, `pre-sre`
+> **核心专属 Skills**：`cmmi-asset-authoring`, `sre-slo-manager`, `postmortem-analyzer`, `strix-penetration-testing`
 
 ---
 

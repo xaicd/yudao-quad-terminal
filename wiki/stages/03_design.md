@@ -1,7 +1,7 @@
 # 阶段交付百科：03_design 架构设计与契约 (HLD, LLD & OpenAPI)
 
 > **所属生命周期**：CMMI 截断阶段 03 | **主责数字员工**：墨斗 (FDA) / 铁匠 (CoreSWE)  
-> **核心专属 Skills**：`cmmi-asset-authoring`, `cmmi-tech-solution`, `cmmi-detailed-contracts`, `adr-architect`, `archify`, `system-design-spec`
+> **核心专属 Skills**：`cmmi-asset-authoring`, `archify`
 
 ---
 

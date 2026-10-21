@@ -1,0 +1,242 @@
+{
+  "name": "module-trim-and-mcp",
+  "domain": "platform",
+  "title": "模块裁剪工具化与 Agent 可编排 MCP 端点",
+  "type": "enhancement",
+  "goal": "把只存在于 .agents/skills/yudao-cloud-bootstrap/SKILL.md 文档代码块里的模块裁剪能力，收敛为确定性脚本 scripts/trim-modules.mjs 与零依赖 MCP 端点，使『保留哪些模块』可由人或 Agent 一条命令预览、落地、校验。",
+  "roles": [
+    {
+      "role": "架构师 / 交付负责人",
+      "can": "用 --profile mini|lite|full 预览裁剪计划（删哪些目录、改哪些 pom 行）而不落地，评审通过后再 --apply"
+    },
+    {
+      "role": "AI Agent (Command Code / Cursor / Claude Code)",
+      "can": "通过 MCP 工具 trim_preview/trim_apply/trim_check/gate_check 在无人工干预下完成裁剪与门禁自证"
+    },
+    {
+      "role": "运维 / DBA",
+      "can": "拿到裁剪后需要对账的菜单与字典清理 SQL，使数据库口径与代码保持同源"
+    }
+  ],
+  "stories": [
+    {
+      "priority": "P0",
+      "text": "作为交付负责人，我要在删除任何文件前看到完整裁剪计划（目录清单 + 文件数 + pom 改动），以便评审后再执行。"
+    },
+    {
+      "priority": "P0",
+      "text": "作为 AI Agent，我要通过 MCP 工具拿到机器可读 JSON 结果，以便把裁剪纳入自动化闭环而不必解析中文日志。"
+    },
+    {
+      "priority": "P1",
+      "text": "作为架构师，我要在『保留 hrm 却裁剪 bpm』时被工具直接拒绝并说明依赖链，以便不在编译期才发现断裂。"
+    },
+    {
+      "priority": "P1",
+      "text": "作为运维，我要拿到与裁剪结果一致的菜单/字典清理 SQL，以便数据库不残留已裁模块的入口。"
+    }
+  ],
+  "constraints": [
+    "单一真源：CLI 与 MCP 必须共用同一个模块元数据真源，禁止第二套模块清单实现。",
+    "零新增运行时依赖：MCP server 手写最小 stdio JSON-RPC，不引入 npm 包；风格对齐既有 scripts/*.cjs。",
+    "破坏性默认关闭：默认 dry-run，--apply 需显式给出；依赖闭包必须校验。"
+  ],
+  "acceptance": [
+    {
+      "check": "node scripts/trim-modules.mjs --profile mini --dry-run --json 退出码 0 且 stdout 为可被 JSON.parse 解析的对象"
+    },
+    {
+      "check": "node scripts/trim-modules.mjs --keep system --dry-run 退出码 2 且说明缺少 infra"
+    },
+    {
+      "check": "在未裁剪仓库执行 node scripts/trim-modules.mjs --check --profile full 退出码 0；裁剪成 mini 后同一命令退出码 1"
+    },
+    {
+      "check": "node scripts/trim-modules.mjs --recover --yes 退出码 0 并输出模块目录数与 Java 文件数；非 TTY 下缺 --yes 时退出码 2"
+    },
+    {
+      "check": "执行 --apply 后 apps/backend 内不存在任何 *.bak（备份位于主仓 .commandcode/backups/）"
+    },
+    {
+      "check": "node scripts/sync-openwiki.mjs --check 退出码 0（wiki 与新技能注册一致）"
+    },
+    {
+      "check": "cmd mcp list 输出包含 yudao-quad-terminal"
+    }
+  ],
+  "nonGoals": [
+    "不实现 speckit archive（未实现，另立 bugfix spec）。",
+    "不新增对 SQLite 的支持。",
+    "不做 wiki 全量技能对账（本轮只把悬空的 mcp-builder 改名为 yudao-mcp-server）。",
+    "不自动连库执行清理 SQL：--sql 只输出语句，连库与执行由使用方自行负责。"
+  ],
+  "architecture": "Agent/CI → (MCP stdio server | CLI) → scripts/lib/module-catalog.mjs（唯一元数据真源：19 模块 + 依赖闭包 + profiles）→ 三处落地：apps/backend/pom.xml 的 <module> 节点、apps/backend/yudao-server/pom.xml 的依赖声明、物理目录 apps/backend/yudao-module-*。校验方向相反：--check 从磁盘与 pom 回读现状，与目标 profile 比对后判定漂移。⚠️ apps/backend 是 git submodule（上游 YunaiV/yudao-cloud，branch master-jdk17），裁剪因此只是『本地消费态』：结果会被 git submodule update / scripts/sync-upstream.sh 还原。工具据此把备份写到主仓 .commandcode/backups/（不在子模块工作树留 .bak），并提供 --recover 一键还原。",
+  "entities": [
+    {
+      "table": "system_menu",
+      "note": "被裁模块的顶级菜单与孤儿父子链需删除（先删子后删父，或递归清理 parent_id 悬空行）"
+    },
+    {
+      "table": "system_role_menu",
+      "note": "清理已移除菜单的角色映射，避免角色持有空权限"
+    },
+    {
+      "table": "system_dict_type / system_dict_data",
+      "note": "清理被裁模块的字典类型与字典数据（按 type/dict_type 前缀）"
+    }
+  ],
+  "invariants": [
+    {
+      "name": "裁剪元数据单一真源",
+      "how": "CLI 与 MCP server 都引用 scripts/lib/module-catalog.mjs；MCP 不复制任何模块元数据，验收用 acceptance 第 6 条与 code review 白名单约束"
+    },
+    {
+      "name": "依赖闭包完整",
+      "how": "--keep 触发 deps 闭包自动扩张，--remove 与闭包冲突时 exit 2；验收用 --keep system 反例覆盖"
+    },
+    {
+      "name": "破坏性操作可回退",
+      "how": "备份写主仓 .commandcode/backups/，git 工作区脏时拒绝执行，--recover 提供一键还原；验收用 acceptance 第 4、5 条覆盖"
+    },
+    {
+      "name": "子模块零污染",
+      "how": "apps/backend 是 git submodule，工具不在其工作树留 .bak；裁剪的『本地消费态』语义在 dry-run/apply 输出与 SKILL §5 显式标注，避免误以为装配已固化"
+    }
+  ],
+  "ui": [
+    "无图形界面。交互面 = CLI 输出（计划表 / 漂移报告）与 MCP 工具描述；两者共用同一份 JSON 结构。"
+  ],
+  "ops": [
+    "接入元命令：pnpm trim:modules / trim:check / mcp:yudao / openwiki:sync / openwiki:check。",
+    "门禁链：node scripts/sync-openwiki.mjs --check 与 pnpm check:drift 必须保持 0 漂移。",
+    "MCP 接入：仓库根 .mcp.json（project scope，随 Git 提交），工具对外名 mcp__yudao-quad-terminal__<tool>。"
+  ],
+  "risks": [
+    {
+      "risk": "裁剪后跨模块编译断裂（例如保留了依赖 bpm 的模块却裁掉 bpm）。",
+      "mitigation": "依赖闭包自动扩张 + 冲突显式拒绝（exit 2）+ --check 漂移门禁三重护栏。"
+    },
+    {
+      "risk": "apps/backend 是 git submodule：trim 结果会被 git submodule update / scripts/sync-upstream.sh 静默还原，使用方误以为装配已固化。",
+      "mitigation": "工具在 dry-run 与 apply 输出显式告警子模块语义并提供 --recover；--check 可随时复验；SKILL §5/§8.5 同步标注。"
+    },
+    {
+      "risk": "能力再次退回文档（在 SKILL.md 里重写 bash 模板），导致文档与脚本分叉。",
+      "mitigation": "删除 bootstrap SKILL 的假 bash 模板改为指针，并在 wiki 注册 yudao-mcp-server 技能固定入口。"
+    }
+  ],
+  "screens": [],
+  "interactions": [
+    "破坏性 --apply 前需二次确认；CI/Agent 场景用 --yes 显式跳过。",
+    "git 工作区存在未提交改动时拒绝 --apply，避免把用户在做的工作一起卷进删除。"
+  ],
+  "states": [
+    "dry-run：打印计划表，不做任何写入。",
+    "apply 成功：打印已删目录数、剩余模块、剩余 Java 文件数与冷编译预估变化。",
+    "check 通过：exit 0 并列出当前 profile。",
+    "check 漂移：exit 1 并逐条列出漂移项（目录 / pom 节点）。"
+  ],
+  "candidates": [
+    {
+      "name": "自研 Node CLI + 手写最小 MCP stdio 协议",
+      "type": "自研",
+      "license": "MIT",
+      "risk": "无新增依赖，需自行维护 JSON-RPC 帧"
+    },
+    {
+      "name": "引入 @modelcontextprotocol/sdk 官方包",
+      "type": "开源",
+      "license": "MIT",
+      "risk": "新增 npm 依赖，与本仓 scripts 零依赖风格不一致"
+    },
+    {
+      "name": "维持现状：SKILL.md 里的纯文档 bash 模板（阴性对照）",
+      "type": "对照",
+      "license": "内部专有",
+      "risk": "不可执行、不可门禁、每次仍需大模型重读数百行文档，Token 浪费且易漂移"
+    }
+  ],
+  "benchmarks": [
+    "同组织姊妹仓 xaicd/cooliebase-all：以 scripts/mcp/cooliebase-mcp-server.cjs + 根 .mcp.json 暴露能力，并配 compat-manifest.json / llms.txt 作为机器可读发现端点。",
+    "本仓既有 scripts/codegen-module.mjs 与 scripts/check-contracts-drift.mjs 已确立『确定性脚本 + --dry-run/--strict 门禁』范式，本规格沿用它。"
+  ],
+  "scan": [
+    "自研方案复用既有依赖（node:fs/child_process，无 npm 依赖），改造面仅为新增文件，ROI 最高。",
+    "官方 SDK 方案需引入依赖并处理 ESM/CJS 混用，收益仅为省下约百行 JSON-RPC 处理代码，性价比不足。",
+    "维持文档方案已被证明不可门禁（scripts/trim-modules.sh 从未存在），且违反 Rule 10 No Artifact, No Done。"
+  ],
+  "licenseConclusion": "采用自研方案：零新增依赖、与既有 scripts 范式一致、可直接进 MCP 与 CI 双通道",
+  "tasks": [
+    {
+      "id": "T1",
+      "parent": "main",
+      "title": "module-catalog 单一真源（19 模块元数据 + profiles + 依赖闭包）",
+      "files": [
+        "scripts/lib/module-catalog.mjs"
+      ]
+    },
+    {
+      "id": "T2",
+      "parent": "T1",
+      "title": "trim-modules CLI（dry-run/apply/check/sql/json + 依赖闭包校验 + 子模块语义与 --recover）",
+      "files": [
+        "scripts/trim-modules.mjs"
+      ]
+    },
+    {
+      "id": "T3",
+      "parent": "T2",
+      "title": "trim CLI 自测：三档 profile 全量覆盖、漂移时 exit 1、重复执行幂等",
+      "files": [
+        "scripts/lib/module-catalog.mjs",
+        "scripts/trim-modules.mjs"
+      ]
+    },
+    {
+      "id": "T4",
+      "parent": "T1",
+      "title": "MCP stdio server + 8 个工具（全程复用既有脚本）",
+      "files": [
+        "scripts/mcp/yudao-mcp-server.cjs",
+        ".mcp.json"
+      ]
+    },
+    {
+      "id": "T5",
+      "parent": "T4",
+      "title": "yudao-mcp-server 技能 + wiki 注册（含悬空 mcp-builder 改名）",
+      "files": [
+        ".agents/skills/yudao-mcp-server/SKILL.md",
+        "scripts/sync-openwiki.mjs",
+        "wiki/"
+      ]
+    },
+    {
+      "id": "T6",
+      "parent": "T2",
+      "title": "bootstrap SKILL 收敛到真实脚本（删除假 bash 模板）",
+      "files": [
+        ".agents/skills/yudao-cloud-bootstrap/SKILL.md"
+      ]
+    },
+    {
+      "id": "T7",
+      "parent": "T1",
+      "title": "package.json 接线（trim:*/mcp:yudao/openwiki:*）",
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "id": "T8",
+      "parent": "main",
+      "title": "修同族工具 SQL 路径 bug（codegen 写到不存在的 apps/backend/scripts/sql）",
+      "files": [
+        "scripts/codegen-module.mjs",
+        "scripts/agent-context-compressor.mjs"
+      ]
+    }
+  ],
+  "dependencies": "T1 → {T2, T4, T7, T8}；T2 → {T3, T6}；T4 → T5",
+  "windowMinutes": 20
+}

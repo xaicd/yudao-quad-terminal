@@ -1,0 +1,192 @@
+# ==============================================================================
+# yudao lite 档外置配置（嵌入式真 PostgreSQL + 嵌入式真 Redis，零 Docker）
+#
+# 由 scripts/lite-up.mjs 通过以下方式注入，不修改 apps/backend 子模块任何文件：
+#   --spring.profiles.active=lite
+#   --spring.config.additional-location=file:./deploy/lite/
+#
+# 基线等价于子模块内的 application-local.yaml，唯一实质差异 = 数据源由 MySQL 换成嵌入式 PG，
+# 以及 Redis 端口/口令由本档生成注入。因 profile 不再是 local，子模块的 application-local.yaml
+# 不会被加载，故此处必须补齐其全部基础设施属性（否则 application.yaml 中的
+# ${spring.boot.admin.context-path} / ${management.endpoints.web.base-path} 占位符会解析失败）。
+#
+# ⚠️ 许可范围：本档使用 Redis 7.4.1（RSALv2 / SSPLv1），仅限本地开发与演示；
+#    严禁用于对外提供 Redis 兼容托管服务。详见 DAR-20261021-lite-runtime-dependencies.md。
+# ==============================================================================
+
+server:
+  port: 48080
+
+--- #################### 数据库相关配置 ####################
+spring:
+  autoconfigure:
+    # noinspection SpringBootApplicationYaml
+    exclude:
+      - org.springframework.ai.vectorstore.qdrant.autoconfigure.QdrantVectorStoreAutoConfiguration
+      - org.springframework.ai.vectorstore.milvus.autoconfigure.MilvusVectorStoreAutoConfiguration
+
+  datasource:
+    druid:
+      web-stat-filter:
+        enabled: true
+      stat-view-servlet:
+        enabled: true
+        allow:
+        url-pattern: /druid/*
+      filter:
+        stat:
+          enabled: true
+          log-slow-sql: true
+          slow-sql-millis: 100
+          merge-sql: true
+        wall:
+          config:
+            multi-statement-allow: true
+    dynamic:
+      druid:
+        initial-size: 1
+        min-idle: 1
+        max-active: 20
+        max-wait: 60000
+        time-between-eviction-runs-millis: 60000
+        min-evictable-idle-time-millis: 600000
+        max-evictable-idle-time-millis: 1800000
+        # MySQL 档为 SELECT 1 FROM DUAL；PG 用标准 SELECT 1
+        validation-query: SELECT 1
+        test-while-idle: true
+        test-on-borrow: false
+        test-on-return: false
+        pool-prepared-statements: true
+        max-pool-prepared-statement-per-connection-size: 20
+      primary: master
+      datasource:
+        master:
+          url: jdbc:postgresql://127.0.0.1:${LITE_PG_PORT:55432}/ruoyi-vue-pro
+          username: ${LITE_PG_USER:yudao}
+          password: ${LITE_PG_PASSWORD:yudao}
+        slave:
+          lazy: true
+          url: jdbc:postgresql://127.0.0.1:${LITE_PG_PORT:55432}/ruoyi-vue-pro
+          username: ${LITE_PG_USER:yudao}
+          password: ${LITE_PG_PASSWORD:yudao}
+
+  # Redis：由本档自行拉起真 redis-server，端口与口令均为注入值
+  data:
+    redis:
+      host: 127.0.0.1
+      port: ${LITE_REDIS_PORT:63799}
+      database: 0
+      password: ${LITE_REDIS_PASSWORD:}
+
+--- #################### 定时任务相关配置 ####################
+xxl:
+  job:
+    enabled: false
+    admin:
+      addresses: http://127.0.0.1:9090/xxl-job-admin
+
+--- #################### 消息队列相关配置 ####################
+rocketmq:
+  name-server: 127.0.0.1:9876
+
+spring:
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: rabbit
+    password: rabbit
+  kafka:
+    bootstrap-servers: 127.0.0.1:9092
+
+--- #################### 服务保障相关配置 ####################
+lock4j:
+  acquire-timeout: 3000
+  expire: 30000
+
+--- #################### 监控相关配置 ####################
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: '*'
+
+spring:
+  boot:
+    admin:
+      client:
+        url: http://127.0.0.1:${server.port}/${spring.boot.admin.context-path}
+        instance:
+          service-host-type: IP
+        username: admin
+        password: admin
+      # 必须显式定义：application.yaml 的 yudao.xss.exclude-urls 引用了该占位符
+      context-path: /admin
+
+logging:
+  file:
+    name: ${user.home}/logs/${spring.application.name}-lite.log
+  level:
+    cn.iocoder.yudao.module.infra.dal.mysql: info
+    cn.iocoder.yudao.module.infra.dal.mysql.logger.ApiErrorLogMapper: INFO
+    cn.iocoder.yudao.module.system.dal.mysql: info
+    org.springframework.context.support.PostProcessorRegistrationDelegate: ERROR
+
+debug: false
+
+--- #################### 微信公众号、小程序相关配置 ####################
+wx:
+  mp:
+    app-id: wx5b23ba7a5589ecbb
+    secret: 2a7b3b20c537e52e74afd395eb85f61f
+    config-storage:
+      type: RedisTemplate
+      key-prefix: wx
+      http-client-type: HttpComponents
+  miniapp:
+    appid: wxc4598c446f8a9cb3
+    secret: 4a1a04e07f6a4a0751b39c3064a92c8b
+    config-storage:
+      type: RedisTemplate
+      key-prefix: wa
+      http-client-type: HttpComponents
+
+--- #################### 芋道相关配置 ####################
+yudao:
+  info:
+    version: 1.0.0
+    # 必须显式声明：YudaoServerApplication 的 scanBasePackages 依赖该占位符
+    # （{"${yudao.info.base-package}.server", "${yudao.info.base-package}.module"}）。
+    # 虽然子模块 application.yaml 也定义了它，但 lite 档绕过了 application-local.yaml，
+    # 为保持外置配置自足与可审计，这里显式重申。
+    base-package: cn.iocoder.yudao
+  captcha:
+    # 本地/lite 环境关闭图片验证码，便于登录探活；若开启，aj.captcha.cache-type 走 redis（本档已有真 Redis）
+    enable: false
+  security:
+    # 与 local 档的差异：lite 档关闭 mock 登录，必须走真实账号密码，避免留下绕过鉴权的后门
+    mock-enable: false
+  access-log:
+    enable: false
+  demo: false
+  wxa-code:
+    env-version: develop
+  wxa-subscribe-message:
+    miniprogram-state: developer
+  tencent-lbs-key: TVDBZ-TDILD-4ON4B-PFDZA-RNLKH-VVF6E
+
+justauth:
+  enabled: true
+  cache:
+    type: REDIS
+    prefix: 'social_auth_state:'
+    timeout: 24h
+
+--- #################### AI 向量库相关（避免误连外部服务） ####################
+spring:
+  ai:
+    vectorstore:
+      redis:
+        initialize-schema: true
+        index-name: knowledge_index
+        prefix: "knowledge_segment:"

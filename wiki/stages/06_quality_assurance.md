@@ -1,7 +1,7 @@
 # 阶段交付百科：06_quality_assurance 质量门禁与过程控制 (Compliance & CAR)
 
 > **所属生命周期**：CMMI 截断阶段 06 | **主责数字员工**：门神 (FDSE) / Hermes  
-> **核心专属 Skills**：`cmmi-asset-authoring`, `cmmi-car-spc-metrics`, `check-governance`
+> **核心专属 Skills**：`cmmi-asset-authoring`, `yudao-cmmi-gatekeeper`
 
 ---
 

@@ -44,16 +44,16 @@
 
 | 阶段代码 | 阶段名称 | 主责数字员工 | 核心专属 Skills | 交付规范与词条 |
 |---|---|---|---|---|
-| **00** | 规范与元编程 | 墨斗 (FDA) | `skill-authoring`, `skill-creator` | [00_meta_standards.md](stages/00_meta_standards.md) |
-| **01** | 决策分析与立项 | 墨斗 (FDA) / 百晓生 (DS) | `cmmi-asset-authoring`, `dar-decision-matrix`, `solution-scouting-and-dar`, `cmmi-wbs-milestone` | [01_management.md](stages/01_management.md) |
-| **02** | 需求工程与规格 | 百晓生 (DS) / Hermes | `cmmi-asset-authoring`, `ears-spec-writer`, `cmmi-req-spec`, `spec-driven-dev` | [02_requirements.md](stages/02_requirements.md) |
-| **03** | 架构设计与契约 | 墨斗 (FDA) / 铁匠 (CoreSWE) | `cmmi-asset-authoring`, `cmmi-tech-solution`, `adr-architect`, `archify`, `cmmi-detailed-contracts` | [03_design.md](stages/03_design.md) |
-| **04** | 编码实现与防假 | 铁匠 (CoreSWE) | `cmmi-asset-authoring`, `core-swe`, `swe-delivery-flow`, `mutation-tester`, `mcp-builder` | [04_implementation.md](stages/04_implementation.md) |
-| **05** | 变异测试与全栈验收 | 门神 (FDSE) / 百晓生 (DS) | `cmmi-asset-authoring`, `cmmi-ver-val`, `mutation-tester`, `comprehensive-testing-workflow`, `qa-humanlike-e2e` | [05_verification.md](stages/05_verification.md) |
-| **06** | 质量门禁与过程控制 | 门神 (FDSE) / Hermes | `cmmi-asset-authoring`, `cmmi-car-spc-metrics`, `check-governance` | [06_quality_assurance.md](stages/06_quality_assurance.md) |
-| **07** | 容器交付与不可变投产 | 兜底渊 (SRE) | `cmmi-asset-authoring`, `cmmi-immutable-release`, `app-release-pipeline`, `sre-release-and-deploy` | [07_release.md](stages/07_release.md) |
-| **08** | SRE 可靠性与事故复盘 | 兜底渊 (SRE) | `cmmi-asset-authoring`, `sre-slo-manager`, `postmortem-analyzer`, `strix-penetration-testing`, `pre-sre` | [08_sre.md](stages/08_sre.md) |
-| **09** | 持续运营与对账平账 | 百晓生 (DS) / 掌柜 (CEO) | `cmmi-asset-authoring`, `financial-reconciliation-agent`, `ceo-company-ops`, `finance-budget-guard` | [09_operations.md](stages/09_operations.md) |
+| **00** | 规范与元编程 | 墨斗 (FDA) | `cmmi-asset-authoring` | [00_meta_standards.md](stages/00_meta_standards.md) |
+| **01** | 决策分析与立项 | 墨斗 (FDA) / 百晓生 (DS) | `cmmi-asset-authoring`, `dar-decision-matrix`, `yudao-cloud-bootstrap` | [01_management.md](stages/01_management.md) |
+| **02** | 需求工程与规格 | 百晓生 (DS) / Hermes | `cmmi-asset-authoring`, `ears-spec-writer` | [02_requirements.md](stages/02_requirements.md) |
+| **03** | 架构设计与契约 | 墨斗 (FDA) / 铁匠 (CoreSWE) | `cmmi-asset-authoring`, `archify` | [03_design.md](stages/03_design.md) |
+| **04** | 编码实现与防假 | 铁匠 (CoreSWE) | `cmmi-asset-authoring`, `yudao-backend-dev`, `yudao-admin-vue3`, `yudao-miniapp-dev`, `yudao-expo-app`, `yudao-contract-sync`, `yudao-local-stack`, `mutation-tester`, `yudao-mcp-server` | [04_implementation.md](stages/04_implementation.md) |
+| **05** | 变异测试与全栈验收 | 门神 (FDSE) / 百晓生 (DS) | `cmmi-asset-authoring`, `mutation-tester`, `yudao-cmmi-gatekeeper` | [05_verification.md](stages/05_verification.md) |
+| **06** | 质量门禁与过程控制 | 门神 (FDSE) / Hermes | `cmmi-asset-authoring`, `yudao-cmmi-gatekeeper` | [06_quality_assurance.md](stages/06_quality_assurance.md) |
+| **07** | 容器交付与不可变投产 | 兜底渊 (SRE) | `cmmi-asset-authoring` | [07_release.md](stages/07_release.md) |
+| **08** | SRE 可靠性与事故复盘 | 兜底渊 (SRE) | `cmmi-asset-authoring`, `sre-slo-manager`, `postmortem-analyzer`, `strix-penetration-testing` | [08_sre.md](stages/08_sre.md) |
+| **09** | 持续运营与对账平账 | 百晓生 (DS) / 掌柜 (CEO) | `cmmi-asset-authoring`, `financial-reconciliation-agent` | [09_operations.md](stages/09_operations.md) |
 
 ---
 

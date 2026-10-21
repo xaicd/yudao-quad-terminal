@@ -78,16 +78,16 @@ function buildIndexMd() {
 
 | 阶段代码 | 阶段名称 | 主责数字员工 | 核心专属 Skills | 交付规范与词条 |
 |---|---|---|---|---|
-| **00** | 规范与元编程 | 墨斗 (FDA) | \`skill-authoring\`, \`skill-creator\` | [00_meta_standards.md](stages/00_meta_standards.md) |
-| **01** | 决策分析与立项 | 墨斗 (FDA) / 百晓生 (DS) | \`cmmi-asset-authoring\`, \`dar-decision-matrix\`, \`solution-scouting-and-dar\`, \`cmmi-wbs-milestone\` | [01_management.md](stages/01_management.md) |
-| **02** | 需求工程与规格 | 百晓生 (DS) / Hermes | \`cmmi-asset-authoring\`, \`ears-spec-writer\`, \`cmmi-req-spec\`, \`spec-driven-dev\` | [02_requirements.md](stages/02_requirements.md) |
-| **03** | 架构设计与契约 | 墨斗 (FDA) / 铁匠 (CoreSWE) | \`cmmi-asset-authoring\`, \`cmmi-tech-solution\`, \`adr-architect\`, \`archify\`, \`cmmi-detailed-contracts\` | [03_design.md](stages/03_design.md) |
-| **04** | 编码实现与防假 | 铁匠 (CoreSWE) | \`cmmi-asset-authoring\`, \`core-swe\`, \`swe-delivery-flow\`, \`mutation-tester\`, \`mcp-builder\` | [04_implementation.md](stages/04_implementation.md) |
-| **05** | 变异测试与全栈验收 | 门神 (FDSE) / 百晓生 (DS) | \`cmmi-asset-authoring\`, \`cmmi-ver-val\`, \`mutation-tester\`, \`comprehensive-testing-workflow\`, \`qa-humanlike-e2e\` | [05_verification.md](stages/05_verification.md) |
-| **06** | 质量门禁与过程控制 | 门神 (FDSE) / Hermes | \`cmmi-asset-authoring\`, \`cmmi-car-spc-metrics\`, \`check-governance\` | [06_quality_assurance.md](stages/06_quality_assurance.md) |
-| **07** | 容器交付与不可变投产 | 兜底渊 (SRE) | \`cmmi-asset-authoring\`, \`cmmi-immutable-release\`, \`app-release-pipeline\`, \`sre-release-and-deploy\` | [07_release.md](stages/07_release.md) |
-| **08** | SRE 可靠性与事故复盘 | 兜底渊 (SRE) | \`cmmi-asset-authoring\`, \`sre-slo-manager\`, \`postmortem-analyzer\`, \`strix-penetration-testing\`, \`pre-sre\` | [08_sre.md](stages/08_sre.md) |
-| **09** | 持续运营与对账平账 | 百晓生 (DS) / 掌柜 (CEO) | \`cmmi-asset-authoring\`, \`financial-reconciliation-agent\`, \`ceo-company-ops\`, \`finance-budget-guard\` | [09_operations.md](stages/09_operations.md) |
+| **00** | 规范与元编程 | 墨斗 (FDA) | \`cmmi-asset-authoring\` | [00_meta_standards.md](stages/00_meta_standards.md) |
+| **01** | 决策分析与立项 | 墨斗 (FDA) / 百晓生 (DS) | \`cmmi-asset-authoring\`, \`dar-decision-matrix\`, \`yudao-cloud-bootstrap\` | [01_management.md](stages/01_management.md) |
+| **02** | 需求工程与规格 | 百晓生 (DS) / Hermes | \`cmmi-asset-authoring\`, \`ears-spec-writer\` | [02_requirements.md](stages/02_requirements.md) |
+| **03** | 架构设计与契约 | 墨斗 (FDA) / 铁匠 (CoreSWE) | \`cmmi-asset-authoring\`, \`archify\` | [03_design.md](stages/03_design.md) |
+| **04** | 编码实现与防假 | 铁匠 (CoreSWE) | \`cmmi-asset-authoring\`, \`yudao-backend-dev\`, \`yudao-admin-vue3\`, \`yudao-miniapp-dev\`, \`yudao-expo-app\`, \`yudao-contract-sync\`, \`yudao-local-stack\`, \`mutation-tester\`, \`yudao-mcp-server\` | [04_implementation.md](stages/04_implementation.md) |
+| **05** | 变异测试与全栈验收 | 门神 (FDSE) / 百晓生 (DS) | \`cmmi-asset-authoring\`, \`mutation-tester\`, \`yudao-cmmi-gatekeeper\` | [05_verification.md](stages/05_verification.md) |
+| **06** | 质量门禁与过程控制 | 门神 (FDSE) / Hermes | \`cmmi-asset-authoring\`, \`yudao-cmmi-gatekeeper\` | [06_quality_assurance.md](stages/06_quality_assurance.md) |
+| **07** | 容器交付与不可变投产 | 兜底渊 (SRE) | \`cmmi-asset-authoring\` | [07_release.md](stages/07_release.md) |
+| **08** | SRE 可靠性与事故复盘 | 兜底渊 (SRE) | \`cmmi-asset-authoring\`, \`sre-slo-manager\`, \`postmortem-analyzer\`, \`strix-penetration-testing\` | [08_sre.md](stages/08_sre.md) |
+| **09** | 持续运营与对账平账 | 百晓生 (DS) / 掌柜 (CEO) | \`cmmi-asset-authoring\`, \`financial-reconciliation-agent\` | [09_operations.md](stages/09_operations.md) |
 
 ---
 
@@ -135,7 +135,7 @@ function buildStages() {
       file: "00_meta_standards.md",
       title: "00 规范与元编程 (Meta & Standards)",
       role: "墨斗 (FDA)",
-      skills: ["skill-authoring", "skill-creator"],
+      skills: ["cmmi-asset-authoring"],
       gates: "技能格式合法性校验、自动化测评通过",
       artifacts: "合规 SKILL.md、技能测评报告",
       blockedBy: "未经格式审计与测评的非规范技能严禁入仓",
@@ -146,7 +146,7 @@ function buildStages() {
       file: "01_management.md",
       title: "01_management 决策分析与立项 (DAR & WBS)",
       role: "墨斗 (FDA) / 百晓生 (DS)",
-      skills: ["cmmi-asset-authoring", "dar-decision-matrix", "solution-scouting-and-dar", "cmmi-wbs-milestone", "product-project-intake"],
+      skills: ["cmmi-asset-authoring", "dar-decision-matrix", "yudao-cloud-bootstrap"],
       gates: "CMMI G1 立项门禁、DAR 加权选型通过 (含 >=2 正选 + 1 阴性对照)",
       artifacts: "docs/01_management/ (project-charter.md, project-plan.md, rskm-risk-ledger.md, DAR-*.md, phase-configuration-management.md)",
       blockedBy: "拍脑袋盲目选型、未完成技术选型与工作分解严禁开工",
@@ -157,7 +157,7 @@ function buildStages() {
       file: "02_requirements.md",
       title: "02_requirements 需求工程与规格 (EARS & Spec-First)",
       role: "百晓生 (DS) / Hermes",
-      skills: ["cmmi-asset-authoring", "ears-spec-writer", "cmmi-req-spec", "requirements-capture", "spec-driven-dev"],
+      skills: ["cmmi-asset-authoring", "ears-spec-writer"],
       gates: "CMMI G1 需求门禁 (EARS 5态语法收敛)",
       artifacts: "docs/02_requirements/ (software-requirements.md, requirements-traceability-matrix.md, non-functional-reqs.md, user-requirements.md) 与 docs/specs/<domain>/<feature-slug>/",
       blockedBy: "口语化伪需求、缺少 EARS 验收标准严禁编码",
@@ -168,7 +168,7 @@ function buildStages() {
       file: "03_design.md",
       title: "03_design 架构设计与契约 (HLD, LLD & OpenAPI)",
       role: "墨斗 (FDA) / 铁匠 (CoreSWE)",
-      skills: ["cmmi-asset-authoring", "cmmi-tech-solution", "cmmi-detailed-contracts", "adr-architect", "archify", "system-design-spec"],
+      skills: ["cmmi-asset-authoring", "archify"],
       gates: "CMMI G2 架构门禁、G3 静态契约门禁 (0 编译报错)",
       artifacts: "docs/03_design/ (ADR-*.md, architecture-design-hld.md, database-design-erd.md, interface-contracts/, api-specifications.md)",
       blockedBy: "跨域直接 import、手写未隔离 SQL 与无契约 Route 严禁通过 G2/G3",
@@ -179,7 +179,7 @@ function buildStages() {
       file: "04_implementation.md",
       title: "04_implementation 编码实现与防假 (Core SWE & Plugins)",
       role: "铁匠 (CoreSWE)",
-      skills: ["cmmi-asset-authoring", "core-swe", "swe-delivery-flow", "mutation-tester", "bug-fix-flow", "mcp-builder"],
+      skills: ["cmmi-asset-authoring", "yudao-backend-dev", "yudao-admin-vue3", "yudao-miniapp-dev", "yudao-expo-app", "yudao-contract-sync", "yudao-local-stack", "mutation-tester", "yudao-mcp-server"],
       gates: "单向模块依赖扫描、TypeScript 0 编译报错、8 大防假红线",
       artifacts: "docs/04_implementation/ (coding-standards.md, mutation-testing-guide.md, plugin-blueprint.md, software-bill-of-materials.md)",
       blockedBy: "跳过 Validator 直调、缺乏类型守卫严禁合入主干",
@@ -190,7 +190,7 @@ function buildStages() {
       file: "05_verification.md",
       title: "05_verification 变异测试打假与全栈验收 (Anti-Fake Mock)",
       role: "门神 (FDSE) / 百晓生 (DS)",
-      skills: ["cmmi-asset-authoring", "cmmi-ver-val", "mutation-tester", "comprehensive-testing-workflow", "qa-humanlike-e2e"],
+      skills: ["cmmi-asset-authoring", "mutation-tester", "yudao-cmmi-gatekeeper"],
       gates: "CMMI G4 全栈验收门禁、变异杀灭率 MSI >= 85%",
       artifacts: "docs/05_verification/ (test-plan.md, test-summary-report.md, mutation-report.md, uat-acceptance-certificate.md)",
       blockedBy: "假 Mock、空断言、绿牌作弊严禁通过 G4 验收门禁",
@@ -201,7 +201,7 @@ function buildStages() {
       file: "06_quality_assurance.md",
       title: "06_quality_assurance 质量门禁与过程控制 (Compliance & CAR)",
       role: "门神 (FDSE) / Hermes",
-      skills: ["cmmi-asset-authoring", "cmmi-car-spc-metrics", "check-governance"],
+      skills: ["cmmi-asset-authoring", "yudao-cmmi-gatekeeper"],
       gates: "14~20 道全生命周期自动化门禁全绿",
       artifacts: "docs/06_cmmi_audit/ (spc-control-chart.md, car-5whys-rca.md, audit-trail.md, gate-trace-record.md)",
       blockedBy: "门禁未跑通、存在 Blocker/High 债务严禁宣称完工",
@@ -212,7 +212,7 @@ function buildStages() {
       file: "07_release.md",
       title: "07_release 容器交付与不可变投产 (DevOps & Release)",
       role: "兜底渊 (SRE)",
-      skills: ["cmmi-asset-authoring", "cmmi-immutable-release", "app-release-pipeline", "sre-release-and-deploy", "release-flow", "release-version-sync"],
+      skills: ["cmmi-asset-authoring"],
       gates: "CMMI G5 不可变投产门禁、7 处版本一致性守卫",
       artifacts: "docs/07_release/ (system-deployment-sop.md, rollback-emergency-plan.md, RELEASE_NOTES_*.md, release-verification-checklist.md)",
       blockedBy: "生产指纹漂移、版本号不一致、缺乏回滚 SOP 严禁放行",
@@ -223,7 +223,7 @@ function buildStages() {
       file: "08_sre.md",
       title: "08_sre 可靠性保障与事故复盘 (SRE, SLO & Incident)",
       role: "兜底渊 (SRE)",
-      skills: ["cmmi-asset-authoring", "sre-slo-manager", "postmortem-analyzer", "strix-penetration-testing", "pre-sre"],
+      skills: ["cmmi-asset-authoring", "sre-slo-manager", "postmortem-analyzer", "strix-penetration-testing"],
       gates: "SLO 可用率 >= 99.95%、12 项安全渗透扫描 0 漏洞",
       artifacts: "docs/08_sre/ (01_slo_sli_metrics/SLO-SLI-ERROR-BUDGET-MATRIX.md, disaster-recovery-plan.md, 02_postmortem/POSTMORTEM-*.md, strix-penetration-report.md)",
       blockedBy: "线上盲目裸跑发版、事故未闭环 CAPA 严禁关闭工单",
@@ -234,7 +234,7 @@ function buildStages() {
       file: "09_operations.md",
       title: "09_operations 商业化持续运营与对账平账 (Ops & Reconciliation)",
       role: "百晓生 (DS) / 掌柜 (CEO)",
-      skills: ["cmmi-asset-authoring", "financial-reconciliation-agent", "ceo-company-ops", "finance-budget-guard"],
+      skills: ["cmmi-asset-authoring", "financial-reconciliation-agent"],
       gates: "三方账实守恒 (0 差错闭环)、日常巡检健康拨测全绿",
       artifacts: "docs/09_operations/ (tenant-governance.md, agent-operations-ledger.md, system-inspection-report.md, 02_financial_reconciliation/RECONCILIATION-*.md)",
       blockedBy: "资金不守恒、账实不符、违规提现抹账一票否决",

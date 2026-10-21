@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "yudao-quad-terminal": {
+      "transport": "stdio",
+      "enabled": true,
+      "command": "node",
+      "args": ["scripts/mcp/yudao-mcp-server.cjs"]
+    }
+  }
+}

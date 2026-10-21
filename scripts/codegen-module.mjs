@@ -899,7 +899,7 @@ onMounted(() => {
 `;
 
   // 12. SQL DDL & Permissions
-  const sqlPath = path.join(ROOT, "apps/backend/scripts/sql", `${tableName}.sql`);
+  const sqlPath = path.join(ROOT, "apps/backend/sql/mysql", `${tableName}.sql`);
   const sqlContent = `-- -------------------------------------------------------------
 -- 物理表: ${tableName} (${title})
 -- -------------------------------------------------------------

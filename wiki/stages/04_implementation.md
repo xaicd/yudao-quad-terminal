@@ -1,7 +1,7 @@
 # 阶段交付百科：04_implementation 编码实现与防假 (Core SWE & Plugins)
 
 > **所属生命周期**：CMMI 截断阶段 04 | **主责数字员工**：铁匠 (CoreSWE)  
-> **核心专属 Skills**：`cmmi-asset-authoring`, `core-swe`, `swe-delivery-flow`, `mutation-tester`, `bug-fix-flow`, `mcp-builder`
+> **核心专属 Skills**：`cmmi-asset-authoring`, `yudao-backend-dev`, `yudao-admin-vue3`, `yudao-miniapp-dev`, `yudao-expo-app`, `yudao-contract-sync`, `yudao-local-stack`, `mutation-tester`, `yudao-mcp-server`
 
 ---
 

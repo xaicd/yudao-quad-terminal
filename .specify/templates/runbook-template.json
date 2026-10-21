@@ -8,33 +8,33 @@
   "steps": [
     {
       "id": "S1",
-      "name": "预检: 环境指纹核验",
-      "command": "npm run fingerprint:verify",
+      "name": "预检: 工具链版本核验",
+      "command": "node --version && java -version && mvn -version",
       "timeoutMs": 60000
     },
     {
       "id": "S2",
-      "name": "预检: 21项工程门禁全绿",
-      "command": "npm run check",
+      "name": "预检: 工程门禁全绿",
+      "command": "pnpm check:drift && node scripts/sync-openwiki.mjs --check && node scripts/socratic-inquiry-engine.cjs --check && node scripts/workflow-engine.cjs --check",
       "timeoutMs": 600000
     },
     {
       "id": "S3",
-      "name": "业务冒烟与平台可用性探活",
-      "command": "npm run smoke:login",
-      "timeoutMs": 120000
+      "name": "契约与类型核验",
+      "command": "pnpm typecheck",
+      "timeoutMs": 300000
     },
     {
       "id": "S4",
-      "name": "数据库迁移发布",
-      "command": "npx prisma migrate deploy",
+      "name": "数据库变更发布 (真实 MySQL)",
+      "command": "mysql -h 127.0.0.1 -P 33066 -uroot -p ruoyi-vue-pro < apps/backend/sql/mysql/ruoyi-vue-pro.sql",
       "timeoutMs": 600000,
       "irreversible": true
     },
     {
       "id": "S5",
-      "name": "实施与全链路自动化测试矩阵",
-      "command": "npm run test:matrix",
+      "name": "构建与就绪探活",
+      "command": "bash scripts/lifecycle.sh . build && node scripts/run-all.cjs --check",
       "timeoutMs": 600000
     }
   ],
@@ -47,14 +47,14 @@
     },
     {
       "id": "R2",
-      "name": "环境指纹自愈核验",
-      "command": "npm run fingerprint:verify",
+      "name": "重跑工程门禁自证",
+      "command": "pnpm check:drift && node scripts/sync-openwiki.mjs --check",
       "timeoutMs": 60000
     },
     {
       "id": "R3",
-      "name": "数据库一致性核实与防污染验证",
-      "command": "npm run verify:real-db -- --reuse",
+      "name": "契约与数据一致性核实",
+      "command": "node scripts/check-contracts-drift.mjs --strict",
       "timeoutMs": 300000
     }
   ]

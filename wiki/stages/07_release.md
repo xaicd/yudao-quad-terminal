@@ -1,7 +1,7 @@
 # 阶段交付百科：07_release 容器交付与不可变投产 (DevOps & Release)
 
 > **所属生命周期**：CMMI 截断阶段 07 | **主责数字员工**：兜底渊 (SRE)  
-> **核心专属 Skills**：`cmmi-asset-authoring`, `cmmi-immutable-release`, `app-release-pipeline`, `sre-release-and-deploy`, `release-flow`, `release-version-sync`
+> **核心专属 Skills**：`cmmi-asset-authoring`
 
 ---
 

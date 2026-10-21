@@ -123,7 +123,7 @@ function scanControllers() {
 }
 
 function scanSqlTables() {
-  const sqlFiles = findFiles(path.join(ROOT, "apps/backend/scripts/sql"), /\.sql$/);
+  const sqlFiles = findFiles(path.join(ROOT, "apps/backend/sql/mysql"), /\.sql$/);
   const tables = [];
 
   for (const file of sqlFiles) {

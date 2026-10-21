@@ -70,7 +70,13 @@ EOF_M2
       (cd apps/backend/server && mvn clean package -DskipTests)
       echo "  ✅ Spring Boot Jar 构建完成: apps/backend/server/target/yudao-server.jar"
     elif [ -d "apps/backend/yudao-server" ]; then
-      (cd apps/backend && mvn clean package -DskipTests -pl yudao-server -am)
+      # ⚠️ 必须两步构建：模块 -server 的 pom 都绑定了 spring-boot repackage 且无 exec classifier，
+      # 若用单条 `package -pl yudao-server -am`，模块 jar 会先被 repackage 成 fat jar，
+      # 再被嵌进 yudao-server 的 BOOT-INF/lib → 形成「fat jar 套 fat jar」，
+      # 类落在嵌套 jar 的 BOOT-INF/classes 下，模块 bean 与 MyBatis Mapper 全部扫描不到，应用起不来。
+      # 正确做法：依赖模块装成「普通库 jar」（跳过 repackage），再单独对 yudao-server repackage。
+      (cd apps/backend && mvn -B clean install -DskipTests -pl yudao-server -am -Dspring-boot.repackage.skip=true) \
+        && (cd apps/backend && mvn -B package -DskipTests -pl yudao-server)
       echo "  ✅ Spring Boot Jar 构建完成: apps/backend/yudao-server/target/yudao-server.jar"
     fi
     if [ -d "apps/admin" ]; then

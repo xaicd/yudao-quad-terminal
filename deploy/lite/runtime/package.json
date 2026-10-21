@@ -1,0 +1,12 @@
+{
+  "name": "yudao-lite-runtime",
+  "version": "1.0.0",
+  "private": true,
+  "description": "lite 档自包含 node 运行时（嵌入式 PostgreSQL + 凭据哈希），独立于根 pnpm workspace",
+  "license": "MIT",
+  "dependencies": {
+    "embedded-postgres": "18.4.0-beta.17",
+    "pg": "^8.23.1",
+    "bcryptjs": "^3.0.2"
+  }
+}

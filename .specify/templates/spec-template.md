@@ -18,7 +18,7 @@
 | 术语 / 概念 | 英文标识 | 领域定义与所属模块 |
 |---|---|---|
 | {{TITLE}} | {{NAME}} | 本规格所交付的业务与技术上下文，严格收敛于 `{{DOMAIN}}` 领域边界 |
-| 行级租户隔离 | Multi-Tenant AST | 基于 Kysely AST 自动在 SQL 注入 `tenant_id` 过滤条件，严禁跨租户越权 |
+| 行级租户隔离 | TenantLineInnerInterceptor | 基于 MyBatis-Plus 租户插件自动在 SQL 注入 `tenant_id` 过滤条件，严禁跨租户越权 |
 | 审计底座字段 | Audit Base Columns | 实体必须自动继承 8 大审计字段，严禁业务层手工更新审计元数据 |
 
 ## 3. 用户故事与角色矩阵 (User Stories & Personas)

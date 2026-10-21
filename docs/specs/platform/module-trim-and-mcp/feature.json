@@ -1,0 +1,12 @@
+{
+  "name": "module-trim-and-mcp",
+  "domain": "platform",
+  "title": "模块裁剪工具化与 Agent 可编排 MCP 端点",
+  "type": "enhancement",
+  "status": "PLAN_APPROVED",
+  "stories": 4,
+  "acceptance": 7,
+  "invariants": 4,
+  "tasks": 8,
+  "updatedAt": "2026-10-21T11:34:31.713Z"
+}

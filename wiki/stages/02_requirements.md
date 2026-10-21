@@ -1,7 +1,7 @@
 # 阶段交付百科：02_requirements 需求工程与规格 (EARS & Spec-First)
 
 > **所属生命周期**：CMMI 截断阶段 02 | **主责数字员工**：百晓生 (DS) / Hermes  
-> **核心专属 Skills**：`cmmi-asset-authoring`, `ears-spec-writer`, `cmmi-req-spec`, `requirements-capture`, `spec-driven-dev`
+> **核心专属 Skills**：`cmmi-asset-authoring`, `ears-spec-writer`
 
 ---
 

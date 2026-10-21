@@ -7,13 +7,13 @@
 ---
 
 ## 1. 宪法与架构合规自检 (Constitutional & Architecture Compliance)
-- [ ] **Rule 0.1 零 Token 浪费**：业务模型采用 Schema/DSL 驱动展开，无冗余手写样板代码。
-- [ ] **Rule 0.2 模式极致复用**：已复用 `BaseMapper<T>`、`QueryWrapper<T>`，自动继承 8 大审计列。
-- [ ] **Rule 0.4 真实数据库驱动**：100% 跑通真实 PostgreSQL/SQLite 状态机测试，0 内存伪造 Mock。
-- [ ] **Rule 0.5 契约第一切入**：对外暴露版本化 API 契约，跨域调用 100% 走 Domain Facade。
-- [ ] **Rule 0.7 权限与租户隔离**：接口配置权限码，全局行级租户隔离自动注入。
+- [ ] **Rule 0 第 1 条 零 Token 浪费**：业务模型采用 Schema/DSL 驱动展开，无冗余手写样板代码。
+- [ ] **Rule 0 第 2 条 模式极致复用**：已复用 `BaseMapper<T>`、`LambdaQueryWrapper<T>`，自动继承审计底座字段。
+- [ ] **Rule 0 第 6 条 真实数据库驱动**：100% 跑通真实 MySQL/H2 状态机测试，0 内存伪造 Mock。
+- [ ] **Rule 0 第 7 条 契约第一切入**：以 Knife4j / OpenAPI 契约为探针穿透闭环，对外契约零破坏性变更。
+- [ ] **Rule 0 第 2 条 权限与租户隔离**：接口配置权限码，MyBatis-Plus 租户插件全局注入行级隔离。
 
-## 2. 11 阶段交付物齐全性自检 (11-Phase Artifacts Health)
+## 2. 六道门禁交付物齐全性自检 (G0_DAR ~ G5_PRE Gates Health)
 - [ ] **选型与研判 (G0_DAR)**：`research.md` (或 `selection.md`) 包含竞品选型与加权评分结论。
 - [ ] **需求规格 (G4_DS)**：`spec.md` (或 `requirements.md`) 包含 P0/P1/P2 用户故事，0 占位符。
 - [ ] **架构设计 (G1_FDA)**：`plan.md` (或 `design.md`) 包含关键业务不变量与 Archify Mermaid 时序图。

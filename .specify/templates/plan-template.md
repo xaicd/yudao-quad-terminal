@@ -20,31 +20,29 @@
 sequenceDiagram
     autonumber
     actor User as 客户端/Admin UI
-    participant BFF as BFF Route (/api/v1/...)
-    participant Facade as {{DOMAIN}} Domain Facade
-    participant Service as {{NAME}} Core Service
-    participant Repo as BaseMapper Repository
-    participant DB as Real Database (PostgreSQL/SQLite)
+    participant Ctrl as Spring MVC Controller (/admin-api/...)
+    participant Service as {{NAME}} Service (@Transactional 状态机守卫)
+    participant Repo as MyBatis-Plus BaseMapper<T>
+    participant DB as Real Database (MySQL/H2)
 
-    User->>BFF: 发起业务请求 (携带 Trace & TenantContext)
-    BFF->>Facade: 参数校验通过并调用 Facade
-    Facade->>Service: 状态机守卫与业务编排
-    Service->>Repo: 执行持久化操作 (自动注入 tenant_id 与审计列)
+    User->>Ctrl: 发起业务请求 (携带 Token 与 TenantContext)
+    Ctrl->>Ctrl: @Valid 参数校验 + @PreAuthorize 权限码校验
+    Ctrl->>Service: 调用 Service 编排
+    Service->>Repo: 执行持久化 (自动注入 tenant_id 与审计列)
     Repo->>DB: 事务提交与写操作落盘
-    Service-->>Facade: 结构化领域响应
-    Facade-->>BFF: 统一标准契约包装
-    BFF-->>User: 成功响应
+    Service-->>Ctrl: 结构化领域响应
+    Ctrl-->>User: CommonResult<T> 统一标准契约包装
 ```
 
 ## 3. 数据模型与持久化契约 (Data Model & Tables)
 
-实体结构严格遵循底座 8 大审计底座字段规范：
-- `id` (主键)
-- `tenant_id` (多租户标识)
+实体结构严格遵循底座审计底座字段规范 (`BaseDO` / `TenantBaseDO` 自动继承)：
+- `id` (主键，`IdTypeEnvironmentPostProcessor` 按数据库方言自适应)
 - `creator` / `create_time` (创建人/时间)
 - `updater` / `update_time` (更新人/时间)
 - `deleted` (逻辑删除标识)
-- `version` (乐观锁版本号)
+- `tenant_id` (多租户标识，由 MyBatis-Plus 租户插件自动注入与过滤)
+- `version` (乐观锁版本号，**仅并发写实体需要，非全表必备**)
 
 ### 涉及实体与变更说明
 {{ENTITIES_SECTION}}

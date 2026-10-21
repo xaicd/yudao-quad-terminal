@@ -1,7 +1,7 @@
 # 阶段交付百科：01_management 决策分析与立项 (DAR & WBS)
 
 > **所属生命周期**：CMMI 截断阶段 01 | **主责数字员工**：墨斗 (FDA) / 百晓生 (DS)  
-> **核心专属 Skills**：`cmmi-asset-authoring`, `dar-decision-matrix`, `solution-scouting-and-dar`, `cmmi-wbs-milestone`, `product-project-intake`
+> **核心专属 Skills**：`cmmi-asset-authoring`, `dar-decision-matrix`, `yudao-cloud-bootstrap`
 
 ---
 

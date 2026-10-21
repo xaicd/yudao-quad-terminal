@@ -1,73 +1,132 @@
 ---
 name: yudao-local-stack
-description: Yudao-Quad-Terminal 本地轻量化容器与开发环境一键自闭环指南。指导数字员工熟练运用 docker-compose.local.yml 与 scripts/start-local-stack.sh 秒级拉起 Alpine Redis 与预置初始化 SQL 的轻量 MySQL 8.0 实例，消除手动搭建中间件的繁重负担，实现与 ruoyi-all-next 等价的开箱即跑体验。
+description: Yudao-Quad-Terminal 本地开发环境自闭环指南（两档：lite 零 Docker 档 / local 容器档）。指导数字员工用 scripts/lite-up.mjs 秒级拉起嵌入式真 PostgreSQL + 嵌入式真 Redis（零 Docker），或用 docker-compose.local.yml 拉起容器化 MySQL/Redis；并规避弱默认凭据与端口冲突。
 ---
 
-# Yudao-Local-Stack 本地容器与零配置自闭环深度研发指南
+# Yudao-Local-Stack 本地环境自闭环指南（lite 零 Docker / local 容器）
 
-> **最高法典契约**：杜绝向普通开发者和掌柜强加繁重的本地环境配置要求。本地开发统一由根目录 `docker-compose.local.yml` 驱动，秒级拉起隔离的依赖环境。严禁手工向宿主机污染安装脏服务，支持随时秒级销毁与一键重置。
+> **最高法典契约**：杜绝向开发者与 Agent 强加繁重的本地环境配置。默认优先 **lite 档**（零 Docker、零外部服务）；
+> 需要贴近生产的 MySQL 方言时再用 **local 档**（容器）。
+> **凭据铁律**：禁止 `admin` / `admin123` 这类弱默认凭据（见 §4）。
 
 ---
 
-## §1 本地环境编排拓扑
+## §1 两档拓扑
 
 ```
-                    【本地一键轻量化容器栈拓扑】
+【lite 档：零 Docker、零外部服务】（推荐，默认）
+        scripts/lite-up.mjs
+                 │
+   ┌─────────────┴──────────────┐
+   ▼                            ▼
+[嵌入式真 PostgreSQL 18.4]   [嵌入式真 Redis 7.4.1]
+ • 官方 sql/postgresql 脚本     • 真二进制（非模拟器）
+ • 端口 55432 / 数据 .commandcode/lite/pgdata
+ • requirepass 由 CSPRNG 生成，仅绑 127.0.0.1
+                 │
+                 ▼
+        [yudao-server 48080]  ← 外置配置 deploy/lite/application-lite.yaml
 
-                       根目录 (docker-compose.local.yml)
-                                      │
-                 ┌────────────────────┴────────────────────┐
-                 ▼                                         ▼
-        [yudao-mysql-dev]                         [yudao-redis-dev]
-      MySQL 8.0 (轻量精简版)                     Redis 7.2 (Alpine 极简镜像)
-      • 预置 ruoyi-vue-pro 核心库               • 内存占用仅 ~15MB
-      • 挂载 ./apps/backend/scripts/sql/        • 启动耗时 < 0.5 秒
-      • 自动导入租户/用户/菜单种子数据           • 端口: 6379
-      • 端口: 3306                              • 数据持久化: ./data/redis
-      • 数据持久化: ./data/mysql
+【local 档：容器化，贴近生产 MySQL】
+        docker-compose.local.yml
+                 │
+   ┌─────────────┴──────────────┐
+   ▼                            ▼
+[yudao-mysql-dev]            [yudao-redis-dev]
+ • mysql:8.0.36               • redis:7.2-alpine
+ • 宿主机端口 33066           • 宿主机端口 63799
+ • 初始化 ./apps/backend/sql/mysql/ruoyi-vue-pro.sql
+ • 数据 ./data/mysql          • 数据 ./data/redis
 ```
 
 ---
 
-## §2 常用操作与自愈指令
+## §2 lite 档（零 Docker）—— 默认选择
 
-### 1. 一键启动本地环境
-在工程根目录下执行一行命令：
+```bash
+# 首次：安装 lite 运行时依赖（嵌入式 PG 二进制 + pg + bcryptjs）
+cd deploy/lite/runtime && npm install
+
+# 构建 fat jar：必须两步（否则会「fat jar 套 fat jar」导致模块 bean 全扫不到）
+cd apps/backend
+mvn -B clean install -DskipTests -pl yudao-server -am -Dspring-boot.repackage.skip=true
+mvn -B package -DskipTests -pl yudao-server
+
+# 启动 / 验收 / 清理
+pnpm lite:up        # 常驻；Ctrl-C 成对回收 Redis 与 java
+pnpm lite:verify    # 跑完整验收（含弱默认凭据反证）后退出
+pnpm lite:clean     # 清理 PG 数据目录与抽出的二进制
+```
+
+**依赖边界（必须如实告知）**：lite 档需要本机具备 JDK 17 / Maven / Node；首次运行需网络拉取
+PG 二进制、Redis 制品与 PG 驱动。除此之外**不需要 Docker，也不需要任何外部数据库/缓存服务**。
+
+**许可边界**：lite 档的 Redis 为 7.4.1（RSALv2 / SSPLv1），仅限本地开发与演示；
+**严禁**用于对外提供 Redis 兼容托管服务，**分发前必须切换**到 Redis 6.2.6（BSD-3）或 Valkey。
+详见 `docs/01_management/dar/DAR-20261021-lite-runtime-dependencies.md`。
+
+---
+
+## §3 local 档（容器，需要 Docker）
+
 ```bash
 bash scripts/start-local-stack.sh
 # 或
 docker compose -f docker-compose.local.yml up -d
 ```
-输出：
-```text
-✔ Container yudao-redis-dev  Started
-✔ Container yudao-mysql-dev  Started
-✅ MySQL 8.0 数据库已就绪 (端口 3306, 数据库 ruoyi-vue-pro, 初始账号 admin/admin123)
-✅ Redis 7.2 缓存已就绪 (端口 6379, 免密)
-```
-两个轻量容器瞬间启动，MySQL 自动注入初始系统表结构，Redis 自动就绪，前后耗时仅需 **3 秒**！
 
-### 2. 探活与健康检查
+探活：
+
 ```bash
-# 检查 MySQL 是否就绪
 docker exec yudao-mysql-dev mysqladmin ping -h localhost -u root -proot
-
-# 检查 Redis 是否就绪
 docker exec yudao-redis-dev redis-cli ping
 ```
 
-### 3. 一键清空重置 (Reset Data)
-若在测试过程中脏数据过多，需一键回滚到初始干净状态：
+重置（销毁数据卷后重建）：
+
 ```bash
 docker compose -f docker-compose.local.yml down -v
 docker compose -f docker-compose.local.yml up -d
 ```
-数据卷销毁后重建，3 秒钟内重置回包含初始管理员账号（`admin / admin123`）的纯净状态。
+
+> ⚠️ local 档首次启动后，`system_users` 仍是**上游种子账号**。该账号仅供隔离环境自检，
+> **不得**用于任何共享/演示/对外环境。需要可用凭据时，请改用 lite 档（会自动替换为 CSPRNG 高熵凭据）。
 
 ---
 
-## §3 端口冲突智能排查与自愈 (Gotchas)
+## §4 凭据铁律（硬约束）
 
-如果本地机器已经安装了本地 MySQL（3306 占用）或本地 Redis（6379 占用）：
-1. **自动复用现有实例**：`yudao-server` 的 `application.yaml` 默认指向 `localhost:3306` 与 `localhost:6379`。若本地已有健康实例，无需启动 Docker Compose，服务可直接连接宿主机现有服务；
-2. **容器端口重定向**：若需完全容器隔离，可在 `docker-compose.local.yml` 中将主机映射端口改为 `"3307:3306"` 与 `"6380:6379"`，并在 `apps/backend/yudao-server/src/main/resources/application.yaml` 对齐修改即可。
+- ❌ 禁止 `admin` 用户名、禁止 `admin123` 之类的弱口令，禁止把种子默认凭据写进文档/脚本/演示话术。
+- ✅ lite 档账号与口令均由 CSPRNG 生成：
+  - 账号需满足后端 `^[a-zA-Z0-9]{4,30}$`（**不能带下划线**）；
+  - 口令长度 16（`AuthLoginReqVO` 的 `@Length(min=4, max=16)` 是登录请求硬上限）；
+  - 凭据写入 `.commandcode/lite/credentials.env`（权限 600、已 gitignore），只回显一次；
+  - 导入种子后立即把 `system_users.id=1` 改名改密，其余种子弱演示账号置为禁用。
+- ✅ Redis 同样启用 `requirepass`（32 位 CSPRNG 口令），且仅绑定 `127.0.0.1`。
+
+---
+
+## §5 端口与冲突排查 (Gotchas)
+
+| 用途 | lite 档 | local 档（compose 映射） |
+|---|---|---|
+| 应用 | 48080 | 48080 |
+| 数据库 | 55432（嵌入式 PG） | 33066（映射到容器 3306） |
+| 缓存 | 63799（嵌入式 Redis） | 63799（映射到容器 6379） |
+
+1. **端口被占用**：lite 档用 `--pg-port/--redis-port/--server-port` 换端口；local 档改 compose 映射并同步外置配置。
+2. **lite 起不来且日志有 `No MyBatis mapper was found` + 缺少 `ApiErrorLogCommonApi`**：
+   典型的「fat jar 套 fat jar」，按 §2 的两步构建重新打包（正确产物约 189MB）。
+3. **登录报 `账号格式为数字以及字母`**：手改过凭据文件且账号含非法字符；删除
+   `.commandcode/lite/credentials.env` 让其重新生成。
+4. **登录报 `请求未包含加密标头`**：蓝图开启了 `yudao.api-encrypt`，且 `AuthController#login` 带
+   `@ApiEncrypt`；调用方必须按 §6 的契约加密请求。
+
+---
+
+## §6 ApiEncrypt 真实契约（lite 探活已内建）
+
+- 请求头 `X-Api-Encrypt` 非空 ⇒ 后端认为请求体已加密并解密；缺失且接口带 `@ApiEncrypt` ⇒ 直接报错。
+- 算法 AES ⇒ **AES/ECB/PKCS5Padding**，密钥取 `yudao.api-encrypt.request-key` / `response-key`（各 32 字节）。
+- 请求体：Hutool 侧「HEX 优先、否则 BASE64」解码；响应体为 `encryptBase64` ⇒ BASE64。
+- 现成实现：`deploy/lite/runtime/lite-api-encrypt.mjs`，由 `scripts/lite-up.mjs` 探活直接复用。
