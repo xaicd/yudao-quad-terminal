@@ -4,6 +4,20 @@
 
 ---
 
+## 📌 本仓事实基线（生成时自动计算，以此为准）
+
+| 事实 | 数值 | 来源 |
+|---|---|---|
+| Agent 技能数 | **18** | `.agents/skills/*/SKILL.md` |
+| 工作流配方数 | **1** | `.agents/workflows/*.workflow.json` |
+| 后端业务模块数 | **19** | `apps/backend/yudao-module-*` |
+| 官方 PG 脚本建表数 | **49** | `apps/backend/sql/postgresql/ruoyi-vue-pro.sql` |
+| 活跃/归档规格数 | **3** | `docs/specs/**/brief.json` |
+
+> ⚠️ 本页其他段落若出现与上表冲突的规模数字（如"324 份契约""263 张表""36 大技能"），均为**来源基座的历史口径**，请以上表为准。
+
+---
+
 ## ⚡ 核心架构最高公理 (Foundry Axioms)
 
 1. **最高生态位与三层物理隔离 (公理一)**：
@@ -13,7 +27,7 @@
 2. **六位一体超级集成体 (公理二)**：
    - 控制面中枢 (Paperclip) + 活体本体 (Palantir) + CMMI 5 质量 + 开源基座自适应 + 极简人机 + 数字员工调度。
 3. **活体本体即中枢 (公理三)**：
-   - 现实业务与技术实现高保真物理并轨，双核基石 (Object Types + Action Types)，深度复用 263 张物理表。
+   - 现实业务与技术实现高保真物理并轨，双核基石 (Object Types + Action Types)，深度复用 49 张物理表。
 4. **CMMI 0-1 软件工程资产与 Spec-First 产物 (公理四)**：
    - 完工状态必须以不可变工程资产凭据为准 (*No Artifact, No Done*)。
 5. **开源基座自适应与扁平敏捷目录 (公理五)**：
@@ -25,18 +39,32 @@
 
 ---
 
+## 🚀 本仓新方案入口 (Capability Entry — Agent 先看这里)
+
+> 以下能力均已落地并通过门禁；Agent 应优先复用，不要重复造轮子。
+
+| 能力 | 命令 | 真源 |
+|---|---|---|
+| 统一门禁（blocking / advisory 分级） | `pnpm gate:fast` / `pnpm gate:full` | `scripts/gate-check.mjs` |
+| lite 零 Docker 档（嵌入式真 PG + 真 Redis） | `pnpm lite:up` / `pnpm lite:verify` | `deploy/lite/README.md` |
+| 模块裁剪（19 模块 + 依赖闭包 + 可撤销） | `pnpm trim:modules --profile lite --dry-run` | `scripts/lib/module-catalog.mjs` |
+| 规格工程与健康度 | `pnpm speckit new / build / check / archive`、`pnpm specs:health` | `scripts/speckit.cjs` |
+| Agent 端点（MCP，8 工具） | `cmd mcp list` | `.agents/skills/yudao-mcp-server/SKILL.md` |
+
+**四条硬约束**：pnpm 唯一（禁 npm）；`apps/{backend,admin,miniapp}` 是第三方 submodule（只读）；禁弱默认凭据；声明必须可执行。
+**构建提醒**：fat jar 必须两步构建（先 `-Dspring-boot.repackage.skip=true` 装普通库 jar，再单独 repackage），否则模块 bean 与 Mapper 全部扫描不到。
+**入口分层**：机器读 `llms.txt`；人读 `README.md`；Agent 读 `AGENTS.md` + 本页。
+**已知既有红灯**：contract / socratic / doc-commands —— 均为 advisory，不阻塞合入，但汇报时**不得**称全绿。
+
+---
+
 ## ⚡ Kiro SDD 原生多智能体工作流引擎与配方 (Workflows & Recipes)
 
-1. **配方单一真源与软链接无缝桥接**：所有多智能体工作流配方统一物理收归 `.agents/workflows/*.workflow.json`（根目录通过 `.kiro/workflows` 软链接桥接），确保 Kiro IDE 原生识别与 Antigravity / 跨 Agent 平台统一标准；
-2. **4 大内置 SDD 工作流配方**：
-   - 📦 **`feature-delivery`**：全生命周期新特性交付 (`scaffold` ➔ `requirements` ➔ `design` ➔ `plan-waves` ➔ `implement` ➔ `verify`)；
-   - 🐛 **`bugfix`**：缺陷排查与红绿验证 (`scaffold` ➔ `diagnose` ➔ `red-test` ➔ `patch` ➔ `verify-gate`)；
-   - 🏛️ **`architecture-refactor`**：架构债务消除 (`scaffold` ➔ `debt-analysis` ➔ `parity-tests` ➔ `refactor-execution` ➔ `regression-audit`)；
-   - 🛡️ **`security-patch`**：安全加固与 PoC 拦截 (`scaffold` ➔ `threat-model` ➔ `poc-red-test` ➔ `hardening` ➔ `strix-audit`)；
-3. **统一工作流 CLI 引擎 (`scripts/workflow-engine.cjs` / `scripts/workflow-engine.ts`)**：
-   - `pnpm run workflow:list`、`workflow:check`、`workflow:dry-run`、`workflow:run`、`workflow:new`、`spec:workflows`；
-4. **CMMI 01~09 全生命周期 26 类标准过程资产矩阵**：
-   - 覆盖 9 大截断阶段，由 `pnpm run cmmi:asset new` 脚手架驱动并严格恪守 `--real` 防假门禁与 Rule 0 实事求是铁律。
+1. **配方单一真源与软链接无缝桥接**：所有多智能体工作流配方统一物理收归 `.agents/workflows/*.workflow.json`（若使用 Kiro IDE，可自行建立 `.kiro/workflows -> ../.agents/workflows` 软链接；本仓未预置），确保跨 Agent 平台统一标准；
+2. **内置 SDD 工作流配方（自动读取 `.agents/workflows/`，共 1 份）**：
+   - `cmmi-full-lifecycle`（7 步）：CMMI 01~09 全生命周期多智能体递进式商业软件交付工作流 (G1 需求规格 -> G2 概要架构 -> G3 静态契约 -> G4 全栈验收 -> G5 不可变投产 -> G6 SRE稳定性 -> G7 持续运营)
+3. **统一工作流 CLI 引擎**：`scripts/workflow-engine.cjs` —— `pnpm workflow:list` / `workflow:check` / `workflow:dry-run` / `workflow:run` / `workflow:new`；
+4. **CMMI 01~09 过程资产矩阵**：按阶段落位于 `docs/01_management` ~ `docs/09_operations`，类型登记见 `scripts/cmmi-asset-scaffold.cjs`，由 `pnpm cmmi:asset new` 生成骨架（含 TODO 标记，`pnpm cmmi:asset:check` 校验残留）。
 
 ---
 

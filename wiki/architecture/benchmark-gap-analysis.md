@@ -3,7 +3,7 @@
 - **对标顶级项目**：
   1. **Supabase (80k★)**：极速本地开发、Realtime CDC、原生向量检索；
   2. **MedusaJS v2 (27k★)**：TypeScript 原生可逆 DAG 工作流与长事务 Saga；
-  3. **ruoyi-vue-pro (25k★)**：17 领域工业级模型、BPMN 2.0 审批流；
+  3. **ruoyi-vue-pro (25k★)**：19 个业务模块的工业级模型、BPMN 2.0 审批流；
   4. **Directus / Refine (30k★)**：低代码动态 Schema 与虚拟滚动大表格；
   5. **Strix (60k★)**：多智能体红队渗透测试平台。
 - **核心差距与持续突破**：

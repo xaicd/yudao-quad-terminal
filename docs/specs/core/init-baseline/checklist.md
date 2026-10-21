@@ -21,5 +21,5 @@
 - [ ] **实施轨回滚演练 (G5_PRE)**：`runbook.json` 包含 S1~S5 步骤与 R1~R3 回滚演练预案。
 
 ## 3. 验收标准逐项核验 (Acceptance Criteria Status)
-- [ ] npm run check 0 报错
+- [ ] pnpm check 0 报错
 - [ ] 全生命周期 CMMI 01~09 资产齐全在位

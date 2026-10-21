@@ -5,4 +5,4 @@
   1. 项目进厂即本体域 (Project as Domain)；
   2. 工坊会话即本体演进 (Conversation as Proposal)；
   3. 任务施工即动词血缘 (Task as Action Execution & Provenance)；
-- **全盘 263 张物理表**高内聚复用，杜绝伪孪生与死报表。
+- **全盘 49 张物理表**高内聚复用，杜绝伪孪生与死报表。

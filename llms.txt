@@ -1,0 +1,130 @@
+# yudao-quad-terminal — LLM 入口契约 (llms.txt)
+
+> 工业级四端一体基座（Java Spring Boot 3 / Vue3 Admin / Uni-App 小程序 / Expo RN）。
+> 本文件是给 AI Agent 的高密度入口：读完它就能在不扫源码的前提下开始干活。
+> 人读版本见 `README.md`；导航式知识库见 `wiki/index.md`。
+
+## 0. 铁律（违反即返工）
+
+1. **pnpm 唯一**：所有 JS 操作只用 pnpm，禁止任何 npm 操作（run / install / exec / ci 四类）。门禁 `pkg-manager` 会拦截。
+2. **`apps/backend` / `apps/admin` / `apps/miniapp` 是 git submodule**（上游第三方仓库）：**不得修改其中任何文件**。所有差异落主仓（`deploy/`、`scripts/`、`.agents/`、`docs/`）。
+3. **禁止弱默认凭据**：不得使用 `admin` / `admin123` 之类。引导凭据由 CSPRNG 生成。
+4. **声明必须可执行**：文档里写的命令必须真实存在；`doc-commands`（advisory）会列出空头命令。
+5. **No Artifact, No Done**：口头"做完了"不算；要有可核验产物（退出码 0 的门禁或真实产物）。
+
+## 1. 30 秒上手（全部走 pnpm）
+
+```bash
+pnpm install                 # 前端多端 + 共享包
+pnpm gate:fast               # 秒级门禁（无需构建/网络）
+pnpm lite:up                 # 零 Docker 起后端（嵌入式真 PG + 真 Redis），Ctrl-C 成对回收
+pnpm lite:verify             # 端到端验收（登录 200 + 弱凭据反证 + 子模块零改动）
+pnpm dev:admin               # PC 运营中台
+pnpm dev:miniapp             # 微信小程序
+pnpm dev:app                 # Expo 原生 App
+```
+
+## 2. 能力地图（本次新增，务必优先复用）
+
+### 2.1 lite 零 Docker 档 —— `deploy/lite/`
+
+不需要 Docker、不需要 MySQL/Redis 服务即可把后端跑起来。
+
+```bash
+cd deploy/lite/runtime && pnpm install        # 首次（独立 workspace，勿在根目录装）
+pnpm lite:up                                  # 拉起并常驻（Ctrl-C 成对回收）
+pnpm lite:verify                              # 完整验收后退出
+pnpm lite:down                                # 收割残留（node 非优雅退出后进程会占端口）
+pnpm lite:clean                               # 清理 PG 数据与抽出的二进制
+```
+
+- 数据库：嵌入式**真** PostgreSQL 18.4，直接执行官方 `apps/backend/sql/postgresql/*.sql`（60 表 / 48 序列），零 DDL 移植。
+- 缓存：嵌入式**真** Redis（真二进制，非模拟器）。变体：`redis-7.4.1`（默认，RSALv2/SSPLv1，**仅本地开发/演示**）/ `--redis-variant redis-6.2.6-bsd`（BSD-3，**可分发**）。
+- 凭据：CSPRNG 生成，写入 `.commandcode/lite/credentials.env`（0600、已 gitignore），只回显一次。
+- **构建 fat jar 必须两步**（否则「fat jar 套 fat jar」导致模块 bean 全扫不到）：
+  ```bash
+  cd apps/backend
+  mvn -B clean install -DskipTests -pl yudao-server -am -Dspring-boot.repackage.skip=true
+  mvn -B package -DskipTests -pl yudao-server
+  ```
+- 登录接口带 `@ApiEncrypt`，调用方须按 AES/ECB 加密并带 `X-Api-Encrypt` 头；现成实现见 `deploy/lite/runtime/lite-api-encrypt.mjs`。
+
+### 2.2 统一门禁 —— `scripts/gate-check.mjs`
+
+```bash
+pnpm gate:fast     # 秒级 14 项：pkg-manager / openwiki / skills / typecheck / specs-health / workflow / scripts-tests / trim-cli / doc-commands / script-targets / ci-files / contract(advisory) / socratic(advisory)
+pnpm gate:full     # 16 项：追加 backend-tests（约 70s）、admin-build（vite，约 25s）与 lite 端到端验收
+pnpm check         # = gate:fast
+pnpm specs:health  # 单独校验规格资产齐备性 + brief 8 要素 + 占位符残留
+pnpm test:scripts  # 62 个 node:test 用例（裁剪/规格/凭据/加解密/收割边界/门禁 CLI/JDK 变体）
+pnpm test:all      # 脚本单测 + typecheck + 后端 mvn test + 就绪自检（严格失败即退出）
+pnpm build:backend # 两步 Maven 构建（已实测 BUILD SUCCESS，189MB jar）
+pnpm build:admin   # vite 构建；解析真实 vite 入口以绕过 hoisted linker 的路径陷阱
+```
+
+分级语义：只有 `blocking` 失败才非零退出；`advisory`（契约漂移、苏格拉底快照）如实展示不阻塞；`skipped ≠ pass`。
+MCP 的 `gate_check` 工具委派给同一脚本（单一真源）。
+
+**已知上游红灯**（勿误判为己方回归，详见 `AGENTS.md §0.4`）：
+- `contract`：孤儿 92 条 = `/ai1` 66（升 admin pin 后新前端领先后端）+ `/infra` 14（上游移除 Quartz 控制器）+ pay/bpm/mes/promotion 12；动词不符 0（advisory）。
+- ~~`pnpm build:admin` 受上游 pin 阻塞~~ → 已修（子模块 rebase 到上游 master，实测 24.6MB dist，已纳入 gate:full）。
+- JDK 变体：`pnpm jdk:list` 查真实 ref；门禁防「文档写不存在的分支」（上游只有 `master-jdk17`/`master`(JDK8线)/`master-jdk25`）。
+
+### 2.3 模块裁剪 + MCP —— `scripts/trim-modules.mjs` / `scripts/mcp/yudao-mcp-server.cjs`
+
+```bash
+pnpm trim:modules --profile lite --dry-run     # 预览删哪些目录/pom 行
+pnpm trim:modules --profile lite --apply --yes # 落地
+pnpm trim:check --profile lite                 # 一致性校验（漂移 exit 1）
+pnpm trim:modules --recover --yes              # 撤销（子模块回到已提交状态）
+```
+
+- 唯一元数据真源：`scripts/lib/module-catalog.mjs`（19 模块 + 依赖闭包 + profiles `mini|lite|full`）。
+- 裁剪是**本地消费态**：`git submodule update` / `scripts/sync-upstream.sh` 会还原它；备份写 `.commandcode/backups/`。
+- MCP 端点：仓库根 `.mcp.json`（project scope），8 个工具：`modules_list` / `trim_preview` / `trim_apply` / `trim_check` / `gen_module` / `openwiki_query` / `contract_drift` / `gate_check`。
+
+### 2.4 pnpm 标准化
+
+`pnpm` 是唯一 JS 包管理器与任务入口。脚本内部直接 `node scripts/x.mjs` 是允许的（等价于 `pnpm x`，MCP 与门禁自身即如此）。
+边界：Maven 仍归 Maven，但入口收敛为 `pnpm lifecycle:build`；`apps/` 下上游子模块有自己的工具链。
+
+### 2.5 选型决策记录
+
+`docs/01_management/dar/DAR-20261021-lite-runtime-dependencies.md` —— 数据库（嵌入式 PG vs H2 vs SQLite vs MySQL 容器）与 Redis（7.4.1 vs 6.2.6-BSD vs Valkey vs 容器）的加权 DAR 矩阵、许可与供应链核验、敏感度分析。
+
+### 2.6 过程资产与冒烟
+
+```bash
+pnpm cmmi:asset new --phase 01 --type charter --title "项目章程"   # 生成 CMMI 01~09 资产骨架
+pnpm cmmi:asset:check                                             # 校验标准头部 + TODO 残留
+pnpm smoke:login                                                  # 对运行中的实例做真实登录探测（秒级）
+pnpm verify:real-db                                               # = lite:verify，真 PG + 真 Redis 全链路
+```
+
+## 3. 文档导航
+
+| 读者 | 入口 | 用途 |
+|---|---|---|
+| 人 | `README.md` | 项目定位、架构、快速开始、能力速查 |
+| AI Agent | `AGENTS.md` → `wiki/index.md` | 治理铁律 + 全息知识库导航（先读 wiki 再动代码） |
+| AI Agent（技能） | `.agents/skills/README.md` | 18 个技能的索引与新增步骤 |
+| 机器 | `llms.txt`（本文件） | 高密度能力契约与命令 |
+| 规格 | `docs/specs/<domain>/<name>/` | 15~16 份规格资产（brief + SRS/设计/任务/回滚） |
+| 过程资产 | `docs/01_management` ~ `09_operations` | CMMI 全生命周期 |
+
+## 4. 目录与边界
+
+- `apps/backend`、`apps/admin`、`apps/miniapp` —— **git submodule（第三方上游）**，只读。
+- `apps/app`、`packages/*`、`scripts/`、`deploy/`、`.agents/`、`.specify/`、`docs/`、`wiki/` —— 主仓自有，可改。
+- `.commandcode/lite/` —— lite 档本地状态（PG 数据、抽出的二进制、引导凭据），已 gitignore。
+- `deploy/lite/runtime/` —— 独立 pnpm workspace 根（`pnpm-workspace.yaml` + `node-linker=isolated`）。
+
+## 5. 常见失败 → 修复
+
+| 现象 | 修复 |
+|---|---|
+| `No MyBatis mapper was found` + 缺 `ApiErrorLogCommonApi` | 「fat jar 套 fat jar」→ 用 2.1 的两步构建 |
+| 登录报「请求未包含加密标头」 | 按 `X-Api-Encrypt` + AES/ECB 加密请求体 |
+| 登录报「账号格式为数字以及字母」 | 凭据账号含非字母数字；删 `.commandcode/lite/credentials.env` 重新生成 |
+| `pkg-manager` 门禁红 | 把 npm 用法改成 pnpm |
+| lite 起不来且端口占用 | `--pg-port/--redis-port/--server-port` 换端口；`pnpm lite:clean` 重置数据 |

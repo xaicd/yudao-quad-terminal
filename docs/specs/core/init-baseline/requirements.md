@@ -35,7 +35,7 @@
 
 ## 5. 验收标准清单 (Acceptance Criteria)
 
-1. **THE system SHALL** 验证：npm run check 0 报错
+1. **THE system SHALL** 验证：pnpm check 0 报错
 2. **THE system SHALL** 验证：全生命周期 CMMI 01~09 资产齐全在位
 
 ## 6. 约束条件与技术边界 (Constraints & Non-Goals)

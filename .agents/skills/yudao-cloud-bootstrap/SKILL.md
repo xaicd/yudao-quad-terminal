@@ -39,14 +39,16 @@ description: Yudao-Cloud (芋道微服务底座) 自动化选型、JDK版本适�
 
 ## §1 JDK 版本与生态组件版本矩阵
 
-基于真实仓库代码（`master`、`master-jdk17`、`master-jdk25`）及官方发布规格，`yudao-cloud` 划分为四大 JDK 运行阶梯：
+基于真实仓库代码（分支 `master-jdk17`、`master-jdk25`、`master`，以及标签 `v2026.09(jdk8/11)` 等）及官方发布规格，`yudao-cloud` 划分为四大 JDK 运行阶梯：
+
+> 真源：变体矩阵定义在 `scripts/lib/jdk-variants.mjs`，用 `pnpm jdk:list` 查最新 ref，用 `jdk-variants` 门禁防"文档里写不存在的分支"。
 
 | 维度指标 | JDK 8 (维护兼容分支) | JDK 17 (官方基准 LTS 主力) | JDK 21 (生产性能高吞吐 LTS) | JDK 25 (前沿技术预研 LTS) |
 |---|---|---|---|---|
-| **Git 分支** | `master` | `master-jdk17` (推荐) | `master-jdk17` (跨版本运行) | `master-jdk25` |
-| **工程版本 (Revision)** | `2026.09-jdk8-SNAPSHOT` | `2026.09-SNAPSHOT` | `2026.09-SNAPSHOT` | `2026.08-jdk25-SNAPSHOT` |
+| **Git ref** | `master`（JDK 8 线分支）/ 标签 `v2026.09(jdk8/11)` | `master-jdk17` (推荐) | `master-jdk17` + `java.version=21` | `master-jdk25` |
+| **工程版本 (Revision)** | `2026.09-jdk8-SNAPSHOT` | `2026.09-SNAPSHOT` | `2026.09-SNAPSHOT` | `2026.09-jdk25-SNAPSHOT` |
 | **Java 编译器版本** | `1.8` | `17` | `21` | `25` |
-| **Spring Boot 版本** | `2.7.18` (2.x 终板) | `3.5.15` (Spring Boot 3.x) | `3.5.15` | `4.1.1` (Spring Boot 4.x) |
+| **Spring Boot 版本** | `2.7.18` (2.x 终板) | `3.5.15` (Spring Boot 3.x) | `3.5.15` | `4.1.0` (Spring Boot 4.x) |
 | **Spring Cloud 版本** | `2021.0.9` | `2025.0.1` | `2025.0.1` | `2025.1.2` |
 | **Spring Cloud Alibaba** | `2021.0.6.2` | `2025.0.0.0` | `2025.0.0.0` | `2025.1.0.0` |
 | **Spring AI 支持** | ❌ 不支持 (Spring AI 硬需 JDK17+) | ✅ `1.1.8` (支持国内外主流 LLM) | ✅ `1.1.8` | ✅ `2.0.0` |

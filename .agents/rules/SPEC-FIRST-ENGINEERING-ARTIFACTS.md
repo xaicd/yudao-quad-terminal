@@ -4,7 +4,7 @@
 > **生效对象**：所有接入 `ruoyi-all-next` 重型业务模板的 AI Agent、IDE 编程助手（Antigravity、Claude Code、Cursor、Copilot）及数字员工  
 > **制定背景**：吸收 Coolie 核心工程教训——「CMMI 是项目交付过程管理，是这个项目从 0-1 的建设交付过程产物、文档、代码；不是项目上线运行后系统内容产物！」「任务、过程如果没有有效高质量的工程产物出现，还不如 Spec 驱动的结果！」  
 > **核心宗旨**：彻底消灭大模型自动生成的套话废文档与形式主义假交付，全面推行 **`No Artifact, No Done`** 结项铁律。  
-> **配套标准**：项目级与组织级 CMMI 过程资产目录划分与物理归档规范，详见 [docs/architecture/CMMI-PROCESS-ASSETS-AND-DELIVERY-STANDARD.md](file:///host-workspace/xaicd/ruoyi-all-next/docs/architecture/CMMI-PROCESS-ASSETS-AND-DELIVERY-STANDARD.md)。
+> **配套标准**：项目级与组织级 CMMI 过程资产目录划分与物理归档规范，见姊妹基座 `ruoyi-all-next` 的 `docs/architecture/CMMI-PROCESS-ASSETS-AND-DELIVERY-STANDARD.md`（本仓未收录；本仓资产落位见 `AGENTS.md` 第 11 条）。
 
 ---
 
@@ -63,12 +63,12 @@
   * 覆盖正常流、边界值、逆向非法状态拦截与事务原子回滚；
   * **反假 Mock 铁律**：严禁无业务断言的空壳单测，必须真实断言数据库入库数据与状态机真值。
 * **全生命周期冒烟与安全拦截报告**：
-  * 跑通平台级登录冒烟（`npm run smoke:login`）；
-  * 跑通 12 项安全穿透检查（`npm run security:scan`，含越权反证与未授权拦截）。
+  * 跑通平台级登录冒烟（`pnpm smoke:login`）；
+  * 按 `strix-penetration-testing` 技能执行安全穿透（含越权反证与未授权拦截）；本仓未内置自动化扫描脚本。
 
 ### 5. G5 交付与投产基线 (Release & Handover)
 * **《生产环境部署与秒级回滚预案 (Deployment & Rollback SOP)》**：
-  * 容器镜像构建指纹握手（`npm run fingerprint:verify`）；
+  * 制品指纹握手：记录 `git rev-parse HEAD` 与镜像 digest，并以 `pnpm gate:fast` 自证；
   * 涵盖冷备还原、配置漂移纠偏、失败秒级回滚确定性执行步骤。
 * **《用户与运维操作手册》**：
   * 面向系统管理员的操作指引与故障排查 Runbook。
@@ -97,4 +97,4 @@
    * 任何工单或阶段任务更新为完成状态时，必须挂载上述 7 类工程资产之一（Git Commit SHA、契约定义文件、测试报告结果、部署 Runbook、SRE 巡检台账、对账平账单）。
    * 严禁任何形式的口头宣称“开发完毕”、“已调通”。
 2. **门禁自动化核验**：
-   * 提交前必须通过 `npm run check`，10 项工程标准、契约同步、手写文件基线全部保持通过。
+   * 提交前必须通过 `pnpm check`，10 项工程标准、契约同步、手写文件基线全部保持通过。

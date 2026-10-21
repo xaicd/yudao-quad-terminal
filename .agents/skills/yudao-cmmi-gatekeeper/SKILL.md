@@ -19,9 +19,27 @@ description: Yudao-Quad-Terminal CMMI 01~09 全生命周期质量门禁与变异
 
 ---
 
-## §2 自动化门禁校验指令集
+## §2 自动化门禁校验指令集（单一真源：`scripts/gate-check.mjs`）
 
-项目根目录下内置了轻量化工作流引擎 [`scripts/workflow-engine.cjs`](file:///host-workspace/xaicd/yudao-quad-terminal/scripts/workflow-engine.cjs)，可一键执行静态与物理断言：
+### 第一层：统一门禁（CI / MCP / 人工共用同一实现）
+
+```bash
+pnpm gate:fast     # 秒级：pkg-manager / openwiki / skills / specs-health / workflow / trim-cli
+pnpm gate:full     # 追加 lite 档端到端验收（嵌入式真 PG + 真 Redis + 真实登录）
+pnpm check         # = gate:fast，任何改动后自证的最小集
+```
+
+**分级语义（汇报时必须如实）**：
+
+- `blocking` 失败 ⇒ 退出码 1，**不得**声明完工；
+- `advisory`（`contract` 契约漂移、`doc-commands` 空头命令、`socratic` 快照过期）如实展示但不阻塞合入；
+- `skipped`（缺前置条件）**不等于**通过。
+
+其他参数：`--tier fast|full`、`--json`（MCP 消费）、`--list`。
+
+### 第二层：工作流引擎（配方驱动与阶段推进）
+
+项目根目录下内置了轻量化工作流引擎 [`scripts/workflow-engine.cjs`](scripts/workflow-engine.cjs)，可一键执行静态与物理断言：
 
 ```bash
 # 1. 门禁全景体检

@@ -45,7 +45,7 @@ description: Yudao-Quad-Terminal 本地开发环境自闭环指南（两档：li
 
 ```bash
 # 首次：安装 lite 运行时依赖（嵌入式 PG 二进制 + pg + bcryptjs）
-cd deploy/lite/runtime && npm install
+cd deploy/lite/runtime && pnpm install
 
 # 构建 fat jar：必须两步（否则会「fat jar 套 fat jar」导致模块 bean 全扫不到）
 cd apps/backend
@@ -55,6 +55,7 @@ mvn -B package -DskipTests -pl yudao-server
 # 启动 / 验收 / 清理
 pnpm lite:up        # 常驻；Ctrl-C 成对回收 Redis 与 java
 pnpm lite:verify    # 跑完整验收（含弱默认凭据反证）后退出
+pnpm lite:down      # 收割残留进程（node 被 SIGKILL 时的兜底）
 pnpm lite:clean     # 清理 PG 数据目录与抽出的二进制
 ```
 
