@@ -5,6 +5,8 @@
   "scripts": {
     "all": "node scripts/run-all.cjs",
     "dev": "node scripts/run-all.cjs",
+    "check:all": "node scripts/run-all.cjs --check",
+    "deploy:caddy": "bash scripts/deploy-caddy.sh",
     "init:all": "bash scripts/lifecycle.sh . install",
     "test:all": "bash scripts/lifecycle.sh . test",
     "lifecycle:build": "bash scripts/lifecycle.sh . build",

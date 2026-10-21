@@ -1,0 +1,128 @@
+# deploy/caddy/yudao-quad-terminal.caddy
+# 项目: yudao-quad-terminal (yudao-quad-terminal)
+# 动态管理端 API: /yudao-quad-terminal/admin-api
+# 动态移动端 API: /yudao-quad-terminal/app-api
+# 隔离后端端口: 48080
+# 隔离前端端口: 3000
+
+# 1. 动态与兼容管理后台接口
+handle /yudao-quad-terminal/admin-api/* {
+	reverse_proxy 127.0.0.1:48080 {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}
+handle /admin-api/* {
+	reverse_proxy 127.0.0.1:48080 {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}
+
+# 2. 移动端/小程序/App 用户端接口
+handle /yudao-quad-terminal/app-api/* {
+	reverse_proxy 127.0.0.1:48080 {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}
+handle /app-api/* {
+	reverse_proxy 127.0.0.1:48080 {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}
+
+# 3. 内部微服务 RPC 调用接口 (/rpc-api/*)
+handle /rpc-api/* {
+	reverse_proxy 127.0.0.1:48080
+}
+
+# 4. Knife4j / OpenAPI / Swagger 接口文档与静态依赖
+handle /doc.html {
+	reverse_proxy 127.0.0.1:48080
+}
+handle /v3/api-docs/* {
+	reverse_proxy 127.0.0.1:48080
+}
+handle /swagger-ui/* {
+	reverse_proxy 127.0.0.1:48080
+}
+handle /webjars/* {
+	reverse_proxy 127.0.0.1:48080
+}
+
+# 5. WebSocket 长连接通道 (/infra/ws/*)
+handle /infra/ws/* {
+	reverse_proxy 127.0.0.1:48080 {
+		header_up Host {host}
+		header_up Upgrade {>Upgrade}
+		header_up Connection {>Connection}
+	}
+}
+
+# 6. SSE 流式输出通道与 MCP 协议端点 (/sse, /mcp/*)
+handle /sse {
+	reverse_proxy 127.0.0.1:48080 {
+		header_down -X-Accel-Buffering
+	}
+}
+handle /mcp/* {
+	reverse_proxy 127.0.0.1:48080
+}
+
+# 7. 积木报表大屏与运维监控探针 (/jmreport/*, /drag/*, /jimubi/*, /actuator/*)
+handle /jmreport/* {
+	reverse_proxy 127.0.0.1:48080
+}
+handle /drag/* {
+	reverse_proxy 127.0.0.1:48080
+}
+handle /jimubi/* {
+	reverse_proxy 127.0.0.1:48080
+}
+handle /actuator/* {
+	reverse_proxy 127.0.0.1:48080
+}
+
+# 8. 微服务单入口统一智能分流 (/services/yudao-quad-terminal/*)
+redir /services/yudao-quad-terminal /services/yudao-quad-terminal/ 308
+handle /services/yudao-quad-terminal/* {
+	@backend path \
+	              /services/yudao-quad-terminal/yudao-quad-terminal/admin-api/* \
+	              /services/yudao-quad-terminal/admin-api/* \
+	              /services/yudao-quad-terminal/yudao-quad-terminal/app-api/* \
+	              /services/yudao-quad-terminal/app-api/* \
+	              /services/yudao-quad-terminal/rpc-api/* \
+	              /services/yudao-quad-terminal/doc.html \
+	              /services/yudao-quad-terminal/v3/api-docs/* \
+	              /services/yudao-quad-terminal/swagger-ui/* \
+	              /services/yudao-quad-terminal/webjars/* \
+	              /services/yudao-quad-terminal/infra/ws/* \
+	              /services/yudao-quad-terminal/sse \
+	              /services/yudao-quad-terminal/mcp/* \
+	              /services/yudao-quad-terminal/jmreport/* \
+	              /services/yudao-quad-terminal/drag/* \
+	              /services/yudao-quad-terminal/jimubi/* \
+	              /services/yudao-quad-terminal/actuator/*
+	handle @backend {
+		uri strip_prefix /services/yudao-quad-terminal
+		reverse_proxy 127.0.0.1:48080 {
+			header_up Host {host}
+			header_up Upgrade {>Upgrade}
+			header_up Connection {>Connection}
+		}
+	}
+	handle {
+		uri strip_prefix /services/yudao-quad-terminal
+		reverse_proxy 127.0.0.1:3000
+	}
+}
