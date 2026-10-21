@@ -128,7 +128,7 @@ function runSocraticInquiry(goal, domain) {
 
 function checkSocraticHealth() {
   if (!fs.existsSync(ARTIFACT_PATH)) {
-    console.error(`[socratic:check] ✗ 缺少高阶反问与辩证演化快照 ${path.relative(ROOT, ARTIFACT_PATH)}，请运行 pnpm run socratic:inquire`)
+    console.error(`[socratic:check] ✗ 缺少高阶反问与辩证演化快照 ${path.relative(ROOT, ARTIFACT_PATH)}，请运行 pnpm socratic:inquire`)
     process.exit(1)
   }
 

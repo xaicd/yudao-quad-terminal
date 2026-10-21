@@ -217,7 +217,8 @@ function buildMarkdownDigest(snapshot) {
   md += `| 控制器 | 基础路径 | 业务名称 | 接口数 | 对应文件 |\n`;
   md += `|---|---|---|---|---|\n`;
   for (const c of snapshot.controllers) {
-    md += `| \`${c.name}\` | \`${c.basePath}\` | ${c.tag || "-"} | ${c.endpoints.length} | [${c.file}](file:///${path.join(ROOT, c.file)}) |\n`;
+    // 链接必须是仓库相对路径：绝对路径（file:////host-workspace/...）在他机一律失效
+    md += `| \`${c.name}\` | \`${c.basePath}\` | ${c.tag || "-"} | ${c.endpoints.length} | [${c.file}](${c.file}) |\n`;
   }
 
   md += `\n## 3. 详细接口清单\n\n`;

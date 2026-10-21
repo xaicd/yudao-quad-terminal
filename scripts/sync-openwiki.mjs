@@ -31,11 +31,119 @@ const generatedFiles = new Map();
 // ==========================================
 // 1. 生成 wiki/index.md (根索引与 Agent 全景)
 // ==========================================
+/**
+ * 动态读取 .agents/workflows 下的真实配方，避免 wiki 写死"4 大配方"却只有 1 份的漂移。
+ */
+function listRecipes() {
+  const dir = path.join(ROOT, ".agents/workflows");
+  const files = fs.existsSync(dir)
+    ? fs.readdirSync(dir).filter((f) => f.endsWith(".workflow.json")).sort()
+    : [];
+  return files.map((f) => {
+    let name = f.replace(/\.workflow\.json$/, "");
+    let desc = "";
+    let steps = 0;
+    try {
+      const j = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
+      name = j.name || name;
+      desc = j.description || "";
+      steps = Array.isArray(j.steps) ? j.steps.length : 0;
+    } catch {
+      /* 解析失败则只显示文件名 */
+    }
+    return { file: f, name, desc, steps };
+  });
+}
+
+function buildRecipesMd() {
+  const recipes = listRecipes();
+  if (recipes.length === 0) {
+    return "2. **内置 SDD 工作流配方**：当前无（`.agents/workflows/` 为空）";
+  }
+  const lines = [`2. **内置 SDD 工作流配方（自动读取 \`.agents/workflows/\`，共 ${recipes.length} 份）**：`];
+  for (const r of recipes) lines.push(`   - \`${r.name}\`（${r.steps} 步）：${r.desc}`);
+  return lines.join("\n");
+}
+
+/** 供「架构词条」页面使用的有序列表形式 */
+function buildRecipeBullets() {
+  const recipes = listRecipes();
+  if (recipes.length === 0) return "  - 当前无（`.agents/workflows/` 为空）";
+  return recipes
+    .map((r, i) => `  ${i + 1}. \`${r.file}\`：${r.desc || r.name}（${r.steps} 步）`)
+    .join("\n");
+}
+
+/** 由磁盘真实计算的规模指标（供各页面插值，杜绝写死数字） */
+function countPgTables() {
+  const p = path.join(ROOT, "apps/backend/sql/postgresql/ruoyi-vue-pro.sql");
+  if (!fs.existsSync(p)) return 0;
+  return (fs.readFileSync(p, "utf8").match(/CREATE TABLE /g) || []).length;
+}
+
+function countModules() {
+  const dir = path.join(ROOT, "apps/backend");
+  if (!fs.existsSync(dir)) return 0;
+  return fs.readdirSync(dir, { withFileTypes: true }).filter((d) => d.isDirectory() && d.name.startsWith("yudao-module-")).length;
+}
+
+/**
+ * 本仓事实基线：全部由磁盘真实计算，杜绝外仓数字（历史口径的"324 份契约/263 张表/36 大技能"）漂移进来。
+ */
+function buildFactsMd() {
+  const skillsDir = path.join(ROOT, ".agents/skills");
+  const skills = fs.existsSync(skillsDir)
+    ? fs.readdirSync(skillsDir, { withFileTypes: true }).filter((d) => d.isDirectory() && fs.existsSync(path.join(skillsDir, d.name, "SKILL.md"))).length
+    : 0;
+
+  const backendDir = path.join(ROOT, "apps/backend");
+  const modules = fs.existsSync(backendDir)
+    ? fs.readdirSync(backendDir, { withFileTypes: true }).filter((d) => d.isDirectory() && d.name.startsWith("yudao-module-")).length
+    : 0;
+
+  let pgTables = 0;
+  const pgSql = path.join(backendDir, "sql/postgresql/ruoyi-vue-pro.sql");
+  if (fs.existsSync(pgSql)) {
+    pgTables = (fs.readFileSync(pgSql, "utf8").match(/CREATE TABLE /g) || []).length;
+  }
+
+  let specs = 0;
+  const specsDir = path.join(ROOT, "docs/specs");
+  if (fs.existsSync(specsDir)) {
+    const walk = (d) => {
+      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+        const p = path.join(d, e.name);
+        if (e.isDirectory()) walk(p);
+        else if (e.name === "brief.json") specs++;
+      }
+    };
+    walk(specsDir);
+  }
+
+  const recipes = listRecipes().length;
+
+  return `## 📌 本仓事实基线（生成时自动计算，以此为准）
+
+| 事实 | 数值 | 来源 |
+|---|---|---|
+| Agent 技能数 | **${skills}** | \`.agents/skills/*/SKILL.md\` |
+| 工作流配方数 | **${recipes}** | \`.agents/workflows/*.workflow.json\` |
+| 后端业务模块数 | **${modules}** | \`apps/backend/yudao-module-*\` |
+| 官方 PG 脚本建表数 | **${pgTables}** | \`apps/backend/sql/postgresql/ruoyi-vue-pro.sql\` |
+| 活跃/归档规格数 | **${specs}** | \`docs/specs/**/brief.json\` |
+
+> ⚠️ 本页其他段落若出现与上表冲突的规模数字（如"324 份契约""263 张表""36 大技能"），均为**来源基座的历史口径**，请以上表为准。
+`;
+}
+
 function buildIndexMd() {
   const content = `# Coolie OpenWiki (LLM 知识大脑)
 
 > **面向 AI 数字员工的核心索引**：本知识库由 Coolie 控制面底座、CMMI 00~09 交付管道、Palantir 活体本体及工程真资产**自动化编译生成与动态自愈**。AI 数字员工（Hermes / 墨斗 / 铁匠 / 门神 / 兜底渊 / 百晓生）进场接单必须优先检索对应词条，严禁全盘盲扫代码。
 
+---
+
+${buildFactsMd()}
 ---
 
 ## ⚡ 核心架构最高公理 (Foundry Axioms)
@@ -47,7 +155,7 @@ function buildIndexMd() {
 2. **六位一体超级集成体 (公理二)**：
    - 控制面中枢 (Paperclip) + 活体本体 (Palantir) + CMMI 5 质量 + 开源基座自适应 + 极简人机 + 数字员工调度。
 3. **活体本体即中枢 (公理三)**：
-   - 现实业务与技术实现高保真物理并轨，双核基石 (Object Types + Action Types)，深度复用 263 张物理表。
+   - 现实业务与技术实现高保真物理并轨，双核基石 (Object Types + Action Types)，深度复用 ${countPgTables()} 张物理表。
 4. **CMMI 0-1 软件工程资产与 Spec-First 产物 (公理四)**：
    - 完工状态必须以不可变工程资产凭据为准 (*No Artifact, No Done*)。
 5. **开源基座自适应与扁平敏捷目录 (公理五)**：
@@ -59,18 +167,31 @@ function buildIndexMd() {
 
 ---
 
+## 🚀 本仓新方案入口 (Capability Entry — Agent 先看这里)
+
+> 以下能力均已落地并通过门禁；Agent 应优先复用，不要重复造轮子。
+
+| 能力 | 命令 | 真源 |
+|---|---|---|
+| 统一门禁（blocking / advisory 分级） | \`pnpm gate:fast\` / \`pnpm gate:full\` | \`scripts/gate-check.mjs\` |
+| lite 零 Docker 档（嵌入式真 PG + 真 Redis） | \`pnpm lite:up\` / \`pnpm lite:verify\` | \`deploy/lite/README.md\` |
+| 模块裁剪（19 模块 + 依赖闭包 + 可撤销） | \`pnpm trim:modules --profile lite --dry-run\` | \`scripts/lib/module-catalog.mjs\` |
+| 规格工程与健康度 | \`pnpm speckit new / build / check / archive\`、\`pnpm specs:health\` | \`scripts/speckit.cjs\` |
+| Agent 端点（MCP，8 工具） | \`cmd mcp list\` | \`.agents/skills/yudao-mcp-server/SKILL.md\` |
+
+**四条硬约束**：pnpm 唯一（禁 npm）；\`apps/{backend,admin,miniapp}\` 是第三方 submodule（只读）；禁弱默认凭据；声明必须可执行。
+**构建提醒**：fat jar 必须两步构建（先 \`-Dspring-boot.repackage.skip=true\` 装普通库 jar，再单独 repackage），否则模块 bean 与 Mapper 全部扫描不到。
+**入口分层**：机器读 \`llms.txt\`；人读 \`README.md\`；Agent 读 \`AGENTS.md\` + 本页。
+**已知既有红灯**：contract / socratic / doc-commands —— 均为 advisory，不阻塞合入，但汇报时**不得**称全绿。
+
+---
+
 ## ⚡ Kiro SDD 原生多智能体工作流引擎与配方 (Workflows & Recipes)
 
-1. **配方单一真源与软链接无缝桥接**：所有多智能体工作流配方统一物理收归 \`.agents/workflows/*.workflow.json\`（根目录通过 \`.kiro/workflows\` 软链接桥接），确保 Kiro IDE 原生识别与 Antigravity / 跨 Agent 平台统一标准；
-2. **4 大内置 SDD 工作流配方**：
-   - 📦 **\`feature-delivery\`**：全生命周期新特性交付 (\`scaffold\` ➔ \`requirements\` ➔ \`design\` ➔ \`plan-waves\` ➔ \`implement\` ➔ \`verify\`)；
-   - 🐛 **\`bugfix\`**：缺陷排查与红绿验证 (\`scaffold\` ➔ \`diagnose\` ➔ \`red-test\` ➔ \`patch\` ➔ \`verify-gate\`)；
-   - 🏛️ **\`architecture-refactor\`**：架构债务消除 (\`scaffold\` ➔ \`debt-analysis\` ➔ \`parity-tests\` ➔ \`refactor-execution\` ➔ \`regression-audit\`)；
-   - 🛡️ **\`security-patch\`**：安全加固与 PoC 拦截 (\`scaffold\` ➔ \`threat-model\` ➔ \`poc-red-test\` ➔ \`hardening\` ➔ \`strix-audit\`)；
-3. **统一工作流 CLI 引擎 (\`scripts/workflow-engine.cjs\` / \`scripts/workflow-engine.ts\`)**：
-   - \`pnpm run workflow:list\`、\`workflow:check\`、\`workflow:dry-run\`、\`workflow:run\`、\`workflow:new\`、\`spec:workflows\`；
-4. **CMMI 01~09 全生命周期 26 类标准过程资产矩阵**：
-   - 覆盖 9 大截断阶段，由 \`pnpm run cmmi:asset new\` 脚手架驱动并严格恪守 \`--real\` 防假门禁与 Rule 0 实事求是铁律。
+1. **配方单一真源与软链接无缝桥接**：所有多智能体工作流配方统一物理收归 \`.agents/workflows/*.workflow.json\`（若使用 Kiro IDE，可自行建立 \`.kiro/workflows -> ../.agents/workflows\` 软链接；本仓未预置），确保跨 Agent 平台统一标准；
+${buildRecipesMd()}
+3. **统一工作流 CLI 引擎**：\`scripts/workflow-engine.cjs\` —— \`pnpm workflow:list\` / \`workflow:check\` / \`workflow:dry-run\` / \`workflow:run\` / \`workflow:new\`；
+4. **CMMI 01~09 过程资产矩阵**：按阶段落位于 \`docs/01_management\` ~ \`docs/09_operations\`，类型登记见 \`scripts/cmmi-asset-scaffold.cjs\`，由 \`pnpm cmmi:asset new\` 生成骨架（含 TODO 标记，\`pnpm cmmi:asset:check\` 校验残留）。
 
 ---
 
@@ -299,7 +420,7 @@ function buildArchitecture() {
   1. 项目进厂即本体域 (Project as Domain)；
   2. 工坊会话即本体演进 (Conversation as Proposal)；
   3. 任务施工即动词血缘 (Task as Action Execution & Provenance)；
-- **全盘 263 张物理表**高内聚复用，杜绝伪孪生与死报表。`,
+- **全盘 ${countPgTables()} 张物理表**高内聚复用，杜绝伪孪生与死报表。`,
     },
     {
       file: "flat-docs-specs-system.md",
@@ -307,7 +428,7 @@ function buildArchitecture() {
       content: `# 架构支柱：开放式扁平敏捷特性库与 CMMI 01~09 体系
 
 - **彻底弃用 .coolie/cmmi 隐藏单文件目录**；
-- **CMMI 01~09 全生命周期 26 类工程资产规范归宿**：
+- **CMMI 01~09 全生命周期工程资产规范归宿**：
   - \`docs/01_management/\`：立项章程、综合计划、风险台账、DAR 决策分析、阶段配置计划
   - \`docs/02_requirements/\`：EARS 语法软件需求规格 (SRS)、跟踪矩阵 (RTM)、NFR
   - \`docs/03_design/\`：MADR 架构决策 (ADR)、HLD 设计、数据库模型 ERD、接口契约
@@ -318,7 +439,7 @@ function buildArchitecture() {
   - \`docs/08_sre/\`：SLO/SLI 矩阵、容灾演练方案、5-Whys 事故复盘、Strix 渗透报告
   - \`docs/09_operations/\`：多租户开通 SOP、数字员工台账、常态巡检报告、财务对账平账单
 - **敏捷特性规格全息包**：
-  - \`docs/specs/<domain>/<feature-slug>/\`：由 Kiro SDD 引擎 (\`npm run spec:ops\`) 驱动，内聚 brief.json, requirements.md, design.md, tasks.md, spec.json, runbook.json
+  - \`docs/specs/<domain>/<feature-slug>/\`：由 Spec-Kit 引擎（\`pnpm speckit new\` / \`pnpm speckit build\`）驱动，内聚 brief.json, requirements.md, design.md, tasks.md, spec.json, runbook.json
 - **机器证据库与工作流流水**：
   - \`docs/artifacts/\`：静态扫描、高并发压测、环境指纹与工作流执行历史 (\`workflow-runs/\`)`,
     },
@@ -331,18 +452,15 @@ function buildArchitecture() {
   工作流是把 SDD 规格从静态 Markdown 推向多智能体自动化执行的核心引擎。
 - **物理单一真源与软链接桥接**：
   - 单一真源：\`.agents/workflows/*.workflow.json\`
-  - Kiro IDE 原生软链接桥接：\`.kiro/workflows -> ../.agents/workflows\`
-- **4 大内置 SDD 配方**：
-  1. \`feature-delivery.workflow.json\`：全生命周期新特性交付
-  2. \`bugfix.workflow.json\`：缺陷排查与红绿验证 (5-Whys + Red-to-Green)
-  3. \`architecture-refactor.workflow.json\`：架构债务消除与渐进演进
-  4. \`security-patch.workflow.json\`：安全加固与 PoC 红蓝渗透验证
+  - Kiro IDE 需自行建立软链接：\`.kiro/workflows -> ../.agents/workflows\`（本仓未预置）
+- **内置 SDD 配方（自动读取 \`.agents/workflows/\`）**：
+${buildRecipeBullets()}
 - **统一工作流 CLI 引擎 (\`scripts/workflow-engine.cjs\`)**：
-  - \`pnpm run workflow:list\`：检视配方清单与依赖
-  - \`pnpm run workflow:check\`：DAG 有向无环图深度扫描与语法校验
-  - \`pnpm run workflow:dry-run\`：模拟展开输出 Mermaid DAG 与角色指令
-  - \`pnpm run workflow:run\`：驱动执行脚手架并落盘执行流水
-  - \`pnpm run workflow:new\`：脚手架生成新配方模板`,
+  - \`pnpm workflow:list\`：检视配方清单与依赖
+  - \`pnpm workflow:check\`：DAG 有向无环图深度扫描与语法校验
+  - \`pnpm workflow:dry-run\`：模拟展开输出 Mermaid DAG 与角色指令
+  - \`pnpm workflow:run\`：驱动执行脚手架并落盘执行流水
+  - \`pnpm workflow:new\`：脚手架生成新配方模板`,
     },
     {
       file: "benchmark-gap-analysis.md",
@@ -352,7 +470,7 @@ function buildArchitecture() {
 - **对标顶级项目**：
   1. **Supabase (80k★)**：极速本地开发、Realtime CDC、原生向量检索；
   2. **MedusaJS v2 (27k★)**：TypeScript 原生可逆 DAG 工作流与长事务 Saga；
-  3. **ruoyi-vue-pro (25k★)**：17 领域工业级模型、BPMN 2.0 审批流；
+  3. **ruoyi-vue-pro (25k★)**：${countModules()} 个业务模块的工业级模型、BPMN 2.0 审批流；
   4. **Directus / Refine (30k★)**：低代码动态 Schema 与虚拟滚动大表格；
   5. **Strix (60k★)**：多智能体红队渗透测试平台。
 - **核心差距与持续突破**：
@@ -574,7 +692,7 @@ function main() {
     }
 
     if (driftCount > 0) {
-      console.error(`\n[openwiki:check] ✗ 发现 ${driftCount} 处 Wiki 漂移，请运行: npm run openwiki:sync 修复\n`);
+      console.error(`\n[openwiki:check] ✗ 发现 ${driftCount} 处 Wiki 漂移，请运行: pnpm openwiki:sync 修复\n`);
       process.exit(1);
     }
 

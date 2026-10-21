@@ -122,7 +122,7 @@ function handleList(flags) {
     }
   }
   console.log("\n" + "=".repeat(78));
-  console.log(`运行 \x1b[32mnpm run workflow:dry-run -- --recipe <name> [args...]\x1b[0m 预览执行拓扑。`);
+  console.log(`运行 \x1b[32mpnpm workflow:dry-run -- --recipe <name> [args...]\x1b[0m 预览执行拓扑。`);
 }
 
 function handleCheck(flags) {
@@ -214,7 +214,7 @@ function handleCheck(flags) {
 function handleDryRun(flags, positional) {
   const recipeName = flags.recipe || positional[0];
   if (!recipeName) {
-    console.error("❌ 请提供配方名称: npm run workflow:dry-run -- --recipe <name>");
+    console.error("❌ 请提供配方名称: pnpm workflow:dry-run -- --recipe <name>");
     process.exit(1);
   }
 
@@ -267,7 +267,7 @@ function handleDryRun(flags, positional) {
 function handleRun(flags, positional) {
   const recipeName = flags.recipe || positional[0];
   if (!recipeName) {
-    console.error("❌ 请提供配方名称: npm run workflow:run -- --recipe <name> --name <spec> --domain <domain> --title <title>");
+    console.error("❌ 请提供配方名称: pnpm workflow:run -- --recipe <name> --name <spec> --domain <domain> --title <title>");
     process.exit(1);
   }
 
@@ -346,7 +346,7 @@ function handleRun(flags, positional) {
 function handleNew(flags, positional) {
   const name = flags.name || positional[0];
   if (!name) {
-    console.error("❌ 请指定新工作流名称: npm run workflow:new -- --name <name> --description <desc>");
+    console.error("❌ 请指定新工作流名称: pnpm workflow:new -- --name <name> --description <desc>");
     process.exit(1);
   }
 
@@ -401,14 +401,14 @@ function handleNew(flags, positional) {
         id: "verify",
         agent: "wf-tester",
         dependsOn: ["implement"],
-        prompt: "Verify implementation against quality gates: `npm run check`.",
+        prompt: "Verify implementation against quality gates: `pnpm check`.",
       },
     ],
   };
 
   fs.writeFileSync(targetFile, JSON.stringify(template, null, 2) + "\n", "utf8");
   console.log(`✅ 成功生成工作流配方: \x1b[32m${path.relative(ROOT, targetFile)}\x1b[0m`);
-  console.log(`运行 \x1b[36mnpm run workflow:check\x1b[0m 校验语法。`);
+  console.log(`运行 \x1b[36mpnpm workflow:check\x1b[0m 校验语法。`);
 }
 
 // ----------------------------------------------------------------------------
@@ -513,12 +513,12 @@ function handleHelp() {
   new        创建新的工作流配方模板 (.agents/workflows/)
 
 示例用法:
-  npm run workflow:list
-  npm run workflow:check
-  npm run workflow:dry-run -- --recipe cmmi-full-lifecycle --name mall --domain mall --title "商城主线"
-  npm run workflow:advance -- --recipe cmmi-full-lifecycle --gate gate_g1_spec --company <id> --project <id>
-  npm run workflow:run -- --recipe bugfix --name fix-pay-lock --domain pay --title "修复支付回调死锁"
-  npm run workflow:new -- --name db-migration --description "数据库平滑迁移编排"
+  pnpm workflow:list
+  pnpm workflow:check
+  pnpm workflow:dry-run -- --recipe cmmi-full-lifecycle --name mall --domain mall --title "商城主线"
+  pnpm workflow:advance -- --recipe cmmi-full-lifecycle --gate gate_g1_spec --company <id> --project <id>
+  pnpm workflow:run -- --recipe bugfix --name fix-pay-lock --domain pay --title "修复支付回调死锁"
+  pnpm workflow:new -- --name db-migration --description "数据库平滑迁移编排"
 `);
 }
 

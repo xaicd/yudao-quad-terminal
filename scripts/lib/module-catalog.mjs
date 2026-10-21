@@ -11,7 +11,9 @@
  * - scripts/trim-modules.mjs            模块裁剪 CLI
  * - scripts/mcp/yudao-mcp-server.cjs    MCP 端点（modules_list 工具）
  *
- * javaFiles 为在本仓实测值（`find <dir> -name '*.java' | wc -l`），非文档估算值。
+ * javaFiles 为在本仓实测值，非文档估算值。
+ * 测量口径：统计 .java 文件时必须排除构建产物目录 target
+ * （构建会在其中生成 MapStruct 等实现类，包含它会把数字虚高）。
  */
 
 /** 后端根目录（相对仓库根） */

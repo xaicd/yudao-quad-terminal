@@ -50,7 +50,7 @@ jobs:
 
       - name: Install lite runtime deps
         working-directory: deploy/lite/runtime
-        run: npm install --no-audit --no-fund
+        run: pnpm install --frozen-lockfile
 
       - name: Build fat jar (two-step: plain module jars, then repackage yudao-server)
         working-directory: apps/backend

@@ -53,15 +53,25 @@ EOF_M2
     ;;
 
   test)
-    echo "🧪 [yudao-quad-terminal] 阶段 3: 执行全栈门禁验证与探针审查..."
-    pnpm run typecheck || true
+    echo "🧪 [yudao-quad-terminal] 阶段 3: 全栈验证（自有脚本单测 + 类型 + 后端单测 + 就绪自检）..."
+
+    echo "  ▸ 自有脚本单元测试"
+    pnpm test:scripts
+
+    echo "  ▸ 多端类型检查"
+    pnpm typecheck
+
+    echo "  ▸ 后端单测（H2 + 内嵌 Jedis 真替身，实测约 72s）"
     if [ -d "apps/backend/server" ]; then
-      (cd apps/backend/server && mvn test)
+      (cd apps/backend/server && mvn -B test)
     elif [ -d "apps/backend/yudao-server" ]; then
-      (cd apps/backend && mvn test -pl yudao-server -am)
+      (cd apps/backend && mvn -B test -pl yudao-server -am)
     fi
-    node scripts/run-all.cjs --check || true
-    echo "  ✅ 测试验证完成"
+
+    echo "  ▸ 全栈就绪自检"
+    node scripts/run-all.cjs --check
+
+    echo "  ✅ 测试验证完成（脚本单测 + 类型 0 报错 + 后端单测 全绿）"
     ;;
 
   build)
@@ -80,8 +90,13 @@ EOF_M2
       echo "  ✅ Spring Boot Jar 构建完成: apps/backend/yudao-server/target/yudao-server.jar"
     fi
     if [ -d "apps/admin" ]; then
-      pnpm --filter yudao-ui-admin-vue3 build || pnpm --filter @*/admin build || true
-      echo "  ✅ 前端静态产物构建完成: apps/admin/dist"
+      # 显式 SKIP 而非 `|| true` 假绿：前端构建需要子模块自己的依赖与构建工具
+      if [ -x "apps/admin/node_modules/.bin/vite" ]; then
+        pnpm --filter yudao-ui-admin-vue3 build:local
+        echo "  ✅ 前端静态产物构建完成: apps/admin/dist"
+      else
+        echo "  ⏭️  SKIP 前端构建: apps/admin 缺依赖/构建工具（cd apps/admin && pnpm install）"
+      fi
     fi
     ;;
 

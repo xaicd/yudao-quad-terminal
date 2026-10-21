@@ -107,7 +107,7 @@ function handleNew() {
         "防回归保证：修复不得引入次生故障或破坏既有正常流转。",
       ],
       acceptance: [
-        { check: "npm run check:drift exit=0" },
+        { check: "pnpm check:drift exit=0" },
         { check: "<!-- 待填: 缺陷复现用例从 Red 变绿 (100% PASS) -->" },
         { check: "<!-- 待填: 既有核心回归测试套件全部通过 (0 Regression) -->" },
       ],
@@ -156,7 +156,7 @@ function handleNew() {
         "跨域通信：必须经过 Domain Facade，禁止违规侵入内部私有服务。",
       ],
       acceptance: [
-        { check: "npm run check:drift exit=0" },
+        { check: "pnpm check:drift exit=0" },
         { check: "<!-- 待填: 业务等价性单测全部通过 -->" },
       ],
       nonGoals: ["不在本次重构中增加未经评审的业务新功能"],
@@ -203,7 +203,7 @@ function handleNew() {
         "极简减法：优先消除多余字段，禁止未经论证的庞杂配置。",
       ],
       acceptance: [
-        { check: "npm run check:drift exit=0" },
+        { check: "pnpm check:drift exit=0" },
         { check: "<!-- 待填: 每条都要可执行验证，不要写『体验良好』 -->" },
       ],
       nonGoals: ["<!-- 待填: 显式划出边界，这一节能挡掉一半范围蔓延 -->"],
@@ -668,7 +668,7 @@ function handleCheck() {
   const expectedDocs = [
     "brief.json", "spec.md", "requirements.md", "plan.md", "design.md",
     "tasks.md", "checklist.md", "research.md", "selection.md", "runbook.json",
-    "evidence.json", "deployment.md", "bugs.md", "prototype.md", "spec.json"
+    "evidence.json", "deployment.md", "bugs.md", "prototype.md", "spec.json", "feature.json"
   ]
 
   let missingCount = 0
@@ -684,9 +684,74 @@ function handleCheck() {
 
   if (missingCount === 0) {
     console.log(`\n✅ 规格交付物检查 100% 通过（${expectedDocs.length} 份标准文档全齐备）！`)
-  } else {
-    console.warn(`\n⚠️ 发现 ${missingCount} 处缺失文档，请先运行: node scripts/speckit.cjs build --name ${specName}`)
+    process.exit(0)
   }
+  // 缺失文档必须让门禁失败：此前仅 warn 且 exit 0，导致它被文档称作「自动化门禁」却拦不住任何东西
+  console.error(`\n❌ 发现 ${missingCount} 处缺失文档，请先运行: node scripts/speckit.cjs build --name ${specName}`)
+  process.exit(1)
+}
+
+// ============================================================================
+// 5. 命令：speckit archive（文档一直声称存在，但最初从未实现）
+// ============================================================================
+/**
+ * 归档：docs/specs/<domain>/<name> → docs/specs/archive/<YYYY-Qx>/<domain>/<name>
+ */
+function handleArchive() {
+  const specName = getArg("--name") || getArg("--spec")
+  if (!specName) {
+    console.error("❌ 用法错误: node scripts/speckit.cjs archive --name <规格名> [--force]")
+    process.exit(2)
+  }
+
+  const dir = resolveSpecDir(specName)
+  if (!dir) {
+    console.error(`❌ [speckit] 找不到规格: ${specName}`)
+    process.exit(2)
+  }
+  if (/[\\/]archive[\\/]/.test(dir)) {
+    console.error(`❌ [speckit] 该规格已在归档区: ${path.relative(ROOT, dir)}`)
+    process.exit(2)
+  }
+
+  const readMeta = (p) => {
+    try {
+      return JSON.parse(fs.readFileSync(p, "utf8"))
+    } catch {
+      return null
+    }
+  }
+  const meta = readMeta(path.join(dir, "spec.json")) || readMeta(path.join(dir, "feature.json")) || {}
+  const domain = meta.domain || path.basename(path.dirname(dir))
+
+  const now = new Date()
+  const quarter = `${now.getFullYear()}-Q${Math.floor(now.getMonth() / 3) + 1}`
+  const target = path.join(ROOT, "docs/specs/archive", quarter, domain, specName)
+
+  if (fs.existsSync(target) && !hasFlag("--force")) {
+    console.error(`❌ 目标已存在: ${path.relative(ROOT, target)}（如需覆盖请加 --force）`)
+    process.exit(2)
+  }
+
+  fs.mkdirSync(path.dirname(target), { recursive: true })
+  fs.renameSync(dir, target)
+
+  for (const f of ["spec.json", "feature.json"]) {
+    const p = path.join(target, f)
+    const j = readMeta(p)
+    if (!j) continue
+    j.status = "ARCHIVED"
+    j.archivedAt = now.toISOString()
+    j.archivedTo = path.relative(ROOT, target)
+    fs.writeFileSync(p, `${JSON.stringify(j, null, 2)}\n`, "utf8")
+  }
+
+  const parent = path.dirname(dir)
+  if (fs.existsSync(parent) && fs.readdirSync(parent).length === 0) fs.rmdirSync(parent)
+
+  console.log(`✅ 已归档: ${path.relative(ROOT, dir)}`)
+  console.log(`   → ${path.relative(ROOT, target)}`)
+  process.exit(0)
 }
 
 // ============================================================================
@@ -733,7 +798,8 @@ Spec-Kit 原生与企业扩展命令:
   specify/new 创建新规格骨架 (feature | bugfix | enhancement | refactor | security)
   plan/build  从 brief.json 展开编译生成完备 Markdown 规格与任务波次图
   tasks/task  查看任务大盘、波次依赖与基于真实 Git 历史核实 1 Task = 1 Commit
-  check       检查规格交付进度与文档齐备度
+  check       检查规格交付进度与文档齐备度（缺失文档会以退出码 1 失败）
+  archive     归档规格到 docs/specs/archive/<YYYY-Qx>/<domain>/<name>
   list        列出全域所有规格状态与路径
 
 示例:
@@ -744,6 +810,7 @@ Spec-Kit 原生与企业扩展命令:
   node scripts/speckit.cjs tasks --spec pay-wallet-sync
   node scripts/speckit.cjs tasks --spec pay-wallet-sync --task T1
   node scripts/speckit.cjs check --spec pay-wallet-sync
+  node scripts/speckit.cjs archive --name pay-wallet-sync
 `)
 }
 
@@ -774,6 +841,9 @@ switch (command) {
     break
   case "check":
     handleCheck()
+    break
+  case "archive":
+    handleArchive()
     break
   case "help":
   default:
