@@ -45,7 +45,8 @@
 | L3 端到端 | `pnpm lite:verify` | 嵌入式真 PG + 真 Redis + 真登录（含 ApiEncrypt 加密登录连续 3 次） | ~20s |
 | L4 构建 | `pnpm build:backend` / `pnpm build:admin` | 189MB 可运行 jar / 24.6MB 前端 dist | 各 ~1min / ~25s |
 | L5 全量 | `pnpm gate:full` | 19 项（含后端单测 + 前端构建 + lite e2e） | ~2min |
-| **L6 反向控制** | `pnpm harness:controls` | **证明门禁真的会红**：给每道门禁注入违规 → 必须失败 → 复原 → 必须转绿 | 见下表 |
+| **L6 反向控制** | `pnpm harness:controls` | **证明门禁真的会红**：给每道门禁注入违规 → 必须失败 → 复原 → 必须转绿 | 9/9 通过 |
+| **L7 派生金路径** | `pnpm harness:hatch` | 在临时目录**真跑一次派生**并断言 13 项：契约文件齐备 / 本地状态零泄漏（含凭据）/ 身份替换 / Java 包迁移 / `groupId` 与包同源 / 文件名旧品牌清零 / workspace 依赖无悬空 / 派生项目能自跑门禁 | 11s · 12986 文件 |
 
 > L6 是本文件与家族 harness（cooliebase-all `harness-health` / wenlv-next `*-negative-control`）对齐的关键：
 > **配置合法 ≠ 生效，门禁存在 ≠ 会咬人**。只有被反向验证过的守卫才算数。

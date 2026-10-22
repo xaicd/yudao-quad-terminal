@@ -11,7 +11,8 @@
       {
         "kind": "derived-project",
         "how": "pnpm project:hatch <工程名> [--title ...] [--package ...]",
-        "note": "零 Git 历史派生：复制骨架 + 改名 + Java 包路径迁移 + 开源关键字脱敏，产出独立 git 仓库"
+        "note": "零 Git 历史派生：复制骨架 + 改名 + Java 包路径迁移 + 开源关键字脱敏，产出独立 git 仓库",
+        "verified": "由 scripts/harness/hatch-smoke.mjs 在临时目录真跑派生并断言 13 项（契约文件/零泄漏/身份替换/包迁移/依赖无悬空/可自跑门禁）"
       },
       {
         "kind": "clone-collaborator",
@@ -70,7 +71,8 @@
     ],
     "compat": "compat:check",
     "launchCheck": "check:all",
-    "harnessControls": "harness:controls"
+    "harnessControls": "harness:controls",
+    "harnessHatch": "harness:hatch"
   },
   "runtime": {
     "lite": {

@@ -58,6 +58,9 @@ jobs:
       - name: Negative controls (every blocking gate must bite)
         run: node scripts/harness/negative-controls.mjs
 
+      - name: Hatch golden path (derive a project and assert the result)
+        run: node scripts/harness/hatch-smoke.mjs
+
   # 端到端：lite 档零 Docker 验收（嵌入式 PG + 嵌入式 Redis + 真实登录）
   lite-e2e:
     name: Lite E2E (zero-Docker boot + login)

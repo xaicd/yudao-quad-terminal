@@ -64,6 +64,7 @@ pnpm jdk:list      # JDK 变体矩阵（真实 ref + pom 实测值）
 pnpm patch:status  # 子模块差异补丁状态（差异收敛于 deploy/patches）
 pnpm compat:check  # 下游兼容契约校验（声明 == 实现）
 pnpm harness:controls  # 门禁反向控制（证明守卫真的会咬人）
+pnpm harness:hatch     # 派生金路径验证（真跑一次 project:hatch 并断言产物）
 pnpm patch:apply   # 幂等注入（lite:up / lifecycle build 自动调用）
 ```
 

@@ -83,7 +83,8 @@
     "patch:revert": "node scripts/submodule-patches.mjs --revert",
     "compat:check": "node scripts/compat-check.mjs",
     "harness:controls": "node scripts/harness/negative-controls.mjs",
-    "harness:check": "node scripts/compat-check.mjs && node scripts/harness/negative-controls.mjs"
+    "harness:check": "node scripts/compat-check.mjs && node scripts/harness/negative-controls.mjs && node scripts/harness/hatch-smoke.mjs",
+    "harness:hatch": "node scripts/harness/hatch-smoke.mjs"
   },
   "packageManager": "pnpm@9.15.4"
 }

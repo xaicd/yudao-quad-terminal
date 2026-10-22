@@ -375,8 +375,11 @@ Yudao-Quad-Terminal 企业级项目反应堆重塑引擎 (ProjectReactor)
 
   const projectName = options.name || path.basename(targetDir);
   const projectTitle = options.title || projectName;
-  const groupId = options.groupId || `com.${projectName}`;
-  const packageName = options.packageName || `com.${projectName}.server`;
+  // Java 包名不能含连字符，故默认值先做标识符化处理（`my-store` → `com.my_store.server`）
+  const packageName = options.packageName || `com.${projectName.replace(/[^a-zA-Z0-9_]/g, "_")}.server`;
+  // groupId 必须与 Java 包同源：直接从项目名硬拼会得到 `com.demo-mall` 这种
+  // 既非法又与包名不一致的值（派生金路径验证 harness/hatch-smoke.mjs 会断言这一点）
+  const groupId = options.groupId || packageName.replace(/\.server$/, "");
   const artifactId = options.artifactId || projectName;
 
   const config = {

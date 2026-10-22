@@ -44,6 +44,7 @@
 | 类型检查 | `pnpm typecheck` | 自有包（app / shared-types / api-client）TS 0 报错 | 各包 `tsconfig.json` |
 | 生产构建 | `pnpm build:backend` / `pnpm build:admin` / `pnpm build` | 后端两步 Maven（已验证 189MB jar）+ 前端 vite 构建（已验证 24.6MB dist） | `scripts/build-admin.mjs` |
 | 下游兼容契约 | `pnpm compat:check` | 下游绑定的入口/端口/路径/子模块指针必须与实现逐条一致 | `compat-manifest.json` |
+| 派生金路径验证 | `pnpm harness:hatch` | 临时目录真跑派生并断言 13 项（零泄漏/身份替换/包迁移/依赖无悬空/可自跑门禁） | `scripts/harness/hatch-smoke.mjs` |
 | 门禁反向控制 | `pnpm harness:controls` | 给每道 blocking 门禁注入违规，证明它真的会红（配置合法 ≠ 生效） | `scripts/harness/negative-controls.mjs` |
 | 子模块差异补丁 | `pnpm patch:status` / `patch:apply` / `patch:check` / `patch:revert` | 差异收敛于 `deploy/patches/`，指针保持纯上游（可 clone） | `deploy/patches/README.md` |
 | JDK 变体矩阵 | `pnpm jdk:list` / `jdk:status` / `jdk:use <id>` | 四档变体的真实 ref 与切换；门禁防"文档写不存在的分支" | `scripts/lib/jdk-variants.mjs` |

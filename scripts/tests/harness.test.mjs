@@ -97,4 +97,29 @@ test("HARNESS.md 存在且覆盖消费方/验证矩阵/不变式三块", () => {
   assert.match(text, /project:hatch/, "必须说明派生用法");
   assert.match(text, /compat:check/, "必须指向兼容契约校验");
   assert.match(text, /harness:controls/, "必须指向反向控制");
+  assert.match(text, /harness:hatch/, "必须指向派生金路径验证");
+});
+
+/* --------------------------- 派生金路径（hatch） --------------------------- */
+
+test("hatch 金路径验证：--help 可用，且契约声明了该入口", () => {
+  const help = run("scripts/harness/hatch-smoke.mjs", "--help");
+  assert.equal(help.status, 0, help.stderr);
+  assert.match(help.stdout, /--keep/, "应说明 --keep（保留派生目录便于排查）");
+  assert.match(help.stdout, /--name/);
+
+  const m = JSON.parse(fs.readFileSync(path.join(ROOT, "compat-manifest.json"), "utf8"));
+  assert.equal(m.entrypoints.harnessHatch, "harness:hatch");
+  assert.ok(m.framework.consumers.some((c) => c.kind === "derived-project" && c.verified), "派生消费方必须声明被验证过");
+});
+
+test("回归防护：project-reactor 的 groupId 必须与 Java 包同源（禁止再从项目名硬拼）", () => {
+  // 真实缺陷：`com.${projectName}` 对 `demo-mall` 会产出 `com.demo-mall` ——
+  // 既不是合法 Java 包段，也与包名 com.demo.server 对不上（由 hatch-smoke 抓到并修复）。
+  const src = fs.readFileSync(path.join(ROOT, "scripts/project-reactor.mjs"), "utf8");
+  assert.ok(
+    src.includes("packageName.replace(/\\.server$/, \"\")"),
+    "groupId 默认值必须从 packageName 派生"
+  );
+  assert.ok(!/groupId\s*=\s*options\.groupId\s*\|\|\s*`com\.\$\{projectName\}`/.test(src), "不得再用项目名硬拼 groupId");
 });
