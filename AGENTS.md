@@ -40,12 +40,14 @@
 
 | 能力 | 命令 | 何时用 | 真源 |
 |---|---|---|---|
-| 统一门禁 | `pnpm gate:fast` / `pnpm gate:full` | 任何改动后自证；fast 15 项 / full 18 项（full 另含后端单测与 lite e2e） | `scripts/gate-check.mjs` |
+| 统一门禁 | `pnpm gate:fast` / `pnpm gate:full` | 任何改动后自证；fast 16 项 / full 19 项（full 另含后端单测与 lite e2e） | `scripts/gate-check.mjs` |
 | 类型检查 | `pnpm typecheck` | 自有包（app / shared-types / api-client）TS 0 报错 | 各包 `tsconfig.json` |
 | 生产构建 | `pnpm build:backend` / `pnpm build:admin` / `pnpm build` | 后端两步 Maven（已验证 189MB jar）+ 前端 vite 构建（已验证 24.6MB dist） | `scripts/build-admin.mjs` |
+| 下游兼容契约 | `pnpm compat:check` | 下游绑定的入口/端口/路径/子模块指针必须与实现逐条一致 | `compat-manifest.json` |
+| 门禁反向控制 | `pnpm harness:controls` | 给每道 blocking 门禁注入违规，证明它真的会红（配置合法 ≠ 生效） | `scripts/harness/negative-controls.mjs` |
 | 子模块差异补丁 | `pnpm patch:status` / `patch:apply` / `patch:check` / `patch:revert` | 差异收敛于 `deploy/patches/`，指针保持纯上游（可 clone） | `deploy/patches/README.md` |
 | JDK 变体矩阵 | `pnpm jdk:list` / `jdk:status` / `jdk:use <id>` | 四档变体的真实 ref 与切换；门禁防"文档写不存在的分支" | `scripts/lib/jdk-variants.mjs` |
-| 自有脚本单测 | `pnpm test:scripts` | 62 个 `node:test` 用例（裁剪/规格/凭据/加解密/门禁 CLI） | `scripts/tests/` |
+| 自有脚本单测 | `pnpm test:scripts` | 78 个 `node:test` 用例（裁剪/规格/凭据/加解密/门禁 CLI/JDK 变体/子模块补丁/harness） | `scripts/tests/` |
 | 全栈验证 | `pnpm test:all` | 脚本单测 + 类型 + 后端单测（实测 72s）+ 就绪自检，**严格失败即退出** | `scripts/lifecycle.sh` test 阶段 |
 | lite 零 Docker 档 | `pnpm lite:up` / `pnpm lite:verify` / `pnpm lite:down` / `pnpm lite:clean` | 起后端、跑验收、收割残留、重置数据 | `deploy/lite/README.md` |
 | 模块裁剪 | `pnpm trim:modules --profile lite --dry-run` → `--apply --yes` → `pnpm trim:check` | 只保留所需业务模块 | `scripts/lib/module-catalog.mjs` |

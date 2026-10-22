@@ -80,7 +80,10 @@
     "patch:status": "node scripts/submodule-patches.mjs --status",
     "patch:check": "node scripts/submodule-patches.mjs --check",
     "patch:apply": "node scripts/submodule-patches.mjs --apply",
-    "patch:revert": "node scripts/submodule-patches.mjs --revert"
+    "patch:revert": "node scripts/submodule-patches.mjs --revert",
+    "compat:check": "node scripts/compat-check.mjs",
+    "harness:controls": "node scripts/harness/negative-controls.mjs",
+    "harness:check": "node scripts/compat-check.mjs && node scripts/harness/negative-controls.mjs"
   },
   "packageManager": "pnpm@9.15.4"
 }

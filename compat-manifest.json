@@ -1,0 +1,161 @@
+{
+  "version": 1,
+  "kind": "compat-manifest",
+  "description": "本基座对下游的机器可读兼容契约：派生项目、克隆协作者与外部 AI Agent 都绑定这里声明的入口与运行时约定。由 `pnpm compat:check`（scripts/compat-check.mjs）逐条对照本仓实际值校验，任何一条对不上即门禁失败。",
+  "framework": {
+    "name": "yudao-quad-terminal",
+    "role": "quad-terminal-base",
+    "templateVersion": "1.2.0",
+    "note": "templateVersion 跟踪的是【底座模板】版本，而非派生项目自身版本；派生项目的 package.json version 由项目自己管理。",
+    "consumers": [
+      {
+        "kind": "derived-project",
+        "how": "pnpm project:hatch <工程名> [--title ...] [--package ...]",
+        "note": "零 Git 历史派生：复制骨架 + 改名 + Java 包路径迁移 + 开源关键字脱敏，产出独立 git 仓库"
+      },
+      {
+        "kind": "clone-collaborator",
+        "how": "git clone --recursive",
+        "note": "三个子模块指针都指向各自远端真实存在的上游提交，clone 即可用"
+      },
+      {
+        "kind": "multi-project-host",
+        "how": "pnpm run-all",
+        "note": "按项目名动态生成 API 前缀与端口偏移，多项目同机并存不冲突"
+      },
+      {
+        "kind": "agent",
+        "how": ".mcp.json + llms.txt + HARNESS.md",
+        "note": "8 个 MCP 工具 + 高密度能力契约 + 一图总览"
+      }
+    ]
+  },
+  "entrypoints": {
+    "hatch": "project:hatch",
+    "launch": "all",
+    "gate": [
+      "gate:fast",
+      "gate:full",
+      "check"
+    ],
+    "lite": [
+      "lite:up",
+      "lite:verify",
+      "lite:down",
+      "lite:clean"
+    ],
+    "patches": [
+      "patch:status",
+      "patch:apply",
+      "patch:check",
+      "patch:revert"
+    ],
+    "jdk": [
+      "jdk:list",
+      "jdk:status",
+      "jdk:use"
+    ],
+    "trim": "trim:modules",
+    "sdk": "gen:api-sdk",
+    "codegen": "gen:module",
+    "drift": "check:drift",
+    "scriptTests": "test:scripts",
+    "build": [
+      "build:backend",
+      "build:admin"
+    ],
+    "specs": [
+      "speckit",
+      "specs:health"
+    ],
+    "compat": "compat:check",
+    "launchCheck": "check:all",
+    "harnessControls": "harness:controls"
+  },
+  "runtime": {
+    "lite": {
+      "profiles": [
+        "lite"
+      ],
+      "configOverlay": "deploy/lite/application-lite.yaml",
+      "configOverlayArg": "--spring.config.additional-location=file:./deploy/lite/",
+      "postgres": {
+        "port": 55432,
+        "user": "yudao",
+        "password": "yudao",
+        "database": "ruoyi-vue-pro",
+        "dataDir": ".commandcode/lite/pgdata"
+      },
+      "redis": {
+        "port": 63799,
+        "bind": "127.0.0.1",
+        "binDir": ".commandcode/lite/bin",
+        "dataDir": ".commandcode/lite/redis-data"
+      },
+      "server": {
+        "port": 48080
+      },
+      "credentialsFile": ".commandcode/lite/credentials.env",
+      "credentialsFileMode": "600",
+      "passwordEnvVars": [
+        "LITE_ADMIN_USERNAME",
+        "LITE_ADMIN_PASSWORD",
+        "LITE_REDIS_PASSWORD"
+      ],
+      "portEnvVars": [
+        "LITE_PG_PORT",
+        "LITE_REDIS_PORT",
+        "LITE_SERVER_PORT"
+      ]
+    },
+    "apiPrefixes": {
+      "admin": "/admin-api",
+      "app": "/app-api",
+      "multiProjectPattern": "/<project-slug>/admin-api",
+      "loginPath": "/admin-api/system/auth/login",
+      "encryptHeader": "X-Api-Encrypt"
+    }
+  },
+  "artifacts": {
+    "backendJar": "apps/backend/yudao-server/target/yudao-server.jar",
+    "adminDist": "apps/admin/dist",
+    "producers": {
+      "backendJar": "build:backend",
+      "adminDist": "build:admin"
+    }
+  },
+  "submodules": [
+    {
+      "path": "apps/backend",
+      "url": "https://github.com/YunaiV/yudao-cloud.git",
+      "branch": "master-jdk17",
+      "patchesDir": "deploy/patches/backend"
+    },
+    {
+      "path": "apps/admin",
+      "url": "https://github.com/yudaocode/yudao-ui-admin-vue3.git",
+      "patchesDir": "deploy/patches/admin"
+    },
+    {
+      "path": "apps/miniapp",
+      "url": "https://github.com/yudaocode/yudao-mall-uniapp.git"
+    }
+  ],
+  "jdkVariants": {
+    "source": "scripts/lib/jdk-variants.mjs",
+    "default": "jdk17-21",
+    "ids": [
+      "jdk17-21",
+      "jdk8-11",
+      "jdk25"
+    ]
+  },
+  "docs": {
+    "constitution": "AGENTS.md",
+    "harness": "HARNESS.md",
+    "llms": "llms.txt",
+    "wiki": "wiki/index.md",
+    "patches": "deploy/patches/README.md",
+    "lite": "deploy/lite/README.md"
+  }
+}

@@ -385,6 +385,13 @@ const GATES = [
     inline: checkScriptTargets,
   },
   {
+    id: "compat",
+    label: "下游兼容契约（声明 == 实现）",
+    tier: "fast",
+    severity: "blocking",
+    spawn: { cmd: process.execPath, args: ["scripts/compat-check.mjs"] },
+  },
+  {
     id: "submodule-patches",
     label: "子模块差异收敛（改动 == deploy/patches 声明）",
     tier: "fast",
@@ -500,9 +507,17 @@ function main() {
   const args = process.argv.slice(2);
   const tierArg = args.includes("--tier") ? args[args.indexOf("--tier") + 1] : "fast";
   const json = args.includes("--json");
+  const onlyArg = args.includes("--only") ? args[args.indexOf("--only") + 1] : null;
 
   if (args.includes("--help") || args.includes("-h")) {
-    console.log("用法: node scripts/gate-check.mjs [--tier fast|full] [--json] [--list]");
+    console.log("用法: node scripts/gate-check.mjs [--tier fast|full] [--json] [--list] [--only <id[,id]>]");
+    console.log("  --only  只跑指定门禁（逗号分隔），供 harness 负向控制等场景单点触发");
+    process.exit(EXIT_OK);
+  }
+  if (args.includes("--list")) {
+    for (const g of GATES) {
+      console.log(`${g.tier.padEnd(5)} ${g.severity.padEnd(9)} ${g.id.padEnd(18)} ${g.label}`);
+    }
     process.exit(EXIT_OK);
   }
   if (!["fast", "full"].includes(tierArg)) {
@@ -510,14 +525,18 @@ function main() {
     process.exit(EXIT_USAGE);
   }
 
-  if (args.includes("--list")) {
-    for (const g of GATES) {
-      console.log(`${g.tier.padEnd(5)} ${g.severity.padEnd(9)} ${g.id.padEnd(11)} ${g.label}`);
+  let selected;
+  if (onlyArg) {
+    const ids = onlyArg.split(",").map((s) => s.trim()).filter(Boolean);
+    selected = GATES.filter((g) => ids.includes(g.id));
+    const missing = ids.filter((id) => !GATES.some((g) => g.id === id));
+    if (missing.length) {
+      console.error(`❌ 未知门禁 id: ${missing.join(", ")}`);
+      process.exit(EXIT_USAGE);
     }
-    process.exit(EXIT_OK);
+  } else {
+    selected = GATES.filter((g) => g.tier === "fast" || tierArg === "full");
   }
-
-  const selected = GATES.filter((g) => g.tier === "fast" || tierArg === "full");
   if (!json) {
     console.log("================================================================");
     console.log(`🚦 工程门禁  tier=${tierArg}（${selected.length} 项）`);
