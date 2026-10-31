@@ -1,0 +1,34 @@
+# Yudao Quad-Terminal 领域拓扑与本体映射 (Domain Topology)
+platform: "yudao-quad-terminal"
+domains:
+  - name: "system"
+    title: "系统管理域"
+    basePackage: "cn.iocoder.yudao.module.system"
+    adminPath: "apps/admin/src/views/system"
+    entities:
+      - system_user
+      - system_role
+      - system_menu
+      - system_dept
+      - system_tenant
+  - name: "infra"
+    title: "基础设施工艺域"
+    basePackage: "cn.iocoder.yudao.module.infra"
+    adminPath: "apps/admin/src/views/infra"
+    entities:
+      - infra_config
+      - infra_file
+      - infra_job
+      - infra_api_access_log
+  - name: "bpm"
+    title: "工作流编排域"
+    basePackage: "cn.iocoder.yudao.module.bpm"
+    adminPath: "apps/admin/src/views/bpm"
+  - name: "pay"
+    title: "支付交易结算域"
+    basePackage: "cn.iocoder.yudao.module.pay"
+    adminPath: "apps/admin/src/views/pay"
+  - name: "mall"
+    title: "新零售电商域"
+    basePackage: "cn.iocoder.yudao.module.mall"
+    adminPath: "apps/admin/src/views/mall"

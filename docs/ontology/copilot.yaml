@@ -1,0 +1,37 @@
+# Yudao Quad-Terminal AI Copilot 侧边栏与安全沙箱规范 (Copilot Specification)
+version: "1.0.0"
+component:
+  name: "OntologyCopilotDrawer"
+  type: "Vue3 / React Native / UniApp"
+  mountStrategy: "layout-floating-dock"
+  ariaLabel: "AI 业务与数据探查 Copilot"
+  zeroDeadButtons: true
+
+security:
+  readonlyOnly: true
+  allowedStatements:
+    - "SELECT"
+    - "WITH"
+  forbiddenKeywords:
+    - "INSERT"
+    - "UPDATE"
+    - "DELETE"
+    - "DROP"
+    - "ALTER"
+    - "TRUNCATE"
+    - "EXEC"
+  tenantIsolation:
+    enforce: true
+    headerName: "tenant-id"
+    injectedColumn: "tenant_id"
+  clampMaxRows: 100
+
+endpoints:
+  ontologyIntrospection:
+    method: "GET"
+    path: "/admin-api/system/ontology"
+    description: "自省输出 Yudao 活体本体七模型元数据"
+  copilotQuery:
+    method: "POST"
+    path: "/admin-api/system/copilot/query"
+    description: "安全只读 SQL 与自然语言查数沙箱执行端点"
