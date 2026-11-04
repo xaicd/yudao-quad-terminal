@@ -13,7 +13,7 @@
     "start": "bash scripts/lifecycle.sh . start",
     "check:readiness": "node scripts/run-all.cjs --check",
     "dev:admin": "pnpm --filter yudao-ui-admin-vue3 dev",
-    "dev:miniapp": "echo \"⏭️  微信小程序开发入口：apps/miniapp (shopro) 是 HBuilderX 工程，未提供 CLI dev 脚本 —— 请用 HBuilderX 打开该目录并运行到微信开发者工具\"",
+    "dev:miniapp": "pnpm --filter shopro run dev:h5",
     "dev:app": "pnpm --filter @yudao-quad-terminal/app start",
     "backend:run": "cd apps/backend/yudao-server && mvn spring-boot:run -Dspring-boot.run.profiles=local",
     "project:reactor": "node scripts/project-reactor.mjs",
@@ -70,7 +70,7 @@
     "spec:archive": "node scripts/speckit.cjs archive",
     "task:verify": "node scripts/speckit.cjs tasks",
     "lite:down": "node scripts/lite-down.mjs",
-    "build": "pnpm build:backend && pnpm build:admin",
+    "build": "pnpm build:backend && pnpm build:admin && pnpm build:miniapp",
     "build:backend": "cd apps/backend && mvn -B clean install -DskipTests -pl yudao-server -am -Dspring-boot.repackage.skip=true && mvn -B package -DskipTests -pl yudao-server",
     "build:admin": "node scripts/build-admin.mjs",
     "test:scripts": "node --test scripts/tests/*.test.mjs",
@@ -86,7 +86,9 @@
     "harness:check": "node scripts/gate-check.mjs --tier fast",
     "harness:hatch": "node scripts/harness/hatch-smoke.mjs",
     "harness": "node scripts/gate-check.mjs",
-    "harness:doctor": "node scripts/compat-check.mjs"
+    "harness:doctor": "node scripts/compat-check.mjs",
+    "build:miniapp": "pnpm --filter shopro run build:h5",
+    "preview:miniapp": "pnpm --filter shopro run preview:h5"
   },
   "packageManager": "pnpm@9.15.4"
 }
