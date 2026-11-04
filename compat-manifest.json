@@ -168,8 +168,10 @@
     "adminDist": "apps/admin/dist",
     "producers": {
       "backendJar": "build:backend",
-      "adminDist": "build:admin"
-    }
+      "adminDist": "build:admin",
+      "miniappH5": "build:miniapp"
+    },
+    "miniappH5": "apps/miniapp/dist/build/h5"
   },
   "submodules": [
     {
@@ -185,7 +187,8 @@
     },
     {
       "path": "apps/miniapp",
-      "url": "https://github.com/yudaocode/yudao-mall-uniapp.git"
+      "url": "https://github.com/yudaocode/yudao-mall-uniapp.git",
+      "patchesDir": "deploy/patches/miniapp"
     }
   ],
   "jdkVariants": {

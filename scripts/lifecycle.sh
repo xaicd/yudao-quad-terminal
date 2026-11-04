@@ -100,6 +100,14 @@ EOF_M2
         echo "  ⏭️  SKIP 前端构建: apps/admin 缺依赖/构建工具（cd apps/admin && pnpm install）"
       fi
     fi
+    if [ -d "apps/miniapp" ]; then
+      if [ -x "apps/miniapp/node_modules/.bin/uni" ] || [ -f "apps/miniapp/node_modules/.bin/vite" ]; then
+        (cd apps/miniapp && pnpm run build:h5)
+        echo "  ✅ C端商城静态产物构建完成: apps/miniapp/dist/build/h5"
+      else
+        echo "  ⏭️  SKIP C端构建: apps/miniapp 缺依赖/构建工具（cd apps/miniapp && pnpm install）"
+      fi
+    fi
     ;;
 
   start)

@@ -17,6 +17,7 @@ import path from "node:path";
 export const PATCH_SETS = [
   { submodule: "backend", dir: "apps/backend", patchDir: "deploy/patches/backend" },
   { submodule: "admin", dir: "apps/admin", patchDir: "deploy/patches/admin" },
+  { submodule: "miniapp", dir: "apps/miniapp", patchDir: "deploy/patches/miniapp" },
 ];
 
 /** 从补丁正文里解析出它触碰的文件列表 */
