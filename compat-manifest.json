@@ -46,19 +46,28 @@
       "prefix": "/admin-api",
       "auth": "bearer-jwt",
       "audit": true,
-      "rateLimit": { "qps": 100, "dim": "userId" }
+      "rateLimit": {
+        "qps": 100,
+        "dim": "userId"
+      }
     },
     "app": {
       "prefix": "/app-api",
       "auth": "bearer-jwt",
       "audit": false,
-      "rateLimit": { "qps": 20, "dim": "memberId" }
+      "rateLimit": {
+        "qps": 20,
+        "dim": "memberId"
+      }
     },
     "open": {
       "prefix": "/open-api",
       "auth": "hmac-sha256",
       "audit": true,
-      "rateLimit": { "qps": 50, "dim": "appKey" }
+      "rateLimit": {
+        "qps": 50,
+        "dim": "appKey"
+      }
     }
   },
   "harness": {
@@ -195,5 +204,18 @@
     "wiki": "wiki/index.md",
     "patches": "deploy/patches/README.md",
     "lite": "deploy/lite/README.md"
+  },
+  "uiPartitions": {
+    "admin": {
+      "name": "B端运营中台 (Vue3 Admin)",
+      "route": "/",
+      "defaultPort": 48121,
+      "desc": "商品管理、多租户行级隔离、订单财务、权限审计"
+    },
+    "portal": {
+      "name": "C端移动/前台商城 (UniApp/H5)",
+      "route": "/mobile",
+      "desc": "C端用户前台、商品详情、购物车下单、个人中心"
+    }
   }
 }
