@@ -113,8 +113,8 @@ for (const envFile of [".env", ".env.local", "apps/admin/.env", "apps/miniapp/.e
 if (!apiPrefix) apiPrefix = `/${projectSlug}/admin-api`;
 if (!appApiPrefix) appApiPrefix = `/${projectSlug}/app-api`;
 if (!openApiPrefix) openApiPrefix = `/${projectSlug}/open-api`;
-if (!backendPort || isNaN(backendPort)) backendPort = 48000 + portOffset;
-if (!frontendPort || isNaN(frontendPort)) frontendPort = 3000 + portOffset;
+if (!backendPort || isNaN(backendPort)) backendPort = 48080;
+if (!frontendPort || isNaN(frontendPort)) frontendPort = 48121;
 if (!miniappPort || isNaN(miniappPort)) miniappPort = 48122;
 if (!gatewayPort || isNaN(gatewayPort)) gatewayPort = 48120;
 
