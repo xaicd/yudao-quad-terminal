@@ -532,19 +532,30 @@ index 60122b60..53d4ba71 100644
  
  export default app;
 diff --git a/vite.config.js b/vite.config.js
-index 40016f4f..1702f5da 100644
+index 40016f4f..1024e011 100644
 --- a/vite.config.js
 +++ b/vite.config.js
-@@ -10,6 +10,12 @@ import mpliveMainfestPlugin from './sheep/libs/mplive-manifest-plugin';
- export default (command, mode) => {
- 	const env = loadEnv(mode, __dirname, 'SHOPRO_');
+@@ -7,10 +7,20 @@ import mpliveMainfestPlugin from './sheep/libs/mplive-manifest-plugin';
+ 
+ 
+ // https://vitejs.dev/config/
+-export default (command, mode) => {
+-	const env = loadEnv(mode, __dirname, 'SHOPRO_');
++export default (configEnv, rawMode) => {
++	const mode = typeof configEnv === 'object' && configEnv ? configEnv.mode : (rawMode || 'development');
++	const env = loadEnv(mode || 'development', __dirname, ['SHOPRO_', 'VITE_']);
++	const basePath = process.env.UNI_H5_BASE || process.env.VITE_BASE_PATH || env.VITE_BASE_PATH || env.SHOPRO_BASE_PATH || './';
++
  	return {
+-		envPrefix: "SHOPRO_",
++		base: basePath,
 +		resolve: {
 +			alias: {
 +				'@': path.resolve(__dirname, '.'),
 +				'sheep': path.resolve(__dirname, 'sheep'),
 +			},
 +		},
- 		envPrefix: "SHOPRO_",
++		envPrefix: ["SHOPRO_", "VITE_"],
  		plugins: [
  			uni(),
+ 			// viteCompression({

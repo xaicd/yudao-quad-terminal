@@ -88,7 +88,7 @@
     "harness": "node scripts/gate-check.mjs",
     "harness:doctor": "node scripts/compat-check.mjs",
     "build:miniapp": "pnpm --filter shopro run build:h5",
-    "preview:miniapp": "pnpm --filter shopro run preview:h5"
+    "preview:miniapp": "node scripts/serve-miniapp.cjs"
   },
   "packageManager": "pnpm@9.15.4"
 }

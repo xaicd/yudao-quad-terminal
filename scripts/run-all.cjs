@@ -316,8 +316,9 @@ async function main() {
   const miniPortAlive = await probeTcpPort(miniappPort);
   if (!miniPortAlive && (fs.existsSync(miniappH5Dist) || fs.existsSync(miniappPkg))) {
     if (fs.existsSync(path.join(miniappH5Dist, "index.html"))) {
-      console.log(`  📱 [Miniapp] 启动 C端前台商城静态服务 (端口 ${miniappPort})...`);
-      const mini = spawn("npx", ["serve", "-l", String(miniappPort), "dist/build/h5"], { cwd: path.resolve("apps/miniapp"), env: envOverrides, stdio: "inherit", detached: true });
+      console.log(`  📱 [Miniapp] 启动 C端前台商城静态服务 (端口 ${miniappPort}, BasePath /${projectSlug}/2c/)...`);
+      const serveScript = path.resolve("scripts/serve-miniapp.cjs");
+      const mini = spawn(process.execPath, [serveScript, "--port", String(miniappPort), "--slug", projectSlug, "--dir", miniappH5Dist], { env: envOverrides, stdio: "inherit", detached: true });
       children.push(mini);
       miniappStarted = true;
     } else {
