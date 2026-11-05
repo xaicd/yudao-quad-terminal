@@ -44,6 +44,10 @@ EOF_M2
     elif [ -d "apps/backend/yudao-server" ]; then
       (cd apps/backend && mvn clean test-compile -DskipTests -pl yudao-server -am)
     fi
+    if [ -f "scripts/domain-prune.mjs" ]; then
+      echo "  🧹 自动化执行领域菜单与脚手架噪声清洗 (domain-prune)..."
+      node scripts/domain-prune.mjs --apply || true
+    fi
     echo "  ✅ 初始化安装完成"
     ;;
 

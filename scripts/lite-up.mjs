@@ -538,6 +538,30 @@ async function main() {
       await client.end();
     }
 
+    // --- 4.5 领域业务纯粹化与脚手架噪声清洗 ---
+    const pruneScript = path.join(ROOT, "scripts/domain-prune.mjs");
+    if (fs.existsSync(pruneScript)) {
+      console.log("🧹 自动化执行领域业务纯粹化与脚手架噪声清洗…");
+      try {
+        const pruneMod = await import("./domain-prune.mjs");
+        const clientPrune = pgRuntime.makeClient({
+          port: opts.pgPort,
+          user: pgRuntime.DEFAULTS.user,
+          password: pgRuntime.DEFAULTS.password,
+          database: pgRuntime.DEFAULTS.database,
+        });
+        await clientPrune.connect();
+        try {
+          const pruneRes = await pruneMod.pruneDatabaseMenus(clientPrune, "mall", true);
+          console.log(`   领域清洗已生效: 已停用并隐藏 ${pruneRes.prunedTopNames.length} 个无关模块 (${pruneRes.totalPrunedCount} 个菜单节点)`);
+        } finally {
+          await clientPrune.end();
+        }
+      } catch (err) {
+        console.warn(`   ⚠️ 领域清洗跳过或失败: ${err.message}`);
+      }
+    }
+
     // --- 5. 启动应用 ---
     console.log("🚀 启动 yudao-server…");
     const sep = process.platform === "win32" ? ";" : ":";

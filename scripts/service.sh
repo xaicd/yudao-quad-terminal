@@ -45,6 +45,10 @@ get_pid() {
 do_install() {
   echo "📦 [${SLUG}] 执行标准依赖安装与初始化 (install)..."
   bash scripts/lifecycle.sh . install
+  if [ -f "scripts/domain-prune.mjs" ]; then
+    echo "🧹 [${SLUG}] 自动化执行领域菜单与脚手架噪声清洗 (domain-prune)..."
+    node scripts/domain-prune.mjs --apply || true
+  fi
   echo "✅ 安装就绪"
 }
 
