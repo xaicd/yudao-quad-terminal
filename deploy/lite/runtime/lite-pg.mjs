@@ -90,6 +90,7 @@ export async function startPostgres({ port, user, password, dataDir, onLog, onEr
     user,
     password,
     persistent: true, // 停机不删数据，保证二次启动秒起
+    initdbFlags: ["-E", "UTF8", "--locale=C"],
     onLog: onLog || (() => {}),
     onError: onError || (() => {}),
   });
@@ -115,7 +116,7 @@ export async function ensureDatabase({ port, user, password, database }) {
   try {
     const { rows } = await admin.query("select 1 from pg_database where datname = $1", [database]);
     if (rows.length === 0) {
-      await admin.query(`CREATE DATABASE "${database}"`);
+      await admin.query(`CREATE DATABASE "${database}" WITH ENCODING 'UTF8'`);
       return { created: true };
     }
     return { created: false };
