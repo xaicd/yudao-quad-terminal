@@ -45,6 +45,102 @@ index 80b0df74..1a9a87ba 100644
 -}
 +}
 \ No newline at end of file
+diff --git a/sheep/store/app.js b/sheep/store/app.js
+index 60122b60..4b1cf801 100644
+--- a/sheep/store/app.js
++++ b/sheep/store/app.js
+@@ -185,13 +185,75 @@ const adaptTemplate = async (appTemplate, templateId) => {
+     ? // 查询指定模板，一般是预览时使用
+       await DiyApi.getDiyTemplate(templateId)
+     : await DiyApi.getUsedDiyTemplate();
+-  // 模板不存在
+-  if (!diyTemplate) {
+-    $router.error('TemplateError');
+-    return;
++  // TemplateError-eliminated: 启用默认极简商城兜底模板
++  let currentTemplate = diyTemplate;
++  if (!currentTemplate) {
++    console.warn('[adaptTemplate] 线上未配置装修模板或 promotion 模块离线，启用默认商城兜底模板');
++    currentTemplate = {
++      property: {
++        tabBar: {
++          mode: 1,
++          theme: 'red',
++          style: {
++            color: '#999999',
++            activeColor: '#ff3000',
++            bgType: 'color',
++            bgColor: '#ffffff',
++          },
++          items: [
++            {
++              text: '首页',
++              url: '/pages/index/index',
++              iconUrl: 'https://static.iocoder.cn/mall/tabbar/home.png',
++              activeIconUrl: 'https://static.iocoder.cn/mall/tabbar/home-selected.png',
++            },
++            {
++              text: '分类',
++              url: '/pages/index/category',
++              iconUrl: 'https://static.iocoder.cn/mall/tabbar/category.png',
++              activeIconUrl: 'https://static.iocoder.cn/mall/tabbar/category-selected.png',
++            },
++            {
++              text: '购物车',
++              url: '/pages/index/cart',
++              iconUrl: 'https://static.iocoder.cn/mall/tabbar/cart.png',
++              activeIconUrl: 'https://static.iocoder.cn/mall/tabbar/cart-selected.png',
++            },
++            {
++              text: '我的',
++              url: '/pages/index/user',
++              iconUrl: 'https://static.iocoder.cn/mall/tabbar/user.png',
++              activeIconUrl: 'https://static.iocoder.cn/mall/tabbar/user-selected.png',
++            },
++          ],
++        },
++      },
++      home: {
++        page: {
++          backgroundColor: '#f6f6f6',
++        },
++        navigationBar: {
++          title: '在线商城',
++          backgroundColor: '#ffffff',
++          color: '#333333',
++        },
++        components: [],
++      },
++      user: {
++        page: {
++          backgroundColor: '#f6f6f6',
++        },
++        navigationBar: {
++          title: '个人中心',
++          backgroundColor: '#ffffff',
++          color: '#333333',
++        },
++        components: [],
++      },
++    };
+   }
+ 
+-  const tabBar = diyTemplate?.property?.tabBar;
++  const tabBar = currentTemplate?.property?.tabBar;
+   if (tabBar) {
+     appTemplate.basic.tabbar = tabBar;
+     // TODO 商城装修没有对 tabBar 进行角标配置，测试角标需打开以下注释
+@@ -206,8 +268,8 @@ const adaptTemplate = async (appTemplate, templateId) => {
+       appTemplate.basic.theme = tabBar?.theme;
+     }
+   }
+-  appTemplate.home = diyTemplate?.home;
+-  appTemplate.user = diyTemplate?.user;
++  appTemplate.home = currentTemplate?.home;
++  appTemplate.user = currentTemplate?.user;
+ };
+ 
+ export default app;
 diff --git a/vite.config.js b/vite.config.js
 index 40016f4f..1702f5da 100644
 --- a/vite.config.js
