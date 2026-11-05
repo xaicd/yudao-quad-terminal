@@ -76,6 +76,52 @@ index 80b0df74..1a9a87ba 100644
 -}
 +}
 \ No newline at end of file
+diff --git a/sheep/request/index.js b/sheep/request/index.js
+index 41121edd..f515f194 100644
+--- a/sheep/request/index.js
++++ b/sheep/request/index.js
+@@ -233,7 +233,7 @@ const refreshToken = async (config) => {
+     // 1. 如果获取不到刷新令牌，则只能执行登出操作
+     const refreshToken = getRefreshToken();
+     if (!refreshToken) {
+-      return handleAuthorized();
++      return handleAuthorized(config);
+     }
+     // 只有真正发起刷新时才标记刷新中，避免无刷新令牌时状态一直卡住，后续 401 不再弹登录框
+     // https://github.com/yudaocode/yudao-mall-uniapp/issues/38
+@@ -260,7 +260,7 @@ const refreshToken = async (config) => {
+         cb();
+       });
+       // 提示是否要登出。即不回放当前请求！不然会形成递归
+-      return handleAuthorized();
++      return handleAuthorized(config);
+     } finally {
+       requestList = [];
+       isRefreshToken = false;
+@@ -278,15 +278,20 @@ const refreshToken = async (config) => {
+ 
+ /**
+  * 处理 401 未登录的错误
++ * 核心原则：只有当请求显式声明需要认证（config.custom?.auth === true）或者用户曾登录但会话过期时，才弹出登录弹窗。
++ * 游客在 C 端首屏正常浏览商品、首页装修、分类等场景，绝不可弹窗阻断！
+  */
+-const handleAuthorized = () => {
++const handleAuthorized = (config = {}) => {
+   const userStore = $store('user');
++  const wasLoggedIn = userStore.isLogin;
+   userStore.logout(true);
+-  showAuthModal();
++  if (config?.custom?.auth || wasLoggedIn) {
++    showAuthModal();
++  }
+   // 登录超时
+   return Promise.reject({
+     code: 401,
+-    msg: userStore.isLogin ? '您的登陆已过期' : '请先登录',
++    msg: wasLoggedIn ? '您的登陆已过期' : '请先登录',
+   });
+ };
+ 
 diff --git a/sheep/store/app.js b/sheep/store/app.js
 index 60122b60..4b1cf801 100644
 --- a/sheep/store/app.js
