@@ -123,17 +123,30 @@ index 41121edd..f515f194 100644
  };
  
 diff --git a/sheep/store/app.js b/sheep/store/app.js
-index 60122b60..4b1cf801 100644
+index 60122b60..5a14502d 100644
 --- a/sheep/store/app.js
 +++ b/sheep/store/app.js
-@@ -185,13 +185,75 @@ const adaptTemplate = async (appTemplate, templateId) => {
-     ? // 查询指定模板，一般是预览时使用
-       await DiyApi.getDiyTemplate(templateId)
-     : await DiyApi.getUsedDiyTemplate();
+@@ -181,17 +181,84 @@ const adaptTenant = async () => {
+ 
+ /** 初始化装修模版 */
+ const adaptTemplate = async (appTemplate, templateId) => {
+-  const { data: diyTemplate } = templateId
+-    ? // 查询指定模板，一般是预览时使用
+-      await DiyApi.getDiyTemplate(templateId)
+-    : await DiyApi.getUsedDiyTemplate();
 -  // 模板不存在
 -  if (!diyTemplate) {
 -    $router.error('TemplateError');
 -    return;
++  let diyTemplate = null;
++  try {
++    const res = templateId
++      ? await DiyApi.getDiyTemplate(templateId)
++      : await DiyApi.getUsedDiyTemplate();
++    diyTemplate = res?.data;
++  } catch (err) {
++    console.warn('[adaptTemplate] 线上未配置装修模版或 promotion 离线，启用默认商城模版');
++  }
 +  // TemplateError-eliminated: 启用默认极简商城兜底模板
 +  let currentTemplate = diyTemplate;
 +  if (!currentTemplate) {
@@ -207,7 +220,7 @@ index 60122b60..4b1cf801 100644
    if (tabBar) {
      appTemplate.basic.tabbar = tabBar;
      // TODO 商城装修没有对 tabBar 进行角标配置，测试角标需打开以下注释
-@@ -206,8 +268,8 @@ const adaptTemplate = async (appTemplate, templateId) => {
+@@ -206,8 +273,8 @@ const adaptTemplate = async (appTemplate, templateId) => {
        appTemplate.basic.theme = tabBar?.theme;
      }
    }
