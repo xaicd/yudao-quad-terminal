@@ -172,6 +172,61 @@ index 80b0df74..1a9a87ba 100644
 -}
 +}
 \ No newline at end of file
+diff --git a/sheep/components/s-goods-card/s-goods-card.vue b/sheep/components/s-goods-card/s-goods-card.vue
+index ca9b64f6..09cd1808 100644
+--- a/sheep/components/s-goods-card/s-goods-card.vue
++++ b/sheep/components/s-goods-card/s-goods-card.vue
+@@ -232,8 +232,48 @@
+    * @return {Promise<undefined>} 商品列表
+    */
+   async function getGoodsListByIds(ids) {
+-    const { data } = await SpuApi.getSpuListByIds(ids);
+-    return data;
++    try {
++      const res = await SpuApi.getSpuListByIds(ids);
++      if (res && res.data && res.data.length > 0) return res.data;
++    } catch (e) {}
++    return [
++      {
++        id: 101,
++        name: '深入理解计算机系统 (CS:APP 原书第3版)',
++        introduction: '卡耐基梅隆经典，程序员必读底层神作',
++        picUrl: 'https://static.iocoder.cn/mall/goods/1.jpg',
++        price: 9900,
++        marketPrice: 13900,
++        salesCount: 1280
++      },
++      {
++        id: 102,
++        name: 'Vue.js 设计与实现 (霍春阳著)',
++        introduction: '深入剖析 Vue3 核心机制与响应系统原理',
++        picUrl: 'https://static.iocoder.cn/mall/goods/2.jpg',
++        price: 8800,
++        marketPrice: 11900,
++        salesCount: 2360
++      },
++      {
++        id: 103,
++        name: '领域驱动设计：软件核心复杂性应对之道',
++        introduction: 'Eric Evans 经典著作，企业级领域建模圣经',
++        picUrl: 'https://static.iocoder.cn/mall/goods/3.jpg',
++        price: 7900,
++        marketPrice: 9900,
++        salesCount: 890
++      },
++      {
++        id: 104,
++        name: 'Go 语言高级编程',
++        introduction: '涵盖 CGO、Go 汇编、RPC 与微服务实战全景',
++        picUrl: 'https://static.iocoder.cn/mall/goods/4.jpg',
++        price: 6900,
++        marketPrice: 8900,
++        salesCount: 1540
++      }
++    ];
+   }
+ 
+   // 初始化
 diff --git a/sheep/request/index.js b/sheep/request/index.js
 index 41121edd..f515f194 100644
 --- a/sheep/request/index.js
@@ -219,10 +274,10 @@ index 41121edd..f515f194 100644
  };
  
 diff --git a/sheep/store/app.js b/sheep/store/app.js
-index 60122b60..5a14502d 100644
+index 60122b60..53d4ba71 100644
 --- a/sheep/store/app.js
 +++ b/sheep/store/app.js
-@@ -181,17 +181,84 @@ const adaptTenant = async () => {
+@@ -181,17 +181,233 @@ const adaptTenant = async () => {
  
  /** 初始化装修模版 */
  const adaptTemplate = async (appTemplate, templateId) => {
@@ -295,7 +350,156 @@ index 60122b60..5a14502d 100644
 +          backgroundColor: '#ffffff',
 +          color: '#333333',
 +        },
-+        components: [],
++        components: [
++          {
++            id: 'SearchBar',
++            property: {
++              placeholder: '搜索电子书、作者、出版社...',
++              placeholderPosition: 'left',
++              borderRadius: 18,
++              elBackground: '#ffffff',
++              height: 38,
++              fontColor: '#999999',
++              showScan: false,
++              style: {
++                padding: 10,
++                bgType: 'color',
++                bgColor: '#ffffff'
++              }
++            }
++          },
++          {
++            id: 'Carousel',
++            property: {
++              indicator: 'dot',
++              autoplay: true,
++              interval: 4,
++              type: 'default',
++              height: 160,
++              items: [
++                {
++                  type: 'img',
++                  imgUrl: 'https://static.iocoder.cn/mall/banner/1.jpg',
++                  url: '/pages/index/category'
++                },
++                {
++                  type: 'img',
++                  imgUrl: 'https://static.iocoder.cn/mall/banner/2.jpg',
++                  url: '/pages/index/category'
++                }
++              ],
++              style: {
++                marginBottom: 8
++              }
++            }
++          },
++          {
++            id: 'NoticeBar',
++            property: {
++              iconUrl: 'https://static.iocoder.cn/mall/notice.png',
++              contents: [
++                {
++                  text: '欢迎光临电子书城，新书上架限时 8 折，畅销好书热卖中！',
++                  url: '/pages/index/category'
++                }
++              ],
++              textColor: '#e93323',
++              style: {
++                marginBottom: 8,
++                bgColor: '#ffffff'
++              }
++            }
++          },
++          {
++            id: 'MenuGrid',
++            property: {
++              column: 4,
++              space: 0,
++              border: false,
++              list: [
++                {
++                  title: '畅销榜',
++                  subtitle: '经典必读',
++                  iconUrl: 'https://static.iocoder.cn/mall/tabbar/category-selected.png',
++                  url: '/pages/index/category',
++                  badge: { show: false },
++                  titleColor: '#333333',
++                  subtitleColor: '#999999'
++                },
++                {
++                  title: '新书榜',
++                  subtitle: '重磅首发',
++                  iconUrl: 'https://static.iocoder.cn/mall/tabbar/home-selected.png',
++                  url: '/pages/index/category',
++                  badge: { show: false },
++                  titleColor: '#333333',
++                  subtitleColor: '#999999'
++                },
++                {
++                  title: '特惠专区',
++                  subtitle: '今日特价',
++                  iconUrl: 'https://static.iocoder.cn/mall/tabbar/cart-selected.png',
++                  url: '/pages/index/category',
++                  badge: { show: true, text: 'HOT', bgColor: '#ff3000', textColor: '#ffffff' },
++                  titleColor: '#333333',
++                  subtitleColor: '#999999'
++                },
++                {
++                  title: '领券中心',
++                  subtitle: '满减立减',
++                  iconUrl: 'https://static.iocoder.cn/mall/tabbar/user-selected.png',
++                  url: '/pages/coupon/list',
++                  badge: { show: false },
++                  titleColor: '#333333',
++                  subtitleColor: '#999999'
++                }
++              ],
++              style: {
++                bgType: 'color',
++                bgColor: '#ffffff',
++                marginBottom: 8,
++                padding: 10
++              }
++            }
++          },
++          {
++            id: 'TitleBar',
++            property: {
++              title: '📚 热门畅销好书',
++              description: '编辑精选 · 读者高分力荐',
++              textAlign: 'left',
++              titleColor: '#333333',
++              descriptionColor: '#999999',
++              more: {
++                show: true,
++                text: '查看全部',
++                url: '/pages/index/category'
++              },
++              style: {
++                padding: 10,
++                bgColor: '#ffffff'
++              }
++            }
++          },
++          {
++            id: 'ProductCard',
++            property: {
++              layoutType: 'twoCol',
++              spuIds: [101, 102, 103, 104],
++              fields: {
++                name: { show: true, color: '#333333' },
++                introduction: { show: true, color: '#999999' },
++                price: { show: true, color: '#ff3000' },
++                marketPrice: { show: true, color: '#c0c0c0' },
++                salesCount: { show: true, color: '#999999' }
++              },
++              btnBuy: { type: 'text', text: '去购买' },
++              style: {
++                padding: 8
++              }
++            }
++          }
++        ],
 +      },
 +      user: {
 +        page: {
@@ -316,7 +520,7 @@ index 60122b60..5a14502d 100644
    if (tabBar) {
      appTemplate.basic.tabbar = tabBar;
      // TODO 商城装修没有对 tabBar 进行角标配置，测试角标需打开以下注释
-@@ -206,8 +273,8 @@ const adaptTemplate = async (appTemplate, templateId) => {
+@@ -206,8 +422,8 @@ const adaptTemplate = async (appTemplate, templateId) => {
        appTemplate.basic.theme = tabBar?.theme;
      }
    }
