@@ -49,6 +49,13 @@ do_install() {
     echo "🧹 [${SLUG}] 自动化执行领域菜单与脚手架噪声清洗 (domain-prune)..."
     node scripts/domain-prune.mjs --apply || true
   fi
+  # 自动化执行垂直领域业务种子注入 (Layer-B Domain Seed Seeding)
+  for seed in scripts/seed-domain-*.mjs scripts/seed-domain.mjs; do
+    if [ -f "$seed" ]; then
+      echo "🌱 [${SLUG}] 自动化执行垂直领域业务种子注入 ($seed)..."
+      node "$seed" || true
+    fi
+  done
   echo "✅ 安装就绪"
 }
 
