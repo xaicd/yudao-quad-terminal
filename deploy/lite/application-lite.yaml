@@ -169,6 +169,11 @@ yudao:
   security:
     # 与 local 档的差异：lite 档关闭 mock 登录，必须走真实账号密码，避免留下绕过鉴权的后门
     mock-enable: false
+    permit-all-urls:
+      - /admin-api/mp/open/**
+      - /app-api/promotion/**
+      - /app-api/product/**
+      - /app-api/system/**
   access-log:
     enable: false
   demo: false
