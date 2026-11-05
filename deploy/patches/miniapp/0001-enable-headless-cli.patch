@@ -38,6 +38,102 @@ index 43dda18e..088e0027 100644
  *.keystore
  pnpm-lock.yaml
 +dist/
+diff --git a/manifest.json b/manifest.json
+index 6137747c..be9ddeba 100644
+--- a/manifest.json
++++ b/manifest.json
+@@ -68,7 +68,10 @@
+         "schemes": "shopro"
+       },
+       "ios": {
+-        "urlschemewhitelist": ["baidumap", "iosamap"],
++        "urlschemewhitelist": [
++          "baidumap",
++          "iosamap"
++        ],
+         "dSYMs": false,
+         "privacyDescription": {
+           "NSPhotoLibraryUsageDescription": "需要同意访问您的相册选取图片才能完善该条目",
+@@ -79,7 +82,9 @@
+         "urltypes": "shopro",
+         "capabilities": {
+           "entitlements": {
+-            "com.apple.developer.associated-domains": ["applinks:shopro.sheepjs.com"]
++            "com.apple.developer.associated-domains": [
++              "applinks:shopro.sheepjs.com"
++            ]
+           }
+         },
+         "idfa": true
+@@ -96,12 +101,18 @@
+         },
+         "payment": {
+           "weixin": {
+-            "__platform__": ["ios", "android"],
++            "__platform__": [
++              "ios",
++              "android"
++            ],
+             "appid": "wxae7a0c156da9383b",
+             "UniversalLinks": "https://shopro.sheepjs.com/uni-universallinks/__UNI__082C0BA/"
+           },
+           "alipay": {
+-            "__platform__": ["ios", "android"]
++            "__platform__": [
++              "ios",
++              "android"
++            ]
+           }
+         },
+         "share": {
+@@ -111,7 +122,9 @@
+           }
+         }
+       },
+-      "orientation": ["portrait-primary"],
++      "orientation": [
++        "portrait-primary"
++      ],
+       "splashscreen": {
+         "androidStyle": "common",
+         "iosStyle": "common",
+@@ -182,7 +195,9 @@
+     "lazyCodeLoading": "requiredComponents",
+     "usingComponents": {},
+     "permission": {},
+-    "requiredPrivateInfos": ["chooseAddress"]
++    "requiredPrivateInfos": [
++      "chooseAddress"
++    ]
+   },
+   "mp-alipay": {
+     "usingComponents": true,
+@@ -201,8 +216,8 @@
+   "h5": {
+     "template": "index.html",
+     "router": {
+-      "mode": "history",
+-      "base": "/"
++      "mode": "hash",
++      "base": "./"
+     },
+     "sdkConfigs": {
+       "maps": {}
+@@ -215,10 +230,11 @@
+       "treeShaking": {
+         "enable": true
+       }
+-    }
++    },
++    "publicPath": "./"
+   },
+   "vueVersion": "3",
+   "_spaceID": "192b4892-5452-4e1d-9f09-eee1ece40639",
+   "locale": "zh-Hans",
+   "fallbackLocale": "zh-Hans"
+-}
++}
+\ No newline at end of file
 diff --git a/package.json b/package.json
 index 80b0df74..1a9a87ba 100644
 --- a/package.json
