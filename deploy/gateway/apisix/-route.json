@@ -1,0 +1,19 @@
+{
+  "uri": "//*",
+  "name": "-gateway-route",
+  "plugins": {
+    "proxy-rewrite": {
+      "regex_uri": [
+        "^//(.*)",
+        "/"
+      ]
+    }
+  },
+  "upstream": {
+    "type": "roundrobin",
+    "nodes": {
+      "127.0.0.1:48120": 1
+    }
+  },
+  "desc": "APISIX \u7edf\u4e00\u7f51\u5173\u8def\u7531\uff08\u5206\u53d1\u81f3 48120 \u81ea\u5305\u542b\u7f51\u5173\uff09"
+}

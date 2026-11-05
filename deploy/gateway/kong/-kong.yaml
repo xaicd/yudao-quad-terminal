@@ -1,0 +1,9 @@
+_format_version: "3.0"
+services:
+  - name: -service
+    url: http://127.0.0.1:48120//
+    routes:
+      - name: -route
+        paths:
+          - /
+        strip_path: false
