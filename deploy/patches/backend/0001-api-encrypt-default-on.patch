@@ -44,12 +44,19 @@ index 0e25e5f9d..54a1592a4 100644
      request-key: 52549111389893486934626385991395 # 【AES 案例】请求加密的秘钥，，必须 16、24、32 位
      response-key: 96103715984234343991809655248883 # 【AES 案例】响应加密的秘钥，AES 案例，必须 16、24、32 位
 diff --git a/yudao-server/src/main/resources/application.yaml b/yudao-server/src/main/resources/application.yaml
-index b91567b6a..a52f208d5 100644
+index b91567b6a..903ca967a 100644
 --- a/yudao-server/src/main/resources/application.yaml
 +++ b/yudao-server/src/main/resources/application.yaml
-@@ -315,7 +315,7 @@ yudao:
-     permit-all_urls:
+@@ -312,10 +312,13 @@ yudao:
+       - ${spring.boot.admin.context-path}/** # 不处理 Spring Boot Admin 的请求
+       - ${management.endpoints.web.base-path}/** # 不处理 Actuator 的请求
+   security:
+-    permit-all_urls:
++    permit-all-urls:
        - /admin-api/mp/open/** # 微信公众号开放平台，微信回调接口，不需要登录
++      - /app-api/promotion/** # 商城装修、活动等公开数据，免登录
++      - /app-api/product/**   # 商品详情、商品分类、列表，免登录
++      - /app-api/system/**    # 租户探测等系统信息，免登录
    api-encrypt:
 -    enable: false # 是否开启 API 加密。默认关闭，避免低版本 JDK 8（8u120 以下）启动时 bcprov 的 JCE 认证报错
 +    enable: true # 是否开启 API 加密。默认关闭，避免低版本 JDK 8（8u120 以下）启动时 bcprov 的 JCE 认证报错
