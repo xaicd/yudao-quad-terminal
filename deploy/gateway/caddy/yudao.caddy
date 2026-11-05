@@ -1,0 +1,43 @@
+# ==============================================================================
+# [yudao] 工业级标准 Caddy 网关配置 (自动生成，严禁手动篡改)
+# 单一入口标准: http://127.0.0.1:48120/yudao/
+# ==============================================================================
+:48120 {
+    # 根入口智能引导至 C 端前台商城
+    redir / /yudao/2c/ 302
+    redir /yudao /yudao/2c/ 302
+    redir /yudao/ /yudao/2c/ 302
+    redir /yudao/2c /yudao/2c/ 308
+
+    # 1. C端前台商城 H5 静态资源 (零代理层极速挂载)
+    handle_path /yudao/2c/* {
+        root * /Users/mac/workspace/xaicd/yudao-quad-terminal/apps/miniapp/dist/build/h5
+        file_server
+        try_files {path} /index.html
+    }
+
+    # 2. B端管理中台 Web 静态资源
+    handle_path /yudao/admin/* {
+        root * /Users/mac/workspace/xaicd/yudao-quad-terminal/apps/admin/dist
+        file_server
+        try_files {path} /index.html
+    }
+
+    # 3. 管理端 API 穿透 (Spring Boot 48080)
+    handle /yudao/admin-api/* {
+        uri strip_prefix /yudao
+        reverse_proxy 127.0.0.1:48080 {
+            header_up Host {host}
+            header_up tenant-id 1
+        }
+    }
+
+    # 4. 移动端/商城 API 穿透 (Spring Boot 48080)
+    handle /yudao/app-api/* {
+        uri strip_prefix /yudao
+        reverse_proxy 127.0.0.1:48080 {
+            header_up Host {host}
+            header_up tenant-id 1
+        }
+    }
+}

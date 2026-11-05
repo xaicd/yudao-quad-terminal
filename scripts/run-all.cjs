@@ -365,12 +365,17 @@ async function main() {
     console.log(`  📱 [Miniapp] C端前台商城已在运行中 (端口 ${miniappPort})，跳过启动`);
   }
 
-  const gatewayScript = path.resolve("deploy/gateway/unified-gateway.mjs");
+  // 自动生成最新的标准 Caddy & Nginx 网关配置
+  try {
+    require("child_process").spawnSync(process.execPath, [path.resolve("scripts/generate-gateway-config.mjs")], { stdio: "ignore" });
+  } catch {}
+
+  const caddyConf = path.resolve(`deploy/gateway/caddy/${projectSlug}.caddy`);
   let gatewayStarted = false;
   const gwPortAlive = await probeTcpPort(gatewayPort);
-  if (!gwPortAlive && fs.existsSync(gatewayScript)) {
-    console.log(`  🚪 [Gateway] 启动企业级统一接入网关 (端口 ${gatewayPort})...`);
-    const gw = spawn("node", [gatewayScript], { env: envOverrides, stdio: "inherit", detached: true });
+  if (!gwPortAlive && fs.existsSync(caddyConf)) {
+    console.log(`  🚪 [Gateway] 启动标准 Caddy 统一网关 (端口 ${gatewayPort}, 配置 ${path.relative(process.cwd(), caddyConf)})...`);
+    const gw = spawn("caddy", ["run", "--adapter", "caddyfile", "--config", caddyConf], { env: envOverrides, stdio: "inherit", detached: true });
     children.push(gw);
     gatewayStarted = true;
   } else if (gwPortAlive) {
@@ -417,7 +422,7 @@ async function main() {
         if (res.ok) gwReady = true;
       }
     }
-    if (beReady && feReady && (miniReady || !fs.existsSync(miniappPkg)) && (gwReady || !fs.existsSync(gatewayScript))) {
+    if (beReady && feReady && (miniReady || !fs.existsSync(miniappPkg)) && (gwReady || !fs.existsSync(caddyConf))) {
       break;
     }
   }
