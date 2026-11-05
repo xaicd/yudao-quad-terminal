@@ -9,6 +9,7 @@
  * 3. 根路径或 /<slug> 自动 302 重定向到 /<slug>/2c/；
  * 4. 2c 移动商城 H5 与 admin 管理后台通过静态资源直接挂载 (零中间层损耗)；
  * 5. 后端 admin-api 与 app-api 统一反向代理至 Spring Boot (默认 48080)，自动透传 tenant-id 头；
+ *    - 双重兼容：同时支持 /<slug>/admin-api/* 与 /admin-api/*，以及 /<slug>/app-api/* 与 /app-api/*，彻底根治跨域与路径断流；
  * 6. 一次生成，全平台适用：
  *    - deploy/gateway/caddy/<slug>.caddy 用于开发与轻量级交付；
  *    - deploy/gateway/nginx/<slug>.conf 用于企业级生产环境 Nginx include。
@@ -71,7 +72,7 @@ const caddyConfig = `# =========================================================
         try_files {path} /index.html
     }
 
-    # 3. 管理端 API 穿透 (Spring Boot ${backendPort})
+    # 3. 管理端 API 穿透 (Spring Boot ${backendPort}，双前缀同源支持)
     handle /${projectSlug}/admin-api/* {
         uri strip_prefix /${projectSlug}
         reverse_proxy 127.0.0.1:${backendPort} {
@@ -79,13 +80,57 @@ const caddyConfig = `# =========================================================
             header_up tenant-id 1
         }
     }
+    handle /admin-api/* {
+        reverse_proxy 127.0.0.1:${backendPort} {
+            header_up Host {host}
+            header_up tenant-id 1
+        }
+    }
 
-    # 4. 移动端/商城 API 穿透 (Spring Boot ${backendPort})
+    # 4. 移动端/商城 API 穿透 (Spring Boot ${backendPort}，双前缀同源支持)
     handle /${projectSlug}/app-api/* {
         uri strip_prefix /${projectSlug}
         reverse_proxy 127.0.0.1:${backendPort} {
             header_up Host {host}
             header_up tenant-id 1
+        }
+    }
+    handle /app-api/* {
+        reverse_proxy 127.0.0.1:${backendPort} {
+            header_up Host {host}
+            header_up tenant-id 1
+        }
+    }
+
+    # 5. 开放平台 API 穿透 (/open-api/*)
+    handle /${projectSlug}/open-api/* {
+        uri strip_prefix /${projectSlug}
+        reverse_proxy 127.0.0.1:${backendPort} {
+            header_up Host {host}
+            header_up tenant-id 1
+        }
+    }
+    handle /open-api/* {
+        reverse_proxy 127.0.0.1:${backendPort} {
+            header_up Host {host}
+            header_up tenant-id 1
+        }
+    }
+
+    # 6. WebSocket 长连接通道 (/infra/ws/*)
+    handle /${projectSlug}/infra/ws/* {
+        uri strip_prefix /${projectSlug}
+        reverse_proxy 127.0.0.1:${backendPort} {
+            header_up Host {host}
+            header_up Upgrade {>Upgrade}
+            header_up Connection {>Connection}
+        }
+    }
+    handle /infra/ws/* {
+        reverse_proxy 127.0.0.1:${backendPort} {
+            header_up Host {host}
+            header_up Upgrade {>Upgrade}
+            header_up Connection {>Connection}
         }
     }
 }
@@ -135,10 +180,52 @@ location /${projectSlug}/admin-api/ {
     proxy_set_header tenant-id 1;
     proxy_read_timeout 60s;
 }
+location /admin-api/ {
+    proxy_pass http://${projectSlug}_backend/admin-api/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header tenant-id 1;
+    proxy_read_timeout 60s;
+}
 
 # 5. 后端移动端 API 穿透 (/app-api/)
 location /${projectSlug}/app-api/ {
     proxy_pass http://${projectSlug}_backend/app-api/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header tenant-id 1;
+    proxy_read_timeout 60s;
+}
+location /app-api/ {
+    proxy_pass http://${projectSlug}_backend/app-api/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header tenant-id 1;
+    proxy_read_timeout 60s;
+}
+
+# 6. 后端开放平台 API 穿透 (/open-api/)
+location /${projectSlug}/open-api/ {
+    proxy_pass http://${projectSlug}_backend/open-api/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header tenant-id 1;
+    proxy_read_timeout 60s;
+}
+location /open-api/ {
+    proxy_pass http://${projectSlug}_backend/open-api/;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
