@@ -67,14 +67,6 @@ handle /open-api/* {
 	}
 }
 
-# 1.4 内部微服务 RPC 调用接口 (/rpc-api/*)
-handle /yudao-quad-terminal/rpc-api/* {
-	uri strip_prefix /yudao-quad-terminal
-	reverse_proxy 127.0.0.1:48080
-}
-handle /rpc-api/* {
-	reverse_proxy 127.0.0.1:48080
-}
 
 # 1.5 Knife4j / OpenAPI / Swagger 接口文档与静态依赖
 handle /yudao-quad-terminal/doc.html {
