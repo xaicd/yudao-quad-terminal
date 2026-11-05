@@ -32,6 +32,12 @@ function cleanup() {
     try { if (child.pid) process.kill(-child.pid, "SIGTERM"); } catch {}
     try { if (child.pid) child.kill("SIGTERM"); } catch {}
   }
+  const liteDown = path.resolve("scripts/lite-down.mjs");
+  if (fs.existsSync(liteDown)) {
+    try {
+      require("child_process").spawnSync(process.execPath, [liteDown, "--force"], { stdio: "ignore" });
+    } catch {}
+  }
 }
 
 process.on("SIGINT", () => { cleanup(); process.exit(0); });
@@ -149,10 +155,25 @@ async function runCheckOnly() {
   console.log(`  🏢 项目标识: ${C.cyan}${projectSlug}${C.reset} | 端口: 后端 ${backendPort} / B端前端 ${frontendPort} / C端前台 ${miniappPort} / 网关 ${gatewayPort}`);
 
   const isNextFullstack = fs.existsSync(path.resolve("next.config.mjs")) || fs.existsSync(path.resolve("next.config.js")) || fs.existsSync(path.resolve("next.config.ts"));
-  const backendJar = path.resolve("apps/backend/server/target/yudao-server.jar");
-  const backendPom = path.resolve("apps/backend/server/pom.xml");
-  const altBackendPom = path.resolve("apps/backend/yudao-server/pom.xml");
-  const hasBackend = isNextFullstack || fs.existsSync(backendJar) || fs.existsSync(backendPom) || fs.existsSync(altBackendPom);
+  let hasBackend = isNextFullstack;
+  if (!hasBackend) {
+    const backendDir = path.resolve("apps/backend");
+    if (fs.existsSync(backendDir)) {
+      if (fs.existsSync(path.join(backendDir, "pom.xml"))) {
+        hasBackend = true;
+      } else {
+        try {
+          const subs = fs.readdirSync(backendDir);
+          for (const sub of subs) {
+            if (fs.existsSync(path.join(backendDir, sub, "pom.xml")) || fs.existsSync(path.join(backendDir, sub, "target"))) {
+              hasBackend = true;
+              break;
+            }
+          }
+        } catch {}
+      }
+    }
+  }
   console.log(`  ☕ 后端工程资产: ${hasBackend ? (isNextFullstack ? C.green + "✅ 在位 (Next.js 前后端同构 API 路由)" + C.reset : C.green + "✅ 在位 (Java/Spring Boot)" + C.reset) : C.red + "❌ 缺失" + C.reset}`);
   
   const adminPkg = path.resolve("apps/admin/package.json");
@@ -261,6 +282,7 @@ async function main() {
     PROJECT_SLUG: projectSlug
   };
 
+  const liteUpScript = path.resolve("scripts/lite-up.mjs");
   const backendJar = path.resolve("apps/backend/server/target/yudao-server.jar");
   const backendPom = path.resolve("apps/backend/server/pom.xml");
   const altBackendPom = path.resolve("apps/backend/yudao-server/pom.xml");
@@ -268,7 +290,12 @@ async function main() {
 
   const beTargetPortAlive = await probeTcpPort(backendPort) || await probeTcpPort(48080);
   if (!beTargetPortAlive) {
-    if (fs.existsSync(backendJar)) {
+    if (fs.existsSync(liteUpScript)) {
+      console.log(`  ☕ [Backend] 启动零 Docker 嵌入式生产运行时 (scripts/lite-up.mjs, PG+Redis+Java, 端口 ${backendPort})...`);
+      const be = spawn(process.execPath, [liteUpScript, "--server-port", String(backendPort)], { env: envOverrides, stdio: "inherit", detached: true });
+      children.push(be);
+      backendStarted = true;
+    } else if (fs.existsSync(backendJar)) {
       console.log(`  ☕ [Backend] 启动预打包 Spring Boot Jar 生产运行时 (端口 ${backendPort}, 前缀 ${apiPrefix})...`);
       const beArgs = ["-jar", backendJar, "--spring.profiles.active=local", `--server.port=${backendPort}`, `--api.prefix=${apiPrefix}`];
       const be = spawn("java", beArgs, { env: envOverrides, stdio: "inherit", detached: true });
@@ -292,11 +319,18 @@ async function main() {
   }
 
   const adminPkg = path.resolve("apps/admin/package.json");
+  const adminDist = path.resolve("apps/admin/dist");
+  const serveAdminScript = path.resolve("scripts/serve-admin.cjs");
   let frontendStarted = false;
   const fePortAlive = await probeTcpPort(frontendPort) || await probeTcpPort(48121);
   if (!fePortAlive) {
-    if (fs.existsSync(adminPkg)) {
-      console.log(`  🌐 [Frontend] 启动 Vue3 管理中台 (apps/admin, 端口 ${frontendPort})...`);
+    if (fs.existsSync(adminDist) && fs.existsSync(path.join(adminDist, "index.html")) && fs.existsSync(serveAdminScript)) {
+      console.log(`  🌐 [Frontend] 启动 B端管理中台静态服务 (端口 ${frontendPort}, BasePath /${projectSlug}/admin/)...`);
+      const fe = spawn(process.execPath, [serveAdminScript, "--port", String(frontendPort), "--slug", projectSlug, "--dir", adminDist], { env: envOverrides, stdio: "inherit", detached: true });
+      children.push(fe);
+      frontendStarted = true;
+    } else if (fs.existsSync(adminPkg)) {
+      console.log(`  🌐 [Frontend] 启动 Vue3 管理中台开发服务 (apps/admin, 端口 ${frontendPort})...`);
       const fe = spawn("pnpm", ["--filter", "./apps/admin", "dev", "--port", String(frontendPort)], { env: envOverrides, stdio: "inherit", detached: true });
       children.push(fe);
       frontendStarted = true;

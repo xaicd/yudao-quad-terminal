@@ -3,6 +3,8 @@
   "version": "1.1.0",
   "private": true,
   "scripts": {
+    "up": "node scripts/run-all.cjs",
+    "serve": "node scripts/run-all.cjs",
     "all": "node scripts/run-all.cjs",
     "dev": "node scripts/run-all.cjs",
     "check:all": "node scripts/run-all.cjs --check",
