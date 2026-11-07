@@ -72,6 +72,13 @@ do_start() {
     echo "⚠️  服务已在运行 (PID: $pid)"
     return 0
   fi
+  # 启动前端口注册表检查与排他占用判定 (D5 防占坑假阳性)
+  if [ -f "scripts/port-registry.cjs" ]; then
+    if ! node scripts/port-registry.cjs check "${PORT}" "${SLUG:-app}"; then
+      echo "❌ 启动终止: 端口 ${PORT} 存在外部项目冲突，请排查释放后重试"
+      exit 1
+    fi
+  fi
   echo "🚀 [${SLUG}] 启动全生命周期统一服务 (对外单一端口: ${PORT})..."
 
   # 1. 确保最新网关配置存在
@@ -106,12 +113,18 @@ do_start() {
   fi
 
   local new_pid="$(cat "$PID_FILE")"
+  if [ -f "scripts/port-registry.cjs" ]; then
+    node scripts/port-registry.cjs claim "${PORT}" "${SLUG:-app}" "$new_pid" || true
+  fi
   echo "✅ 全栈服务已拉起 (主网关 PID: $new_pid)"
   echo "🔗 统一对外单一入口: http://127.0.0.1:${PORT}/${SLUG}/"
 }
 
 do_stop() {
   echo "🛑 停止 [${SLUG}] 全栈服务..."
+  if [ -f "scripts/port-registry.cjs" ]; then
+    node scripts/port-registry.cjs release "${PORT}" "${SLUG:-app}" || true
+  fi
   if pid="$(get_pid)"; then
     kill "$pid" 2>/dev/null || kill -9 "$pid" 2>/dev/null || true
     rm -f "$PID_FILE"
