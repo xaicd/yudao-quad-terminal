@@ -227,6 +227,37 @@ index ca9b64f6..09cd1808 100644
    }
  
    // 初始化
+diff --git a/sheep/config/index.js b/sheep/config/index.js
+index b00e4635..0497d003 100644
+--- a/sheep/config/index.js
++++ b/sheep/config/index.js
+@@ -30,6 +30,26 @@ if (typeof baseUrl === 'undefined') {
+   console.log(`[芋道商城 ${version}]  https://doc.iocoder.cn`);
+ }
+ 
++// H5 Web 环境自适应：
++// 若在浏览器端运行，如果 baseUrl 配的是同端口或是本地环回地址 (localhost/127.0.0.1)，
++// 动态对齐为当前浏览器的 window.location.origin，彻底消除 localhost vs 127.0.0.1 产生的跨域预检与阻断
++if (typeof window !== 'undefined' && window.location) {
++  try {
++    const curOrigin = window.location.origin;
++    if (baseUrl) {
++      const u = new URL(baseUrl, window.location.href);
++      const isLoopback =
++        (u.hostname === 'localhost' || u.hostname === '127.0.0.1') &&
++        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
++      if (u.port === window.location.port || isLoopback) {
++        baseUrl = curOrigin;
++      }
++    } else {
++      baseUrl = curOrigin;
++    }
++  } catch (e) {}
++}
++
+ export const apiPath = import.meta.env.SHOPRO_API_PATH;
+ export const staticUrl = import.meta.env.SHOPRO_STATIC_URL;
+ export const tenantId = import.meta.env.SHOPRO_TENANT_ID;
 diff --git a/sheep/request/index.js b/sheep/request/index.js
 index 41121edd..f515f194 100644
 --- a/sheep/request/index.js
