@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "{{EXPO_APP_NAME}}",
+    "slug": "{{EXPO_APP_SLUG}}",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "ios": {
+      "bundleIdentifier": "{{IOS_BUNDLE_ID}}"
+    },
+    "android": {
+      "package": "{{ANDROID_PACKAGE}}"
+    },
+    "updates": {
+      "url": "https://api.yourdomain.com/ota/manifest",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD"
+    }
+  }
+}

@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": "2.0.0",
+  "templateId": "yudao-quad-terminal-blueprint",
+  "syntax": "{{VAR_NAME}}",
+  "description": "Coolie工坊与27B本地模型专用的 Yudao 四位一体多端蓝图母版契约。覆盖 Spring Boot 3 微服务、Vue3 管理后台、Expo 原生端与 UniApp 小程序的声明式模板插槽。",
+  "engineCompatibility": [
+    "coolie-workshop",
+    "local-llm-27b",
+    "mustache",
+    "handlebars",
+    "blueprint-engine-cli"
+  ],
+  "templateFiles": [
+    {
+      "templatePath": "apps/backend/yudao-server/src/main/resources/application-local.template.yaml",
+      "targetPath": "apps/backend/yudao-server/src/main/resources/application-local.yaml",
+      "format": "yaml",
+      "description": "Spring Boot 核心数据源 (MySQL)、Redis 端口与后端服务端口配置模板"
+    },
+    {
+      "templatePath": "apps/admin/.env.local.template",
+      "targetPath": "apps/admin/.env.local",
+      "format": "dotenv",
+      "description": "Vue3 管理后台本地后端网关代理地址环境变量模板"
+    },
+    {
+      "templatePath": "apps/admin/.env.template",
+      "targetPath": "apps/admin/.env",
+      "format": "dotenv",
+      "description": "Vue3 管理后台标题、Logo、默认租户身份配置模板"
+    },
+    {
+      "templatePath": "apps/app/app.template.json",
+      "targetPath": "apps/app/app.json",
+      "format": "json",
+      "description": "Expo (React Native) 移动原生端应用名称、渠道标识与 Package 包名配置模板"
+    }
+  ],
+  "variables": {
+    "PROJECT_NAME": {
+      "group": "engineering",
+      "type": "string",
+      "default": "yudao-quad-terminal",
+      "description": "项目英文代号 / slug"
+    },
+    "PLATFORM_TITLE": {
+      "group": "branding",
+      "type": "string",
+      "default": "企业级管理系统",
+      "description": "项目商业全称 / 平台中文名"
+    },
+    "SHORT_NAME": {
+      "group": "branding",
+      "type": "string",
+      "default": "管理中台",
+      "description": "客户端与前端展示的品牌简称"
+    },
+    "PACKAGE_PREFIX": {
+      "group": "engineering",
+      "type": "string",
+      "default": "com.yudao.app",
+      "description": "Java 微服务顶级包名前缀"
+    },
+    "DB_HOST": {
+      "group": "infrastructure",
+      "type": "string",
+      "default": "127.0.0.1",
+      "description": "MySQL 数据库连接主机地址"
+    },
+    "DB_PORT": {
+      "group": "infrastructure",
+      "type": "number",
+      "default": 3306,
+      "description": "MySQL 数据库端口"
+    },
+    "DB_NAME": {
+      "group": "infrastructure",
+      "type": "string",
+      "default": "ruoyi-vue-pro",
+      "description": "MySQL 业务数据库名称"
+    },
+    "DB_USER": {
+      "group": "infrastructure",
+      "type": "string",
+      "default": "root",
+      "description": "MySQL 数据库用户名"
+    },
+    "DB_PASSWORD": {
+      "group": "infrastructure",
+      "type": "string",
+      "default": "123456",
+      "description": "MySQL 数据库密码"
+    },
+    "REDIS_HOST": {
+      "group": "infrastructure",
+      "type": "string",
+      "default": "127.0.0.1",
+      "description": "Redis 缓存主机地址"
+    },
+    "REDIS_PORT": {
+      "group": "infrastructure",
+      "type": "number",
+      "default": 6379,
+      "description": "Redis 缓存端口"
+    },
+    "BACKEND_PORT": {
+      "group": "runtime",
+      "type": "number",
+      "default": 48080,
+      "description": "Spring Boot 后端 API 服务端口"
+    },
+    "ADMIN_PORT": {
+      "group": "runtime",
+      "type": "number",
+      "default": 80,
+      "description": "Vue3 管理后台前端运行端口"
+    },
+    "GATEWAY_PORT": {
+      "group": "runtime",
+      "type": "number",
+      "default": 48080,
+      "description": "后端网关聚合代理端口"
+    },
+    "EXPO_APP_NAME": {
+      "group": "multiClient",
+      "type": "string",
+      "default": "管理中台",
+      "description": "Expo 客户端展示名称"
+    },
+    "EXPO_APP_SLUG": {
+      "group": "multiClient",
+      "type": "string",
+      "default": "yudao-quad-app",
+      "description": "Expo 客户端内部代号"
+    },
+    "IOS_BUNDLE_ID": {
+      "group": "multiClient",
+      "type": "string",
+      "default": "com.yudao.app",
+      "description": "iOS 应用 Bundle Identifier"
+    },
+    "ANDROID_PACKAGE": {
+      "group": "multiClient",
+      "type": "string",
+      "default": "com.yudao.app",
+      "description": "Android 应用 Package Name"
+    },
+    "CADDY_DOMAIN": {
+      "group": "topologyAndDomains",
+      "type": "string",
+      "default": "yudao.local",
+      "description": "Caddy 网关绑定的本地或线上测试域名"
+    },
+    "MCP_SERVER_NAME": {
+      "group": "engineering",
+      "type": "string",
+      "default": "yudao-mcp",
+      "description": "伴生 MCP 工具服务名称"
+    },
+    "MCP_SERVER_DESC": {
+      "group": "branding",
+      "type": "string",
+      "default": "业务管理中台原子能力调度服务",
+      "description": "MCP 工具服务描述"
+    },
+    "INDUSTRY_PRESET": {
+      "group": "branding",
+      "type": "string",
+      "default": "general-enterprise",
+      "description": "行业场景预设词包"
+    }
+  },
+  "languageShifters": [
+    "java-package-shifter",
+    "node-scope-shifter"
+  ]
+}
