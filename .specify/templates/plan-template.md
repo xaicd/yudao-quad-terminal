@@ -58,3 +58,8 @@ sequenceDiagram
 ## 6. 技术风险评估与缓解策略 (Technical Risks & Mitigations)
 
 {{RISKS_SECTION}}
+
+## 7. E2E 页面拟人操作运营配置与全链路自动化测试 (E2E Human-Like Ops & Automated Testing)
+
+- **反 Seed 铁律（Rule 0.8）**：严禁通过 SQL 脚本或后台静默函数直接灌入业务运营数据；必须通过真实浏览器页面拟人操作（登录 /admin/login -> 进入 B 端运营页 -> 点击新建 -> 填写表单字段 -> 点击提交 -> 断言表格新增行）完成运营配置。
+- **B 端运营配置 -> C 端消费体验 -> B 端履约闭环**：通过 pnpm harness e2e 执行端到端拟人配置、多端体验与真实数据库状态机全链路闭环验证。
