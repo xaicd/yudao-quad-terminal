@@ -10,7 +10,7 @@
  *   - 特性规格文档: docs/specs/<domain>/<name>/{design.md, prototype.md}
  *
  * 统一跨底座命令:
- *   node scripts/speckit.cjs cmmi 03 [docs|check|asset|doctor|compile-domain]
+ *   pnpm run speckit -- cmmi 03 [docs|check|asset|doctor|compile-domain]
  *   node scripts/cmmi-03-design.cjs [docs|check|asset|doctor|compile-domain]
  */
 
@@ -60,11 +60,11 @@ if (sub === "compile-domain" || sub === "contract") {
 
 if (sub === "--help" || sub === "-h" || sub === "help") {
   console.log(`用法 (Spec-Kit × CMMI-03 架构与设计扩展):
-  node scripts/speckit.cjs cmmi 03 docs [--spec <名>]                       列出 ADR/ERD 架构文档与各规格 design.md/prototype.md
-  node scripts/speckit.cjs cmmi 03 check [--spec <名>]                      校验 CMMI-03 设计文档与存量蓝图架构契约
-  node scripts/speckit.cjs cmmi 03 asset --type <adr|erd|archify> --title . 创建 CMMI-03 标准 ADR 或架构图文档
-  node scripts/speckit.cjs cmmi 03 doctor --file <blueprint.json> [--write] 蓝图字段/状态机/权限码自愈修复
-  node scripts/speckit.cjs cmmi 03 compile-domain <domain> [--write]        编译领域契约与 Facade`);
+  node scripts/cmmi-03-design.cjs docs [--spec <名>]                       列出 ADR/ERD 架构文档与各规格 design.md/prototype.md
+  node scripts/cmmi-03-design.cjs check [--spec <名>]                      校验 CMMI-03 设计文档与存量蓝图架构契约
+  node scripts/cmmi-03-design.cjs asset --type <adr|erd|archify> --title . 创建 CMMI-03 标准 ADR 或架构图文档
+  node scripts/cmmi-03-design.cjs doctor --file <blueprint.json> [--write] 蓝图字段/状态机/权限码自愈修复
+  node scripts/cmmi-03-design.cjs compile-domain <domain> [--write]        编译领域契约与 Facade`);
   process.exit(0);
 }
 

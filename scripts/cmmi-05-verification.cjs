@@ -10,7 +10,7 @@
  *   - 特性规格文档: docs/specs/<domain>/<name>/{testing.md, evidence.json, bugs.md}
  *
  * 统一跨底座命令:
- *   node scripts/speckit.cjs cmmi 05 [docs|check|asset|e2e|unit|mutation]
+ *   pnpm run speckit -- cmmi 05 [docs|check|asset|e2e|unit|mutation]
  *   node scripts/cmmi-05-verification.cjs [docs|check|asset|e2e|unit|mutation]
  */
 
@@ -136,12 +136,12 @@ if (sub === "mutation") {
 
 if (sub === "--help" || sub === "-h" || sub === "help") {
   console.log(`用法 (Spec-Kit × CMMI-05 测试验证与真 PG E2E 扩展):
-  node scripts/speckit.cjs cmmi 05 docs [--spec <名>]                               列出测试报告/UAT 与各规格 testing.md/evidence.json
-  node scripts/speckit.cjs cmmi 05 check [--spec <名>]                              校验 CMMI-05 测试文档与证据账本
-  node scripts/speckit.cjs cmmi 05 asset --type <test-summary|mutation-report|uat>  创建 CMMI-05 标准测试或 UAT 证书文档
-  node scripts/speckit.cjs cmmi 05 e2e [--file <blueprint.json>|--module <mod>]     6 阶段嵌入式真 PostgreSQL 18.4 Spec E2E
-  node scripts/speckit.cjs cmmi 05 unit                                             运行单元测试套件
-  node scripts/speckit.cjs cmmi 05 mutation                                         运行变异测试与防空洞断言验证`);
+  node scripts/cmmi-05-verification.cjs docs [--spec <名>]                               列出测试报告/UAT 与各规格 testing.md/evidence.json
+  node scripts/cmmi-05-verification.cjs check [--spec <名>]                              校验 CMMI-05 测试文档与证据账本
+  node scripts/cmmi-05-verification.cjs asset --type <test-summary|mutation-report|uat>  创建 CMMI-05 标准测试或 UAT 证书文档
+  node scripts/cmmi-05-verification.cjs e2e [--file <blueprint.json>|--module <mod>]     6 阶段嵌入式真 PostgreSQL 18.4 Spec E2E
+  node scripts/cmmi-05-verification.cjs unit                                             运行单元测试套件
+  node scripts/cmmi-05-verification.cjs mutation                                         运行变异测试与防空洞断言验证`);
   process.exit(0);
 }
 

@@ -10,7 +10,7 @@
  *   - 特性规格文档: docs/specs/<domain>/<name>/operations.md
  *
  * 统一跨底座命令:
- *   node scripts/speckit.cjs cmmi 08 [docs|check|asset|status|health|security|load]
+ *   pnpm run speckit -- cmmi 08 [docs|check|asset|status|health|security|load]
  *   node scripts/cmmi-08-sre.cjs [docs|check|asset|status|health|security|load]
  */
 
@@ -66,12 +66,12 @@ if (sub === "load" || sub === "slo") {
 
 if (sub === "--help" || sub === "-h" || sub === "help") {
   console.log(`用法 (Spec-Kit × CMMI-08 SRE 稳定性与复盘文档扩展):
-  node scripts/speckit.cjs cmmi 08 docs [--spec <名>]                             列出 SLO/SLI 矩阵、免责复盘文档与各规格 operations.md
-  node scripts/speckit.cjs cmmi 08 check [--spec <名>]                            校验 CMMI-08 SRE 稳定性文档
-  node scripts/speckit.cjs cmmi 08 asset --type <slo-matrix|postmortem|dr-plan>   创建 CMMI-08 标准 SLO 矩阵或事故复盘文档
-  node scripts/speckit.cjs cmmi 08 <start|stop|restart|status|health|logs>        服务生命周期与健康探针
-  node scripts/speckit.cjs cmmi 08 security                                       安全红队渗透扫描
-  node scripts/speckit.cjs cmmi 08 load                                           SRE 容量护栏压测`);
+  node scripts/cmmi-08-sre.cjs docs [--spec <名>]                             列出 SLO/SLI 矩阵、免责复盘文档与各规格 operations.md
+  node scripts/cmmi-08-sre.cjs check [--spec <名>]                            校验 CMMI-08 SRE 稳定性文档
+  node scripts/cmmi-08-sre.cjs asset --type <slo-matrix|postmortem|dr-plan>   创建 CMMI-08 标准 SLO 矩阵或事故复盘文档
+  node scripts/cmmi-08-sre.cjs <start|stop|restart|status|health|logs>        服务生命周期与健康探针
+  node scripts/cmmi-08-sre.cjs security                                       安全红队渗透扫描
+  node scripts/cmmi-08-sre.cjs load                                           SRE 容量护栏压测`);
   process.exit(0);
 }
 

@@ -10,7 +10,7 @@
  *   - 特性规格文档: docs/specs/<domain>/<name>/{deployment.md, runbook.json}
  *
  * 统一跨底座命令:
- *   node scripts/speckit.cjs cmmi 07 [docs|check|asset|gateway|build|fingerprint|runbook]
+ *   pnpm run speckit -- cmmi 07 [docs|check|asset|gateway|build|fingerprint|runbook]
  *   node scripts/cmmi-07-release.cjs [docs|check|asset|gateway|build|fingerprint|runbook]
  */
 
@@ -105,12 +105,12 @@ if (sub === "runbook") {
 
 if (sub === "--help" || sub === "-h" || sub === "help") {
   console.log(`用法 (Spec-Kit × CMMI-07 发布与割接扩展):
-  node scripts/speckit.cjs cmmi 07 docs [--spec <名>]                                     列出部署 SOP 与各规格 deployment.md/runbook.json
-  node scripts/speckit.cjs cmmi 07 check [--spec <名>]                                    校验 CMMI-07 部署与回滚预案文档
-  node scripts/speckit.cjs cmmi 07 asset --type <deployment-sop|rollback-runbook|...>     创建 CMMI-07 标准发布 SOP 文档
-  node scripts/speckit.cjs cmmi 07 gateway                                                渲染四端统一网关配置
-  node scripts/speckit.cjs cmmi 07 fingerprint [--verify]                                 生成或核验制品 SHA-256 指纹
-  node scripts/speckit.cjs cmmi 07 runbook                                                生产割接 Runbook 执行与预检`);
+  node scripts/cmmi-07-release.cjs docs [--spec <名>]                                     列出部署 SOP 与各规格 deployment.md/runbook.json
+  node scripts/cmmi-07-release.cjs check [--spec <名>]                                    校验 CMMI-07 部署与回滚预案文档
+  node scripts/cmmi-07-release.cjs asset --type <deployment-sop|rollback-runbook|...>     创建 CMMI-07 标准发布 SOP 文档
+  node scripts/cmmi-07-release.cjs gateway                                                渲染四端统一网关配置
+  node scripts/cmmi-07-release.cjs fingerprint [--verify]                                 生成或核验制品 SHA-256 指纹
+  node scripts/cmmi-07-release.cjs runbook                                                生产割接 Runbook 执行与预检`);
   process.exit(0);
 }
 

@@ -201,7 +201,7 @@ function listStageDocs(phaseCode, opts = {}) {
   if (!stage) throw new Error(`Unknown CMMI phase: ${phaseCode}`);
 
   console.log(`═══ [Spec-Kit × ${stage.title}] 文档资产清单 ═══`);
-  console.log(`所属阶段: CMMI-${stage.code} (${stage.name}) | 扩展入口: node scripts/speckit.cjs cmmi ${stage.code}`);
+  console.log(`所属阶段: CMMI-${stage.code} (${stage.name}) | 扩展入口: pnpm run speckit -- cmmi ${stage.code}`);
 
   // 1. 宏观过程资产目录扫描
   const macroFiles = new Set();
@@ -250,6 +250,7 @@ function checkStageDocs(phaseCode, opts = {}) {
 
   for (const s of specs) {
     for (const docName of stage.specDocs) {
+      // bugs.md 仅在 bugfix 或存在时检查；selection.md/research.md/prototype.md/deployment.md/operations.md 在已展开的规格中检查
       const docAbs = path.join(s.dir, docName);
       if (!fs.existsSync(docAbs)) continue;
       const info = inspectDocFile(docAbs);
@@ -275,6 +276,18 @@ function createStageAsset(phaseCode, rawArgs = []) {
   const scaffoldPath = path.join(ROOT, "scripts/cmmi-asset-scaffold.cjs");
   const forward = ["new", "--phase", phaseCode, ...rawArgs];
   const res = spawnSync(process.execPath, [scaffoldPath, ...forward], {
+    cwd: ROOT,
+    stdio: "inherit",
+    env: process.env,
+  });
+  return res.status ?? 1;
+}
+
+/**
+ * 跨底座统一调用 Spec-Kit 引擎 (`pnpm run speckit -- ...`)
+ */
+function runSpeckit(extraArgs = []) {
+  const res = spawnSync("pnpm", ["run", "--silent", "speckit", "--", ...extraArgs], {
     cwd: ROOT,
     stdio: "inherit",
     env: process.env,
@@ -326,13 +339,13 @@ function printCmmiSpecMatrix() {
   for (const code of Object.keys(CMMI_SPEC_STAGES).sort()) {
     const st = CMMI_SPEC_STAGES[code];
     console.log(
-      `| **CMMI-${code}** | \`node scripts/speckit.cjs cmmi ${code}\` (\`${path.basename(st.script)}\`) | \`${st.macroDirs[0]}\` | \`${st.specDocs.join("`, `")}\` |`
+      `| **CMMI-${code}** | \`pnpm run speckit -- cmmi ${code}\` (\`${path.basename(st.script)}\`) | \`${st.macroDirs[0]}\` | \`${st.specDocs.join("`, `")}\` |`
     );
   }
   console.log("\n通用阶段文档子命令 (00~09 全部支持):");
-  console.log("  node scripts/speckit.cjs cmmi <00..09> docs [--spec <规格名>]          列出该阶段宏观文档与规格包阶段文档");
-  console.log("  node scripts/speckit.cjs cmmi <00..09> check [--spec <规格名>]         校验该阶段文档齐备度与阶段契约门禁");
-  console.log("  node scripts/speckit.cjs cmmi <01..09> asset --type <类型> --title ... 创建该阶段 CMMI 标准过程文档\n");
+  console.log("  pnpm run speckit -- cmmi <00..09> docs [--spec <规格名>]          列出该阶段宏观文档与规格包阶段文档");
+  console.log("  pnpm run speckit -- cmmi <00..09> check [--spec <规格名>]         校验该阶段文档齐备度与阶段契约门禁");
+  console.log("  pnpm run speckit -- cmmi <01..09> asset --type <类型> --title ... 创建该阶段 CMMI 标准过程文档\n");
 }
 
 module.exports = {
@@ -340,6 +353,7 @@ module.exports = {
   listStageDocs,
   checkStageDocs,
   createStageAsset,
+  runSpeckit,
   tryHandleDocSubcommand,
   printCmmiSpecMatrix,
   findActiveSpecDirs,

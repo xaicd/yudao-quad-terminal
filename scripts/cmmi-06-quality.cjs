@@ -10,7 +10,7 @@
  *   - 特性规格文档: docs/specs/<domain>/<name>/checklist.md
  *
  * 统一跨底座命令:
- *   node scripts/speckit.cjs cmmi 06 [docs|check|asset|tasks|controls]
+ *   pnpm run speckit -- cmmi 06 [docs|check|asset|tasks|controls]
  *   node scripts/cmmi-06-quality.cjs [docs|check|asset|tasks|controls]
  */
 
@@ -19,7 +19,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
-const { tryHandleDocSubcommand, checkStageDocs } = require("./lib/speckit-cmmi-docs.cjs");
+const { tryHandleDocSubcommand, checkStageDocs, runSpeckit } = require("./lib/speckit-cmmi-docs.cjs");
 
 const ROOT = path.resolve(__dirname, "..");
 
@@ -47,7 +47,7 @@ if (sub === "check" || sub === "gate") {
 
 if (sub === "tasks") {
   console.log("═══ [Spec-Kit × CMMI-06] 原子任务与 Git 提交追溯核验 ═══");
-  process.exit(runNode("scripts/speckit.cjs", ["tasks", ...rest]));
+  process.exit(runSpeckit(["tasks", ...rest]));
 }
 
 if (sub === "controls") {
@@ -60,11 +60,11 @@ if (sub === "controls") {
 
 if (sub === "--help" || sub === "-h" || sub === "help") {
   console.log(`用法 (Spec-Kit × CMMI-06 质量保证与配置审计扩展):
-  node scripts/speckit.cjs cmmi 06 docs [--spec <名>]                    列出 PPQA/FCA/PCA 审计报告与各规格 checklist.md
-  node scripts/speckit.cjs cmmi 06 check [--tier fast|full]              校验 checklist.md 并执行质量门禁与配置审计
-  node scripts/speckit.cjs cmmi 06 asset --type <audit|spc|car> --title  创建 CMMI-06 标准质量审计或 CAR 根因文档
-  node scripts/speckit.cjs cmmi 06 tasks --spec <name>                   Git 原子任务追溯审计
-  node scripts/speckit.cjs cmmi 06 controls                              工程控制矩阵审计`);
+  node scripts/cmmi-06-quality.cjs docs [--spec <名>]                    列出 PPQA/FCA/PCA 审计报告与各规格 checklist.md
+  node scripts/cmmi-06-quality.cjs check [--tier fast|full]              校验 checklist.md 并执行质量门禁与配置审计
+  node scripts/cmmi-06-quality.cjs asset --type <audit|spc|car> --title  创建 CMMI-06 标准质量审计或 CAR 根因文档
+  node scripts/cmmi-06-quality.cjs tasks --spec <name>                   Git 原子任务追溯审计
+  node scripts/cmmi-06-quality.cjs controls                              工程控制矩阵审计`);
   process.exit(0);
 }
 

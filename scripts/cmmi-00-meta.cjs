@@ -10,7 +10,7 @@
  *   - 特性规格文档: docs/specs/<domain>/<name>/spec.json
  *
  * 统一跨底座命令:
- *   node scripts/speckit.cjs cmmi 00 [docs|check|constitution|schema|sync]
+ *   pnpm run speckit -- cmmi 00 [docs|check|constitution|schema|sync]
  *   node scripts/cmmi-00-meta.cjs [docs|check|constitution|schema|sync]
  */
 
@@ -19,7 +19,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
-const { tryHandleDocSubcommand, checkStageDocs } = require("./lib/speckit-cmmi-docs.cjs");
+const { tryHandleDocSubcommand, checkStageDocs, runSpeckit } = require("./lib/speckit-cmmi-docs.cjs");
 
 const ROOT = path.resolve(__dirname, "..");
 
@@ -39,7 +39,7 @@ const sub = rawArgs[0] && !rawArgs[0].startsWith("-") ? rawArgs[0] : "check";
 const rest = rawArgs[0] && !rawArgs[0].startsWith("-") ? rawArgs.slice(1) : rawArgs;
 
 if (sub === "constitution") {
-  process.exit(runNode("scripts/speckit.cjs", ["constitution", ...rest]));
+  process.exit(runSpeckit(["constitution", ...rest]));
 }
 
 if (sub === "check") {
@@ -70,11 +70,11 @@ if (sub === "sync") {
 
 if (sub === "--help" || sub === "-h" || sub === "help") {
   console.log(`用法 (Spec-Kit × CMMI-00 规范与元契约扩展):
-  node scripts/speckit.cjs cmmi 00 docs           列出 CMMI-00 宏观规范文档与各规格 spec.json 状态
-  node scripts/speckit.cjs cmmi 00 check          校验 CMMI-00 文档、compat-manifest 与 Blueprint v1 元契约
-  node scripts/speckit.cjs cmmi 00 constitution   输出项目工程宪法 (.specify/memory/constitution.md)
-  node scripts/speckit.cjs cmmi 00 schema         输出 Blueprint v1 JSON Schema
-  node scripts/speckit.cjs cmmi 00 sync           同步 Agent 表面契约与 OpenWiki`);
+  node scripts/cmmi-00-meta.cjs docs           列出 CMMI-00 宏观规范文档与各规格 spec.json 状态
+  node scripts/cmmi-00-meta.cjs check          校验 CMMI-00 文档、compat-manifest 与 Blueprint v1 元契约
+  node scripts/cmmi-00-meta.cjs constitution   输出项目工程宪法 (.specify/memory/constitution.md)
+  node scripts/cmmi-00-meta.cjs schema         输出 Blueprint v1 JSON Schema
+  node scripts/cmmi-00-meta.cjs sync           同步 Agent 表面契约与 OpenWiki`);
   process.exit(0);
 }
 

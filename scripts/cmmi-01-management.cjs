@@ -10,7 +10,7 @@
  *   - 特性规格文档: docs/specs/<domain>/<name>/{selection.md, research.md}
  *
  * 统一跨底座命令:
- *   node scripts/speckit.cjs cmmi 01 [docs|check|asset|init|render]
+ *   pnpm run speckit -- cmmi 01 [docs|check|asset|init|render]
  *   node scripts/cmmi-01-management.cjs [docs|check|asset|init|render]
  */
 
@@ -86,11 +86,11 @@ if (sub === "render" || sub === "blueprint") {
 
 if (sub === "--help" || sub === "-h" || sub === "help") {
   console.log(`用法 (Spec-Kit × CMMI-01 立项策划扩展):
-  node scripts/speckit.cjs cmmi 01 docs [--spec <名>]                        列出立项章程/风险/DAR 与规格选型文档 (selection.md, research.md)
-  node scripts/speckit.cjs cmmi 01 check [--spec <名>]                       校验 CMMI-01 立项与选型文档完备度
-  node scripts/speckit.cjs cmmi 01 asset --type <charter|plan|risk|dar> ...  创建 CMMI-01 标准立项文档
-  node scripts/speckit.cjs cmmi 01 init --name <slug> --title "<项目名>"     零污染外部沙箱孵化 (/tmp/<slug>-sandbox)
-  node scripts/speckit.cjs cmmi 01 render --name "<系统名>" --domain <域> ... 渲染 Blueprint v1 立项蓝图`);
+  node scripts/cmmi-01-management.cjs docs [--spec <名>]                        列出立项章程/风险/DAR 与规格选型文档 (selection.md, research.md)
+  node scripts/cmmi-01-management.cjs check [--spec <名>]                       校验 CMMI-01 立项与选型文档完备度
+  node scripts/cmmi-01-management.cjs asset --type <charter|plan|risk|dar> ...  创建 CMMI-01 标准立项文档
+  node scripts/cmmi-01-management.cjs init --name <slug> --title "<项目名>"     零污染外部沙箱孵化 (/tmp/<slug>-sandbox)
+  node scripts/cmmi-01-management.cjs render --name "<系统名>" --domain <域> ... 渲染 Blueprint v1 立项蓝图`);
   process.exit(0);
 }
 

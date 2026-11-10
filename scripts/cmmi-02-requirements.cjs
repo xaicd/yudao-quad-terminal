@@ -10,7 +10,7 @@
  *   - 特性规格文档: docs/specs/<domain>/<name>/{brief.json, requirements.md, spec.md}
  *
  * 统一跨底座命令:
- *   node scripts/speckit.cjs cmmi 02 [docs|check|asset|route|new|build]
+ *   pnpm run speckit -- cmmi 02 [docs|check|asset|route|new|build]
  *   node scripts/cmmi-02-requirements.cjs [docs|check|asset|route|new|build]
  */
 
@@ -19,7 +19,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
-const { tryHandleDocSubcommand, checkStageDocs } = require("./lib/speckit-cmmi-docs.cjs");
+const { tryHandleDocSubcommand, checkStageDocs, runSpeckit } = require("./lib/speckit-cmmi-docs.cjs");
 
 const ROOT = path.resolve(__dirname, "..");
 
@@ -42,7 +42,7 @@ if (sub === "route" || sub === "triage") {
   if (fs.existsSync(path.join(ROOT, "scripts/agent-route.cjs"))) {
     process.exit(runNode("scripts/agent-route.cjs", rawArgs.slice(1)));
   }
-  process.exit(runNode("scripts/speckit.cjs", ["list"]));
+  process.exit(runSpeckit(["list"]));
 }
 
 if (sub === "check" && !rawArgs.includes("--spec") && !rawArgs.includes("--name")) {
@@ -51,17 +51,17 @@ if (sub === "check" && !rawArgs.includes("--spec") && !rawArgs.includes("--name"
 
 if (["new", "build", "check", "tasks", "archive", "list"].includes(sub)) {
   console.log(`═══ [Spec-Kit × CMMI-02] 需求规格工程 (Spec-Kit: ${sub}) ═══`);
-  process.exit(runNode("scripts/speckit.cjs", rawArgs));
+  process.exit(runSpeckit(rawArgs));
 }
 
 if (sub === "--help" || sub === "-h" || sub === "help") {
   console.log(`用法 (Spec-Kit × CMMI-02 需求工程扩展):
-  node scripts/speckit.cjs cmmi 02 docs [--spec <名>]                  列出 CMMI-02 宏观需求文档与各规格 brief.json/requirements.md
-  node scripts/speckit.cjs cmmi 02 check [--spec <名>]                 校验 CMMI-02 需求规格文档完备度
-  node scripts/speckit.cjs cmmi 02 asset --type <srs|rtm|nfr> ...      创建 CMMI-02 标准需求与 RTM 追溯文档
-  node scripts/speckit.cjs cmmi 02 route "<用户原始需求>"              执行确定性需求分诊
-  node scripts/speckit.cjs cmmi 02 new --name <spec> --domain <域> ... 创建新特性规格骨架 (brief.json)
-  node scripts/speckit.cjs cmmi 02 build --name <spec>                 从 brief.json 展开生成全套规格文档`);
+  node scripts/cmmi-02-requirements.cjs docs [--spec <名>]                  列出 CMMI-02 宏观需求文档与各规格 brief.json/requirements.md
+  node scripts/cmmi-02-requirements.cjs check [--spec <名>]                 校验 CMMI-02 需求规格文档完备度
+  node scripts/cmmi-02-requirements.cjs asset --type <srs|rtm|nfr> ...      创建 CMMI-02 标准需求与 RTM 追溯文档
+  node scripts/cmmi-02-requirements.cjs route "<用户原始需求>"              执行确定性需求分诊
+  node scripts/cmmi-02-requirements.cjs new --name <spec> --domain <域> ... 创建新特性规格骨架 (brief.json)
+  node scripts/cmmi-02-requirements.cjs build --name <spec>                 从 brief.json 展开生成全套规格文档`);
   process.exit(0);
 }
 
