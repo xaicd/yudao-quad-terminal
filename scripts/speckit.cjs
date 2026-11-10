@@ -801,10 +801,15 @@ Spec-Kit 原生与企业扩展命令:
   check       检查规格交付进度与文档齐备度（缺失文档会以退出码 1 失败）
   archive     归档规格到 docs/specs/archive/<YYYY-Qx>/<domain>/<name>
   list        列出全域所有规格状态与路径
+  cmmi        CMMI 00~09 全环节文档与过程资产扩展 (matrix | 00..09 | new | list | check)
+  00..09      直接进入对应 CMMI 环节的 Spec-Kit 文档与工具扩展 (cmmi-00-meta.cjs ~ cmmi-09-operations.cjs)
 
 示例:
   node scripts/speckit.cjs init
   node scripts/speckit.cjs constitution
+  node scripts/speckit.cjs cmmi matrix
+  node scripts/speckit.cjs cmmi 02 docs
+  node scripts/speckit.cjs 03 check
   node scripts/speckit.cjs new --name pay-wallet-sync --domain pay --title "钱包同步" --type feature
   node scripts/speckit.cjs build --name pay-wallet-sync
   node scripts/speckit.cjs tasks --spec pay-wallet-sync
@@ -845,6 +850,51 @@ switch (command) {
   case "archive":
     handleArchive()
     break
+  case "00":
+  case "01":
+  case "02":
+  case "03":
+  case "04":
+  case "05":
+  case "06":
+  case "07":
+  case "08":
+  case "09": {
+    const { CMMI_SPEC_STAGES } = require("./lib/speckit-cmmi-docs.cjs")
+    const stage = CMMI_SPEC_STAGES[command]
+    const res = spawnSync(process.execPath, [path.join(ROOT, stage.script), ...process.argv.slice(3)], {
+      cwd: ROOT,
+      stdio: "inherit",
+      env: process.env,
+    })
+    process.exit(res.status ?? 1)
+    break
+  }
+  case "cmmi": {
+    const { CMMI_SPEC_STAGES, printCmmiSpecMatrix } = require("./lib/speckit-cmmi-docs.cjs")
+    const sub = process.argv[3] || "matrix"
+    if (/^0[0-9]$/.test(sub)) {
+      const stage = CMMI_SPEC_STAGES[sub]
+      const res = spawnSync(process.execPath, [path.join(ROOT, stage.script), ...process.argv.slice(4)], {
+        cwd: ROOT,
+        stdio: "inherit",
+        env: process.env,
+      })
+      process.exit(res.status ?? 1)
+    }
+    if (sub === "matrix" || sub === "stages") {
+      printCmmiSpecMatrix()
+      process.exit(0)
+    }
+    const cmmiScript = path.join(__dirname, "cmmi-asset-scaffold.cjs")
+    const res = spawnSync(process.execPath, [cmmiScript, ...process.argv.slice(3)], {
+      cwd: ROOT,
+      stdio: "inherit",
+      env: process.env,
+    })
+    process.exit(res.status ?? 0)
+    break
+  }
   case "help":
   default:
     handleHelp()

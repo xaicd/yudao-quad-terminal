@@ -1,42 +1,72 @@
 #!/usr/bin/env node
 /**
- * scripts/cmmi-04-implementation.cjs —— CMMI Phase 04: 全栈编码生成与防假实现 (04_implementation)
- * 主责数字员工: 铁匠 (CoreSWE)
+ * CMMI-04 (Spec-Kit 扩展): 研发计划 Plan、WBS 任务矩阵 Tasks 与全栈代码生成 (04_implementation)
+ * --------------------------------------------------------------------------
+ * 架构定位:
+ *   - `harness.cjs` 定工作流程总规范
+ *   - `cmmi-04-implementation.cjs` 属于 `speckit` 在 CMMI-04 编码实现环节的文档与生成器扩展
+ * 关联文档:
+ *   - 宏观过程文档: docs/04_implementation/{coding-standards-and-guidelines.md, code-review-*}
+ *   - 特性规格文档: docs/specs/<domain>/<name>/{plan.md, tasks.md}
  *
- * 跨底座统一用法 (cooliebase-all & yudao-quad-terminal 100% 同名同参):
- *   node scripts/cmmi-04-implementation.cjs deliver --file <domain>.blueprint.json [--verify-e2e]
- *   node scripts/cmmi-04-implementation.cjs codegen --schema <schema.json>
+ * 统一跨底座命令:
+ *   node scripts/speckit.cjs cmmi 04 [docs|check|asset|tasks|deliver|codegen]
+ *   node scripts/cmmi-04-implementation.cjs [docs|check|asset|tasks|deliver|codegen]
  */
 
-const path = require("node:path");
+"use strict";
+
 const { spawnSync } = require("node:child_process");
+const path = require("node:path");
+const { tryHandleDocSubcommand, checkStageDocs } = require("./lib/speckit-cmmi-docs.cjs");
 
 const ROOT = path.resolve(__dirname, "..");
-const argv = process.argv.slice(2);
-const sub = (argv[0] && !argv[0].startsWith("-") ? argv[0] : "deliver").toLowerCase();
-const rest = argv[0] && !argv[0].startsWith("-") ? argv.slice(1) : argv;
 
-function runNode(scriptRel, args = []) {
-  const res = spawnSync(process.execPath, [path.join(ROOT, scriptRel), ...args], {
+function runNode(scriptRel, extraArgs = []) {
+  const res = spawnSync(process.execPath, [path.join(ROOT, scriptRel), ...extraArgs], {
     cwd: ROOT,
     stdio: "inherit",
     env: process.env,
   });
-  if (res.status !== 0) process.exit(res.status ?? 1);
+  return res.status ?? 1;
 }
 
-if (sub === "help" || argv.includes("--help") || argv.includes("-h")) {
-  console.log(`CMMI 04 (04_implementation) —— 声明式蓝图全栈代码与 PostgreSQL DDL 生成引擎
-用法:
-  node scripts/cmmi-04-implementation.cjs [deliver] --file <domain>.blueprint.json [--verify-e2e]
-  node scripts/cmmi-04-implementation.cjs codegen --schema <domain.codegen.json>`);
+const rawArgs = process.argv.slice(2);
+tryHandleDocSubcommand("04", rawArgs);
+
+const sub = rawArgs[0] && !rawArgs[0].startsWith("-") ? rawArgs[0] : "check";
+const rest = rawArgs[0] && !rawArgs[0].startsWith("-") ? rawArgs.slice(1) : rawArgs;
+
+if (sub === "check") {
+  console.log("═══ [Spec-Kit × CMMI-04] 实施计划 (plan.md) 与任务矩阵 (tasks.md) 校验 ═══");
+  process.exit(checkStageDocs("04"));
+}
+
+if (sub === "tasks" || sub === "task") {
+  console.log("═══ [Spec-Kit × CMMI-04] WBS 任务矩阵与 Git 原子提交核验 ═══");
+  process.exit(runNode("scripts/speckit.cjs", ["tasks", ...rest]));
+}
+
+if (sub === "deliver" || sub === "compile") {
+  console.log("═══ [Spec-Kit × CMMI-04] 蓝图全栈交付编译 (Blueprint Deliver) ═══");
+  process.exit(runNode("scripts/blueprint-engine.cjs", [sub, ...rest]));
+}
+
+if (sub === "codegen" || sub === "module") {
+  console.log("═══ [Spec-Kit × CMMI-04] 领域模块全栈代码生成 (Codegen Module) ═══");
+  process.exit(runNode("scripts/codegen-module.cjs", rest));
+}
+
+if (sub === "--help" || sub === "-h" || sub === "help") {
+  console.log(`用法 (Spec-Kit × CMMI-04 研发计划与代码实现扩展):
+  node scripts/speckit.cjs cmmi 04 docs [--spec <名>]                          列出编码规范文档与各规格 plan.md/tasks.md
+  node scripts/speckit.cjs cmmi 04 check [--spec <名>]                         校验 CMMI-04 研发计划与任务文档完备度
+  node scripts/speckit.cjs cmmi 04 asset --type code-review --title "..."      创建 CMMI-04 代码走查报告文档
+  node scripts/speckit.cjs cmmi 04 tasks --spec <名> [--task T1]               查看任务矩阵与核验 1 Task = 1 Commit
+  node scripts/speckit.cjs cmmi 04 deliver --file <blueprint.json>             蓝图全栈交付编译
+  node scripts/speckit.cjs cmmi 04 codegen --module <域> --table <表> ...      单表全栈代码生成`);
   process.exit(0);
 }
 
-if (sub === "codegen" || sub === "gen") {
-  runNode("scripts/codegen-module.cjs", rest);
-} else if (sub === "asset") {
-  runNode("scripts/cmmi-asset-scaffold.cjs", ["new", "--phase", "04", ...rest]);
-} else {
-  runNode("scripts/blueprint-engine.cjs", ["deliver", ...rest]);
-}
+console.error(`[CMMI-04] 未知子命令: ${sub}`);
+process.exit(2);
