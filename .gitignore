@@ -141,3 +141,4 @@ coverage/
 .nyc_output/
 playwright-report/
 test-results/
+docs/architecture/artifacts/agent-route-last.json

@@ -1,18 +1,20 @@
 # Cursor Rules for yudao-quad-terminal
+# The authoritative rules for this project live in `AGENTS.md` and `HARNESS.md`.
 
-You are the lead architect and FDE for Yudao Quad-Terminal.
-1. When asked to fix a bug or add a feature, trace the root cause in the business ontology (Objects & Actions).
-2. Follow the Minimalist Subtraction Principle: prefer deleting obsolete code over adding patch logic.
-3. Verify all four UI states (loading, empty, data, error) and ensure defensive interaction across Web, MiniApp, and Expo App.
-4. Keep contracts synchronized between Java Backend (Knife4j) and Frontend (packages/api-client).
-5. Slash Commands (/speckit.*):
-   - `/speckit.specify`: 规格立项与需求初始化
-   - `/speckit.plan`: 展开编译标准化工程资产与任务波次图
-   - `/speckit.checklist`: 交付进度与门禁健康扫描
-   - `/speckit.tasks`: 原子任务树与 Git 提交核对
-   - `/speckit.constitution`: 项目工程宪法与零造假铁律
-   - `/speckit.eval`: 6 阶哲学反问与激进减法
-   - `/speckit.implement`: 任务执行与 1 Task = 1 Commit 核查
-   - `/speckit.gate`: CMMI 全端质量与契约总门禁
-   - `/speckit.ops`: 无头接口运营与体检
-   - `/speckit.archive`: 生产割接完毕后防污染归档
+- Two-Pillar Architecture:
+  - Pillar 1 (`harness` = Master Workflow): `pnpm harness <install|check|build|start|health|status|stop|e2e|deliver>` (`scripts/harness.cjs`)
+  - Pillar 2 (`speckit` + CMMI 00~09 Stage Document Extensions): `pnpm run speckit -- cmmi <00..09> [docs|check|asset|...]` (`scripts/cmmi-00-meta.cjs` ~ `scripts/cmmi-09-operations.cjs`)
+- Spec & Prototype Standard (`FEATURE-SPEC-AND-PROTOTYPE-STANDARD`): `pnpm run spec:new`, `pnpm run spec:build`, `pnpm run spec:check`, `pnpm run spec:archive`
+- Zero-Pollution Sandbox Hatching: `pnpm run project:init -- --name <slug> --title "<系统名>" --target /tmp/<slug>-sandbox`
+- `<500 Tokens` Blueprint + Embedded PostgreSQL 18.4 E2E: `pnpm run blueprint:deliver -- --file <domain>.blueprint.json --verify-e2e`
+- Quality & Compat Gates: `pnpm run check` && `pnpm run compat:check`
+
+## 第一步（强制）：需求分诊
+
+动手做任何需求之前，先跑：
+
+    pnpm run agent:route -- "<用户的原始需求原文>"
+
+- `SPEC_REQUIRED` → 先 `pnpm run speckit:new -- --name <名> --domain <域> --type <类型> --title "<标题>"`
+- `DIRECT_OK` → 可直接改（改完仍须 `pnpm run check` 全绿）
+- `NOT_A_REQUIREMENT` → 这句话不是一个需求，既不立规格也不改代码

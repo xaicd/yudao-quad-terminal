@@ -12,7 +12,15 @@
 4. **声明必须可执行**：文档里写的命令必须真实存在；`doc-commands`（advisory）会列出空头命令。
 5. **No Artifact, No Done**：口头"做完了"不算；要有可核验产物（退出码 0 的门禁或真实产物）。
 
-## 1. 30 秒上手（全部走 pnpm）
+## 1. 30 秒上手与双支柱架构（与 `cooliebase-all` 100% 同名同参）
+
+- **支柱一 `harness` (`HARNESS.md` + `scripts/harness.cjs`)**：定义 `pnpm harness <install|check|build|start|health|status|stop|e2e|deliver>` 9 大运行生命周期环节。
+- **支柱二 `speckit` (`scripts/speckit.cjs`) + CMMI 00~09 扩展 (`scripts/cmmi-00-meta.cjs` ~ `scripts/cmmi-09-operations.cjs`)**：通过 `pnpm run speckit -- cmmi <00..09> [docs|check|asset|...]` 统一治理每个 CMMI 环节的宏观过程文档 (`docs/00_meta_standards/`~`docs/09_operations/`) 与特性规格阶段文档 (`docs/specs/<domain>/<name>/`)。
+- **零污染沙箱孵化 + `<500 Tokens` 蓝图一键真库交付**：
+  ```bash
+  pnpm run project:init -- --name <slug> --title "<系统中文名>" --target /tmp/<slug>-sandbox
+  cd /tmp/<slug>-sandbox && pnpm run blueprint:deliver -- --file <domain>.blueprint.json --verify-e2e
+  ```
 
 ```bash
 pnpm install                 # 前端多端 + 共享包
