@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "schemaVersion": "2.0.0",
+  "schemaVersion": "2.1.0",
   "templateId": "yudao-quad-terminal-blueprint",
   "syntax": "{{VAR_NAME}}",
-  "description": "Coolie工坊与27B本地模型专用的 Yudao 四位一体多端蓝图母版契约。覆盖 Spring Boot 3 微服务、Vue3 管理后台、Expo 原生端与 UniApp 小程序的声明式模板插槽。",
+  "description": "Coolie工坊与27B本地模型专用的 Yudao 四位一体多端蓝图母版契约。覆盖 Spring Boot 3 微服务、Vue3 管理后台、Expo 原生端与 UniApp 小程序的声明式模板插槽与四端同源 BASE_PATH。",
   "engineCompatibility": [
     "coolie-workshop",
     "local-llm-27b",
@@ -13,28 +13,34 @@
   ],
   "templateFiles": [
     {
-      "templatePath": "apps/backend/yudao-server/src/main/resources/application-local.template.yaml",
+      "templatePath": "deploy/templates/backend/application-local.template.yaml",
       "targetPath": "apps/backend/yudao-server/src/main/resources/application-local.yaml",
       "format": "yaml",
       "description": "Spring Boot 核心数据源 (MySQL)、Redis 端口与后端服务端口配置模板"
     },
     {
-      "templatePath": "apps/admin/.env.local.template",
+      "templatePath": "deploy/templates/admin/.env.local.template",
       "targetPath": "apps/admin/.env.local",
       "format": "dotenv",
-      "description": "Vue3 管理后台本地后端网关代理地址环境变量模板"
+      "description": "Vue3 管理后台本地后端网关代理地址与 BASE_PATH 环境变量模板"
     },
     {
-      "templatePath": "apps/admin/.env.template",
+      "templatePath": "deploy/templates/admin/.env.template",
       "targetPath": "apps/admin/.env",
       "format": "dotenv",
-      "description": "Vue3 管理后台标题、Logo、默认租户身份配置模板"
+      "description": "Vue3 管理后台标题、BASE_PATH、默认租户身份配置模板"
+    },
+    {
+      "templatePath": "deploy/templates/miniapp/.env.template",
+      "targetPath": "apps/miniapp/.env",
+      "format": "dotenv",
+      "description": "UniApp C端商城/小程序 H5 网关地址与 BASE_PATH (/2c) 配置模板"
     },
     {
       "templatePath": "apps/app/app.template.json",
       "targetPath": "apps/app/app.json",
       "format": "json",
-      "description": "Expo (React Native) 移动原生端应用名称、渠道标识与 Package 包名配置模板"
+      "description": "Expo (React Native) 移动原生端应用名称、BASE_PATH 路由与 Package 包名配置模板"
     }
   ],
   "variables": {
@@ -43,6 +49,12 @@
       "type": "string",
       "default": "yudao-quad-terminal",
       "description": "项目英文代号 / slug"
+    },
+    "BASE_PATH": {
+      "group": "topologyAndDomains",
+      "type": "string",
+      "default": "/yudao",
+      "description": "四端同源统一基础路径前缀（派生 /<slug>/2c、/<slug>/admin、/<slug>/admin-api、/<slug>/app-api、/<slug>/v3/api-docs）"
     },
     "PLATFORM_TITLE": {
       "group": "branding",
@@ -113,14 +125,14 @@
     "ADMIN_PORT": {
       "group": "runtime",
       "type": "number",
-      "default": 80,
+      "default": 48121,
       "description": "Vue3 管理后台前端运行端口"
     },
     "GATEWAY_PORT": {
       "group": "runtime",
       "type": "number",
-      "default": 48080,
-      "description": "后端网关聚合代理端口"
+      "default": 48120,
+      "description": "统一接入网关聚合代理端口"
     },
     "EXPO_APP_NAME": {
       "group": "multiClient",

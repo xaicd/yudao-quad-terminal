@@ -40,28 +40,48 @@
 
 | 能力 | 命令 | 何时用 | 真源 |
 |---|---|---|---|
-| 统一门禁 | `pnpm gate:fast` / `pnpm gate:full` | 任何改动后自证；fast 16 项 / full 19 项（full 另含后端单测与 lite e2e） | `scripts/gate-check.mjs` |
+| 零污染沙箱初始化 | `pnpm project:init -- --name <slug> --title "<中文名>" --target /tmp/<slug>-sandbox` | 秒级克隆沙箱 + 四端 `BASE_PATH` 同源渲染 + 白标包名重构（与 `cooliebase-all` 同参） | `scripts/project-init.cjs` |
+| `<500 Tokens` 蓝图交付 | `pnpm blueprint:deliver -- --file <domain>.blueprint.json --verify-e2e` | 蓝图口语化自愈 (`doctor`) + 16 份 Spec 资产 + 全栈生成 + **Embedded PostgreSQL** 6 阶段真库 E2E | `scripts/blueprint-engine.cjs` |
+| 蓝图校验/渲染/编译 | `pnpm blueprint:check` / `blueprint:render` / `blueprint:doctor` / `blueprint:compile` | 校验模板、按行业预设渲染四端配置、单独诊断或编译领域蓝图 | `scripts/blueprint-engine.cjs` |
+| 嵌入式真 PG 解析器 | `node -e 'require("./scripts/lib/ephemeral-pg.cjs").resolveDatabaseEndpoint()'` | 零 Docker 拉起 **Embedded PostgreSQL 18.4 (`embedded-postgres`)**（与 `cooliebase-all` 同名同契约） | `scripts/lib/ephemeral-pg.cjs` |
+| 统一 9 阶段 Harness | `pnpm harness <install\|check\|build\|start\|health\|status\|stop\|e2e\|deliver>` | 跨底座统一 9 大生命周期编排 | `scripts/harness.cjs` |
+| 统一门禁 | `pnpm check` / `pnpm gate:fast` / `pnpm gate:full` | 任何改动后自证；fast 16 项 / full 19 项（full 另含后端单测与 lite e2e） | `scripts/gate-check.cjs` |
 | 类型检查 | `pnpm typecheck` | 自有包（app / shared-types / api-client）TS 0 报错 | 各包 `tsconfig.json` |
 | 生产构建 | `pnpm build:backend` / `pnpm build:admin` / `pnpm build` | 后端两步 Maven（已验证 189MB jar）+ 前端 vite 构建（已验证 24.6MB dist） | `scripts/build-admin.mjs` |
-| 下游兼容契约 | `pnpm compat:check` | 下游绑定的入口/端口/路径/子模块指针必须与实现逐条一致 | `compat-manifest.json` |
+| 下游兼容契约 | `pnpm compat:check` | 下游绑定的入口/端口/路径/子模块指针必须与实现逐条一致 | `scripts/compat-check.cjs` |
 | 派生金路径验证 | `pnpm harness:hatch` | 临时目录真跑派生并断言 13 项（零泄漏/身份替换/包迁移/依赖无悬空/可自跑门禁） | `scripts/harness/hatch-smoke.mjs` |
 | 门禁反向控制 | `pnpm harness:controls` | 给每道 blocking 门禁注入违规，证明它真的会红（配置合法 ≠ 生效） | `scripts/harness/negative-controls.mjs` |
 | 子模块差异补丁 | `pnpm patch:status` / `patch:apply` / `patch:check` / `patch:revert` | 差异收敛于 `deploy/patches/`，指针保持纯上游（可 clone） | `deploy/patches/README.md` |
 | JDK 变体矩阵 | `pnpm jdk:list` / `jdk:status` / `jdk:use <id>` | 四档变体的真实 ref 与切换；门禁防"文档写不存在的分支" | `scripts/lib/jdk-variants.mjs` |
-| 自有脚本单测 | `pnpm test:scripts` | 78 个 `node:test` 用例（裁剪/规格/凭据/加解密/门禁 CLI/JDK 变体/子模块补丁/harness） | `scripts/tests/` |
+| 自有脚本单测 | `pnpm test:scripts` | 81 个 `node:test` 用例（裁剪/规格/凭据/加解密/门禁 CLI/JDK 变体/子模块补丁/harness） | `scripts/tests/` |
 | 全栈验证 | `pnpm test:all` | 脚本单测 + 类型 + 后端单测（实测 72s）+ 就绪自检，**严格失败即退出** | `scripts/lifecycle.sh` test 阶段 |
 | lite 零 Docker 档 | `pnpm lite:up` / `pnpm lite:verify` / `pnpm lite:down` / `pnpm lite:clean` | 起后端、跑验收、收割残留、重置数据 | `deploy/lite/README.md` |
 | 模块裁剪 | `pnpm trim:modules --profile lite --dry-run` → `--apply --yes` → `pnpm trim:check` | 只保留所需业务模块 | `scripts/lib/module-catalog.mjs` |
 | 撤销裁剪 | `pnpm trim:modules --recover --yes` | 子模块回到已提交状态 | 同上 |
-| 规格工程 | `pnpm speckit new` / `build` / `tasks` / `check` / `archive` | 需求 → 资产 → 任务 → 归档 | `scripts/speckit.cjs` |
+| 规格工程 | `pnpm speckit:new` / `speckit:build` / `speckit:tasks` / `speckit:check` / `speckit:archive` | 需求 → 资产 → 任务 → 归档（与 `cooliebase-all` 同名命令） | `scripts/speckit.cjs` |
 | 规格健康 | `pnpm specs:health` | 校验 16 份资产 + brief 8 要素 + 占位符残留 | `scripts/specs-health.mjs` |
 | CMMI 资产骨架 | `pnpm cmmi:asset new --phase 01 --type charter --title "..."` | 生成 01~09 过程资产骨架（含 TODO 标记） | `scripts/cmmi-asset-scaffold.cjs` |
 | 登录冒烟 | `pnpm smoke:login` | 对**运行中**实例做真实登录探测（秒级） | `scripts/smoke-login.mjs` |
 | 真实库验收 | `pnpm verify:real-db` | = `lite:verify`（真 PG + 真 Redis 全链路） | `deploy/lite/README.md` |
-| 全栈代码生成 | `pnpm gen:module` | 生成 DO/Mapper/Service/Controller/VO + TS + Vue | `scripts/codegen-module.mjs` |
+| 全栈代码生成 | `pnpm gen:module` / `pnpm domain:new` | 生成 DO/Mapper/Service/Admin+App Controller/VO + TS + Vue + PostgreSQL/MySQL DDL | `scripts/codegen-module.cjs` |
 | 契约防漂移 | `pnpm check:drift` | 前后端路由对账（advisory） | `scripts/check-contracts-drift.mjs` |
 | 上下文切片 | `pnpm ctx:query <keyword>` | 秒级定位域/接口/表（~150 tokens） | `scripts/agent-context-compressor.mjs` |
 | MCP 端点 | `cmd mcp list`（8 工具） | 无头编排上述能力 | `.agents/skills/yudao-mcp-server/SKILL.md` |
+
+### 0.2.1 跨底座统一 CMMI 00~09 全生命周期 `.cjs` 标准脚本矩阵（与 `cooliebase-all` 100% 同名同参）
+
+| CMMI 阶段与文档目录 | 统一 `.cjs` 脚本路径 | 统一 `pnpm` / `harness` 入口 | 标准动作与交付闭环 |
+|---|---|---|---|
+| **00 规范与元契约** (`docs/00_meta_standards`) | `scripts/cmmi-00-meta.cjs` | `pnpm run cmmi:00` / `pnpm harness 00` | `check \| schema \| sync`：校验 `compat-manifest`、蓝图 Schema 与 OpenWiki |
+| **01 立项与沙箱孵化** (`docs/01_management`) | `scripts/cmmi-01-management.cjs` | `pnpm run cmmi:01` / `pnpm harness 01` | `init --name <slug> --title "<项目名>" --target /tmp/<slug>-sandbox` |
+| **02 需求与规格工程** (`docs/02_requirements`) | `scripts/cmmi-02-requirements.cjs` | `pnpm run cmmi:02` / `pnpm harness 02` | `route \| new \| build \| check`：需求分诊与 Spec-Kit EARS 规格立项展开 |
+| **03 架构设计与自愈** (`docs/03_architecture_and_design`) | `scripts/cmmi-03-design.cjs` | `pnpm run cmmi:03` / `pnpm harness 03` | `doctor --file <bp.json> --write \| compile-domain`：蓝图自愈与契约编译 |
+| **04 全栈实现与生成** (`docs/04_implementation`) | `scripts/cmmi-04-implementation.cjs` | `pnpm run cmmi:04` / `pnpm harness 04` | `deliver --file <bp.json> \| codegen`：`<500 Tokens` 蓝图全栈代码生成 |
+| **05 测试与真 PG E2E** (`docs/05_verification_and_testing`) | `scripts/cmmi-05-verification.cjs` | `pnpm run cmmi:05` / `pnpm harness 05` | `e2e \| unit \| mutation`：基于 `ephemeral-pg.cjs` (PostgreSQL 18.4) 的 6 阶段 Spec E2E |
+| **06 质量门禁与审计** (`docs/06_quality_and_audit`) | `scripts/cmmi-06-quality.cjs` | `pnpm run cmmi:06` / `pnpm harness 06` | `check [--tier fast\|full] \| tasks \| controls`：PPQA/FCA/PCA 质量门禁 |
+| **07 构建与不可变发布** (`docs/07_release_and_deployment`) | `scripts/cmmi-07-release.cjs` | `pnpm run cmmi:07` / `pnpm harness 07` | `gateway \| build \| fingerprint \| runbook`：四端网关渲染与 SHA-256 指纹 |
+| **08 SRE 运维与探活** (`docs/08_sre_and_resilience`) | `scripts/cmmi-08-sre.cjs` | `pnpm run cmmi:08` / `pnpm harness 08` | `start \| stop \| restart \| status \| health \| logs \| security \| load` |
+| **09 持续运营与归档** (`docs/09_operations`) | `scripts/cmmi-09-operations.cjs` | `pnpm run cmmi:09` / `pnpm harness 09` | `ops \| archive --name <spec> \| check`：持续运营与规格防污染归档 |
 
 ### 0.3 先读什么（避免 Token 浪费）
 

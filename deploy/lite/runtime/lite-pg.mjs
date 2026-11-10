@@ -77,19 +77,26 @@ export function makeClient({ port, user, password, database }) {
  * 启动嵌入式 PG。
  * 数据目录已初始化（存在 PG_VERSION）时跳过 initdb，保证二次启动快且不碰已有数据。
  */
-export async function startPostgres({ port, user, password, dataDir, onLog, onError }) {
+export async function startPostgres({ port, user, password, dataDir, persistent = true, onLog, onError }) {
   const EmbeddedPostgres = await loadEmbeddedPostgres();
   const absDataDir = path.resolve(dataDir);
   const alreadyInitialised = fs.existsSync(path.join(absDataDir, "PG_VERSION"));
+  const isRoot = typeof process.getuid === "function" && process.getuid() === 0;
 
   fs.mkdirSync(absDataDir, { recursive: true });
+  if (isRoot) {
+    try {
+      fs.chmodSync(absDataDir, 0o777);
+    } catch {}
+  }
 
   const runtime = new EmbeddedPostgres({
     databaseDir: absDataDir,
     port,
     user,
     password,
-    persistent: true, // 停机不删数据，保证二次启动秒起
+    persistent, // 默认停机不删数据；临时沙箱 E2E 可传 persistent: false
+    createPostgresUser: isRoot,
     initdbFlags: ["-E", "UTF8", "--locale=C"],
     onLog: onLog || (() => {}),
     onError: onError || (() => {}),

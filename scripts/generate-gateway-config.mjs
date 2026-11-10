@@ -117,7 +117,37 @@ const caddyConfig = `# =========================================================
         }
     }
 
-    # 6. WebSocket 长连接通道 (/infra/ws/*)
+    # 6. OpenAPI 3.0 契约文档平面穿透 (/v3/api-docs, /doc.html, /swagger-ui/*)
+    handle /${projectSlug}/v3/api-docs* {
+        uri strip_prefix /${projectSlug}
+        reverse_proxy 127.0.0.1:${backendPort} {
+            header_up Host {host}
+        }
+    }
+    handle /v3/api-docs* {
+        reverse_proxy 127.0.0.1:${backendPort} {
+            header_up Host {host}
+        }
+    }
+    handle /${projectSlug}/doc.html* {
+        uri strip_prefix /${projectSlug}
+        reverse_proxy 127.0.0.1:${backendPort} {
+            header_up Host {host}
+        }
+    }
+    handle /doc.html* {
+        reverse_proxy 127.0.0.1:${backendPort} {
+            header_up Host {host}
+        }
+    }
+    handle /${projectSlug}/swagger-ui/* {
+        uri strip_prefix /${projectSlug}
+        reverse_proxy 127.0.0.1:${backendPort} {
+            header_up Host {host}
+        }
+    }
+
+    # 7. WebSocket 长连接通道 (/infra/ws/*)
     handle /${projectSlug}/infra/ws/* {
         uri strip_prefix /${projectSlug}
         reverse_proxy 127.0.0.1:${backendPort} {
@@ -234,14 +264,37 @@ location /open-api/ {
     proxy_set_header tenant-id 1;
     proxy_read_timeout 60s;
 }
+
+# 7. OpenAPI 3.0 契约文档平面穿透 (/v3/api-docs, /doc.html, /swagger-ui/)
+location /${projectSlug}/v3/api-docs {
+    proxy_pass http://${projectSlug}_backend/v3/api-docs;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+}
+location /${projectSlug}/doc.html {
+    proxy_pass http://${projectSlug}_backend/doc.html;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+}
+location /${projectSlug}/swagger-ui/ {
+    proxy_pass http://${projectSlug}_backend/swagger-ui/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+}
 `;
 
+const isDryRun = process.argv.includes("--dry-run");
 const caddyPath = path.join(caddyDir, `${projectSlug}.caddy`);
 const nginxPath = path.join(nginxDir, `${projectSlug}.conf`);
 
-fs.writeFileSync(caddyPath, caddyConfig, "utf8");
-fs.writeFileSync(nginxPath, nginxConfig, "utf8");
+if (!isDryRun) {
+  fs.writeFileSync(caddyPath, caddyConfig, "utf8");
+  fs.writeFileSync(nginxPath, nginxConfig, "utf8");
+}
 
-console.log(`✅ [Gateway Config] 成功生成标准网关配置：`);
+console.log(`✅ [Gateway Config] 成功生成标准网关配置${isDryRun ? " (dry-run)" : ""}：`);
 console.log(`   • Caddy: ${path.relative(ROOT, caddyPath)}`);
 console.log(`   • Nginx: ${path.relative(ROOT, nginxPath)}`);

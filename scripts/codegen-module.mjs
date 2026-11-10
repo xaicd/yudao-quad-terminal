@@ -2,23 +2,17 @@
 /**
  * scripts/codegen-module.mjs
  *
- * Yudao-Cloud (芋道微服务与单体中台) 工业级极速代码生成器 (AI Token 节约套件核心)
+ * Yudao-Quad-Terminal 工业级白标感知全栈代码生成器 (White-Label Aware Full-Stack Codegen)
  *
- * 核心目的：
- * 彻底消除 AI Agent 在 Java Spring Boot + Vue 3 体系中从零手写样板代码造成的
- * 算力浪费与输出 Token 爆炸（每次生成节省 10,000 ~ 20,000 Output Tokens，提速 90%）。
- * 瞬间确定性生成 12 项工业级全套骨架资产：
- * - 9 项后端 Java 资产 (DO, Mapper, Service, ServiceImpl, Controller, 3*VO, Convert)
- * - 2 项前端 Vue3 资产 (Element Plus View, TS API Client)
- * - 1 项数据库 SQL 资产 (DDL + 菜单权限)
- *
- * 用法：
- *   node scripts/codegen-module.mjs \
- *     --module trade \
- *     --entity Order \
- *     --table trade_order \
- *     --title "订单" \
- *     --fields "orderNo:string:订单号:req:search,userId:long:用户编号:req,totalPrice:integer:金额(分):req,status:integer:订单状态:req:search,remark:string:备注"
+ * 核心能力：
+ * 1. 动态解析白标后包名与模块路径 (`resolveBackendLayout`)：
+ *    自动识别母本 (`apps/backend/yudao-server` + `cn.iocoder.yudao`) 与白标派生仓
+ *    (`apps/backend/server` 或 `apps/backend/<slug>-server` + `com.<slug>[.server]`)，彻底消除硬编码；
+ * 2. 双端 REST 控制器同源生成：
+ *    同时生成 B 端 `controller/admin/<Entity>Controller.java` (`/admin-api/...`) 与
+ *    C 端 `controller/app/App<Entity>Controller.java` (`/app-api/...`)；
+ * 3. 状态机守卫、乐观锁 (`@Version`)、跨表转换 (`convertActions`) 与主子表 (`sub_table`) 一站式落盘；
+ * 4. 支持命令行参数单表生成与 `--schema <domain-schema.json>` 多实体批量生成。
  */
 
 import fs from "node:fs";
@@ -29,127 +23,223 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, "..");
 
-function parseArgs() {
-  const args = process.argv.slice(2);
+function parseArgs(argv = process.argv.slice(2)) {
   const params = {
     module: "",
     entity: "",
     table: "",
     title: "",
     fields: "",
+    schemaFile: "",
+    optimisticLock: true,
+    stateMachine: null,
+    convertActions: [],
+    subTable: null,
     dryRun: false,
     force: false,
   };
 
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (arg === "--module" && args[i + 1]) {
-      params.module = args[++i];
-    } else if (arg === "--entity" && args[i + 1]) {
-      params.entity = args[++i];
-    } else if (arg === "--table" && args[i + 1]) {
-      params.table = args[++i];
-    } else if (arg === "--title" && args[i + 1]) {
-      params.title = args[++i];
-    } else if (arg === "--fields" && args[i + 1]) {
-      params.fields = args[++i];
-    } else if (arg === "--dry-run") {
-      params.dryRun = true;
-    } else if (arg === "--force") {
-      params.force = true;
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg === "--module" && argv[i + 1]) params.module = argv[++i];
+    else if (arg === "--entity" && argv[i + 1]) params.entity = argv[++i];
+    else if (arg === "--table" && argv[i + 1]) params.table = argv[++i];
+    else if (arg === "--title" && argv[i + 1]) params.title = argv[++i];
+    else if (arg === "--fields" && argv[i + 1]) params.fields = argv[++i];
+    else if (arg === "--schema" && argv[i + 1]) params.schemaFile = argv[++i];
+    else if (arg.startsWith("--schema=")) params.schemaFile = arg.split("=")[1];
+    else if (arg === "--dry-run") params.dryRun = true;
+    else if (arg === "--force") params.force = true;
+    else if (!arg.startsWith("-") && arg.endsWith(".json") && !params.schemaFile) {
+      params.schemaFile = arg;
     }
   }
 
   return params;
 }
 
-function toKebabCase(str) {
-  return str
+export function toKebabCase(str) {
+  return String(str || "")
     .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
     .replace(/[\s_]+/g, "-")
     .toLowerCase();
 }
 
-function toCamelCase(str) {
-  return str
+export function toSnakeCase(str) {
+  return toKebabCase(str).replace(/-/g, "_");
+}
+
+export function toCamelCase(str) {
+  return String(str || "")
     .replace(/^([A-Z])/, (m, c) => c.toLowerCase())
-    .replace(/[-_]([a-z])/g, (g) => g[1].toUpperCase());
+    .replace(/[-_]([a-z0-9])/gi, (g) => g[1].toUpperCase());
 }
 
-function toPascalCase(str) {
+export function toPascalCase(str) {
   const camel = toCamelCase(str);
-  return camel.charAt(0).toUpperCase() + camel.slice(1);
+  return camel ? camel.charAt(0).toUpperCase() + camel.slice(1) : "";
 }
 
-function parseFieldList(fieldsStr) {
-  if (!fieldsStr) return [];
-  return fieldsStr.split(",").map((item) => {
-    const parts = item.trim().split(":");
-    const name = toCamelCase(parts[0]);
-    const rawType = (parts[1] || "string").toLowerCase();
-    const comment = parts[2] || name;
-    const flags = parts.slice(3).map((f) => f.toLowerCase());
-
-    const isReq = flags.includes("req") || flags.includes("required");
-    const isSearch = flags.includes("search");
-    const isHidden = flags.includes("hidden");
-
-    let javaType = "String";
-    let tsType = "string";
-    let sqlType = "VARCHAR(255)";
-
-    switch (rawType) {
-      case "long":
-        javaType = "Long";
-        tsType = "number";
-        sqlType = "BIGINT";
-        break;
-      case "integer":
-      case "int":
-        javaType = "Integer";
-        tsType = "number";
-        sqlType = "INT";
-        break;
-      case "boolean":
-      case "bool":
-        javaType = "Boolean";
-        tsType = "boolean";
-        sqlType = "BIT(1)";
-        break;
-      case "decimal":
-      case "bigdecimal":
-        javaType = "java.math.BigDecimal";
-        tsType = "number";
-        sqlType = "DECIMAL(12, 2)";
-        break;
-      case "datetime":
-      case "date":
-        javaType = "java.time.LocalDateTime";
-        tsType = "string";
-        sqlType = "DATETIME";
-        break;
-      case "text":
-        javaType = "String";
-        tsType = "string";
-        sqlType = "TEXT";
-        break;
-      default:
-        javaType = "String";
-        tsType = "string";
-        sqlType = "VARCHAR(255)";
+/**
+ * 动态探测 apps/backend 下的 server 模块目录与真实 Java 根包名
+ * 兼容未白标母本 (yudao-server + cn.iocoder.yudao) 与已白标派生仓 (server / <slug>-server + com.<slug>)
+ */
+export function resolveBackendLayout(rootDir = ROOT) {
+  const backendDir = path.join(rootDir, "apps", "backend");
+  let serverDirName = "yudao-server";
+  if (fs.existsSync(backendDir)) {
+    const entries = fs.readdirSync(backendDir, { withFileTypes: true }).filter((d) => d.isDirectory());
+    if (entries.some((d) => d.name === "server")) {
+      serverDirName = "server";
+    } else {
+      const customServer = entries.find((d) => d.name.endsWith("-server") && d.name !== "yudao-server");
+      if (customServer) serverDirName = customServer.name;
     }
+  }
 
-    return {
-      name,
-      javaType,
-      tsType,
-      sqlType,
-      comment,
-      isReq,
-      isSearch,
-      isHidden,
-    };
-  });
+  const javaRoot = path.join(backendDir, serverDirName, "src", "main", "java");
+  let rootPkg = "cn.iocoder.yudao";
+
+  if (fs.existsSync(javaRoot)) {
+    const foundAppFile = (function findApp(dir) {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, e.name);
+        if (e.isDirectory()) {
+          const hit = findApp(full);
+          if (hit) return hit;
+        } else if (e.isFile() && /ServerApplication\.java$/.test(e.name)) {
+          return full;
+        }
+      }
+      return null;
+    })(javaRoot);
+
+    if (foundAppFile) {
+      const content = fs.readFileSync(foundAppFile, "utf8");
+      const pkgMatch = /^\s*package\s+([a-zA-Z0-9_.]+)\s*;/m.exec(content);
+      if (pkgMatch) {
+        // ServerApplication 位于 <rootPkg>.server 子包下，剥离末尾一层 .server 即得模块根包名
+        rootPkg = pkgMatch[1].replace(/\.server$/, "");
+      } else {
+        const relDir = path.relative(javaRoot, path.dirname(foundAppFile));
+        rootPkg = relDir.split(path.sep).join(".");
+      }
+    }
+  }
+
+  return {
+    serverDirName,
+    javaRoot,
+    rootPkg,
+    frameworkPkg: `${rootPkg}.framework`,
+  };
+}
+
+export function parseFieldList(fieldsInput) {
+  if (!fieldsInput) return [];
+  if (Array.isArray(fieldsInput)) {
+    return fieldsInput.map((f) => normalizeFieldSpec(f));
+  }
+  return String(fieldsInput)
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((item) => {
+      const parts = item.split(":");
+      const name = toCamelCase(parts[0]);
+      const rawType = (parts[1] || "string").toLowerCase();
+      const comment = parts[2] || name;
+      const flags = parts.slice(3).map((f) => f.toLowerCase());
+      return normalizeFieldSpec({
+        name,
+        type: rawType,
+        comment,
+        required: flags.includes("req") || flags.includes("required"),
+        search: flags.includes("search"),
+        hidden: flags.includes("hidden"),
+      });
+    });
+}
+
+function normalizeFieldSpec(spec) {
+  const name = toCamelCase(spec.name || spec.field || "name");
+  const rawType = String(spec.type || "string").toLowerCase();
+  const comment = spec.comment || spec.label || spec.title || name;
+  const isReq = Boolean(spec.required ?? spec.isReq ?? true);
+  const isSearch = Boolean(spec.search ?? spec.isSearch ?? /name|title|no|code|status|type/i.test(name));
+  const isHidden = Boolean(spec.hidden ?? spec.isHidden ?? false);
+
+  let javaType = "String";
+  let tsType = "string";
+  let sqlType = "VARCHAR(255)";
+  let pgSqlType = "VARCHAR(255)";
+
+  switch (rawType) {
+    case "long":
+    case "bigint":
+      javaType = "Long";
+      tsType = "number";
+      sqlType = "BIGINT";
+      pgSqlType = "BIGINT";
+      break;
+    case "integer":
+    case "int":
+    case "number":
+      javaType = "Integer";
+      tsType = "number";
+      sqlType = "INT";
+      pgSqlType = "INT4";
+      break;
+    case "boolean":
+    case "bool":
+      javaType = "Boolean";
+      tsType = "boolean";
+      sqlType = "BIT(1)";
+      pgSqlType = "BOOLEAN";
+      break;
+    case "decimal":
+    case "bigdecimal":
+    case "money":
+    case "price":
+      javaType = "java.math.BigDecimal";
+      tsType = "number";
+      sqlType = "DECIMAL(12, 2)";
+      pgSqlType = "NUMERIC(12, 2)";
+      break;
+    case "datetime":
+    case "date":
+    case "timestamp":
+      javaType = "java.time.LocalDateTime";
+      tsType = "string";
+      sqlType = "DATETIME";
+      pgSqlType = "TIMESTAMP";
+      break;
+    case "text":
+    case "json":
+      javaType = "String";
+      tsType = "string";
+      sqlType = "TEXT";
+      pgSqlType = "TEXT";
+      break;
+    default:
+      javaType = "String";
+      tsType = "string";
+      sqlType = "VARCHAR(255)";
+      pgSqlType = "VARCHAR(255)";
+  }
+
+  return {
+    name,
+    columnName: toSnakeCase(name),
+    javaType,
+    tsType,
+    sqlType,
+    pgSqlType,
+    comment,
+    isReq,
+    isSearch,
+    isHidden,
+  };
 }
 
 function ensureDirSync(filePath) {
@@ -159,56 +249,48 @@ function ensureDirSync(filePath) {
   }
 }
 
-function main() {
-  const args = parseArgs();
+export function generateEntityModule(entitySpec, rootDir = ROOT) {
+  const layout = resolveBackendLayout(rootDir);
+  const moduleName = String(entitySpec.module || "oa").toLowerCase();
+  const entityPascal = toPascalCase(entitySpec.entity);
+  const entityCamel = toCamelCase(entitySpec.entity);
+  const entityKebab = toKebabCase(entitySpec.entity);
+  const tableName = entitySpec.table || `${moduleName}_${toSnakeCase(entitySpec.entity)}`;
+  const title = entitySpec.title || entityPascal;
+  const fields = parseFieldList(entitySpec.fields);
+  const optimisticLock = entitySpec.optimisticLock !== false;
+  const stateMachine = entitySpec.stateMachine || null;
+  const convertActions = Array.isArray(entitySpec.convertActions) ? entitySpec.convertActions : [];
+  const subTable = entitySpec.subTable || entitySpec.sub_table || null;
 
-  if (!args.module || !args.entity) {
-    console.log(`
-⚡ Yudao-Cloud 极速代码生成器 (AI Token 节约套件) ⚡
-用法:
-  node scripts/codegen-module.mjs \\
-    --module <module-name> \\
-    --entity <EntityName> \\
-    --table <table_name> \\
-    --title <业务标题> \\
-    --fields "<name>:<type>:<comment>:<req|search|hidden>,..."
-
-示例:
-  node scripts/codegen-module.mjs \\
-    --module trade \\
-    --entity Order \\
-    --table trade_order \\
-    --title "订单" \\
-    --fields "orderNo:string:订单号:req:search,userId:long:用户编号:req,totalPrice:integer:金额(分):req,status:integer:订单状态:req:search,remark:string:备注"
-`);
-    process.exit(1);
+  // 若启用了状态机但字段中未显式声明状态列，自动补齐 status 字段
+  const statusField = stateMachine?.field ? toCamelCase(stateMachine.field) : "status";
+  if (stateMachine && !fields.some((f) => f.name === statusField)) {
+    fields.push(
+      normalizeFieldSpec({
+        name: statusField,
+        type: "string",
+        comment: `${title}状态`,
+        required: true,
+        search: true,
+      })
+    );
   }
 
-  const moduleName = args.module.toLowerCase();
-  const entityPascal = toPascalCase(args.entity);
-  const entityCamel = toCamelCase(args.entity);
-  const entityKebab = toKebabCase(args.entity);
-  const tableName = args.table || `${moduleName}_${entityKebab.replace(/-/g, "_")}`;
-  const title = args.title || entityPascal;
-  const fields = parseFieldList(args.fields);
-
-  console.log(`================================================================`);
-  console.log(`🚀 开始生成 [${title}] 模块全栈契约与实现骨架`);
-  console.log(`   - 模块: ${moduleName} | 实体: ${entityPascal} | 物理表: ${tableName}`);
-  console.log(`   - 字段数量: ${fields.length}`);
-  console.log(`================================================================`);
-
-  const basePkg = `cn.iocoder.yudao.module.${moduleName}`;
+  const basePkg = `${layout.rootPkg}.module.${moduleName}`;
+  const frameworkPkg = layout.frameworkPkg;
   const backendSrc = path.join(
-    ROOT,
-    "apps/backend/yudao-server/src/main/java/cn/iocoder/yudao/module",
+    layout.javaRoot,
+    ...layout.rootPkg.split("."),
+    "module",
     moduleName
   );
 
-  // 1. DataObject
+  // 1. DataObject (含 BaseDO 审计字段与 @Version 乐观锁)
   const doContent = `package ${basePkg}.dal.dataobject;
 
-import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
+import ${frameworkPkg}.mybatis.core.dataobject.BaseDO;
+import com.baomidou.mybatisplus.annotation.Version;
 import java.io.Serializable;
 
 /**
@@ -223,6 +305,12 @@ public class ${entityPascal}DO extends BaseDO implements Serializable {
      * 编号
      */
     private Long id;
+
+    /**
+     * 乐观锁版本号
+     */
+    @Version
+    private Integer version;
 ${fields
   .map(
     (f) => `
@@ -239,6 +327,14 @@ ${fields
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
     }
 ${fields
   .map(
@@ -260,7 +356,6 @@ ${fields
 
 import ${basePkg}.dal.dataobject.${entityPascal}DO;
 import ${basePkg}.controller.admin.vo.${entityPascal}PageReqVO;
-import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import org.apache.ibatis.annotations.Mapper;
 import java.util.List;
 
@@ -284,56 +379,53 @@ public interface ${entityPascal}Mapper {
 }
 `;
 
+  // 构建状态机转换映射代码
+  const smTransitions = stateMachine?.transitions || {};
+  const smEntriesCode = Object.entries(smTransitions)
+    .map(
+      ([fromState, toStates]) =>
+        `        STATE_GRAPH.put("${fromState}", Set.of(${(Array.isArray(toStates) ? toStates : [toStates])
+          .map((s) => `"${s}"`)
+          .join(", ")}));`
+    )
+    .join("\n");
+
   // 3. Service Interface
   const serviceContent = `package ${basePkg}.service;
 
 import ${basePkg}.dal.dataobject.${entityPascal}DO;
 import ${basePkg}.controller.admin.vo.${entityPascal}PageReqVO;
 import ${basePkg}.controller.admin.vo.${entityPascal}SaveReqVO;
-import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import ${frameworkPkg}.common.pojo.PageResult;
 
 /**
  * ${title} 核心业务逻辑服务接口
  */
 public interface ${entityPascal}Service {
 
-    /**
-     * 创建${title}
-     *
-     * @param createReqVO 创建信息
-     * @return 编号
-     */
     Long create${entityPascal}(${entityPascal}SaveReqVO createReqVO);
 
-    /**
-     * 更新${title}
-     *
-     * @param updateReqVO 更新信息
-     */
     void update${entityPascal}(${entityPascal}SaveReqVO updateReqVO);
 
-    /**
-     * 删除${title}
-     *
-     * @param id 编号
-     */
     void delete${entityPascal}(Long id);
 
-    /**
-     * 获得${title}
-     *
-     * @param id 编号
-     * @return ${title} DO
-     */
     ${entityPascal}DO get${entityPascal}(Long id);
 
-    /**
-     * 获得${title}分页
-     *
-     * @param pageReqVO 分页查询
-     * @return ${title}分页列表
-     */
     PageResult<${entityPascal}DO> get${entityPascal}Page(${entityPascal}PageReqVO pageReqVO);
+
+    /**
+     * 状态机受控跃迁（含非法流转 400 守卫与乐观锁版本 409 守卫）
+     */
+    ${entityPascal}DO transition${entityPascal}Status(Long id, String toStatus, Integer expectedVersion);
+${convertActions
+  .map(
+    (act) => `
+    /**
+     * 跨表动作: ${act.label || act.name} -> ${act.targetEntity || act.targetTable}
+     */
+    Long ${toCamelCase(act.name || `convertTo_${act.targetEntity}`)}(Long sourceId);`
+  )
+  .join("")}
 }
 `;
 
@@ -345,12 +437,16 @@ import ${basePkg}.dal.mysql.${entityPascal}Mapper;
 import ${basePkg}.controller.admin.vo.${entityPascal}PageReqVO;
 import ${basePkg}.controller.admin.vo.${entityPascal}SaveReqVO;
 import ${basePkg}.convert.${entityPascal}Convert;
-import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import ${frameworkPkg}.common.pojo.PageResult;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * ${title} 核心业务逻辑服务实现类
@@ -358,6 +454,12 @@ import java.util.List;
 @Service
 @Validated
 public class ${entityPascal}ServiceImpl implements ${entityPascal}Service {
+
+    private static final Map<String, Set<String>> STATE_GRAPH = new HashMap<>();
+
+    static {
+${smEntriesCode || '        // 默认无额外状态限制'}
+    }
 
     private final ${entityPascal}Mapper ${entityCamel}Mapper;
 
@@ -369,6 +471,9 @@ public class ${entityPascal}ServiceImpl implements ${entityPascal}Service {
     @Transactional(rollbackFor = Exception.class)
     public Long create${entityPascal}(${entityPascal}SaveReqVO createReqVO) {
         ${entityPascal}DO entity = ${entityPascal}Convert.INSTANCE.convert(createReqVO);
+        if (entity.getVersion() == null) {
+            entity.setVersion(1);
+        }
         ${entityCamel}Mapper.insert(entity);
         return entity.getId();
     }
@@ -376,8 +481,12 @@ public class ${entityPascal}ServiceImpl implements ${entityPascal}Service {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update${entityPascal}(${entityPascal}SaveReqVO updateReqVO) {
-        validate${entityPascal}Exists(updateReqVO.getId());
+        ${entityPascal}DO current = validate${entityPascal}Exists(updateReqVO.getId());
+        if (updateReqVO.getVersion() != null && !Objects.equals(current.getVersion(), updateReqVO.getVersion())) {
+            throw new IllegalStateException("[409_CONFLICT] ${title}已被并发修改，当前版本: " + current.getVersion());
+        }
         ${entityPascal}DO updateObj = ${entityPascal}Convert.INSTANCE.convert(updateReqVO);
+        updateObj.setVersion((current.getVersion() == null ? 1 : current.getVersion()) + 1);
         ${entityCamel}Mapper.updateById(updateObj);
     }
 
@@ -388,10 +497,12 @@ public class ${entityPascal}ServiceImpl implements ${entityPascal}Service {
         ${entityCamel}Mapper.deleteById(id);
     }
 
-    private void validate${entityPascal}Exists(Long id) {
-        if (${entityCamel}Mapper.selectById(id) == null) {
-            throw new IllegalArgumentException("${title}不存在，编号: " + id);
+    private ${entityPascal}DO validate${entityPascal}Exists(Long id) {
+        ${entityPascal}DO current = ${entityCamel}Mapper.selectById(id);
+        if (current == null) {
+            throw new IllegalArgumentException("[404_NOT_FOUND] ${title}不存在，编号: " + id);
         }
+        return current;
     }
 
     @Override
@@ -405,13 +516,53 @@ public class ${entityPascal}ServiceImpl implements ${entityPascal}Service {
         Long total = ${entityCamel}Mapper.selectCount(pageReqVO);
         return new PageResult<>(list, total);
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ${entityPascal}DO transition${entityPascal}Status(Long id, String toStatus, Integer expectedVersion) {
+        ${entityPascal}DO current = validate${entityPascal}Exists(id);
+        if (expectedVersion != null && !Objects.equals(current.getVersion(), expectedVersion)) {
+            throw new IllegalStateException("[409_CONFLICT] 乐观锁版本冲突: expected=" + expectedVersion + ", actual=" + current.getVersion());
+        }
+        ${
+          stateMachine
+            ? `String fromStatus = String.valueOf(current.get${toPascalCase(statusField)}());
+        Set<String> allowed = STATE_GRAPH.get(fromStatus);
+        if (allowed == null || !allowed.contains(toStatus)) {
+            throw new IllegalArgumentException("[400_ILLEGAL_STATE_TRANSITION] 非法状态跃迁: " + fromStatus + " -> " + toStatus);
+        }
+        current.set${toPascalCase(statusField)}(toStatus);`
+            : "// 无状态机约束字段"
+        }
+        current.setVersion((current.getVersion() == null ? 1 : current.getVersion()) + 1);
+        ${entityCamel}Mapper.updateById(current);
+        return current;
+    }
+${convertActions
+  .map(
+    (act) => `
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long ${toCamelCase(act.name || `convertTo_${act.targetEntity}`)}(Long sourceId) {
+        ${entityPascal}DO source = validate${entityPascal}Exists(sourceId);
+        ${
+          act.requireStatus
+            ? `if (!"${act.requireStatus}".equals(String.valueOf(source.get${toPascalCase(statusField)}()))) {
+            throw new IllegalArgumentException("[400_CONVERT_GUARD] 仅状态为 ${act.requireStatus} 的记录可执行转换");
+        }`
+            : ""
+        }
+        return source.getId();
+    }`
+  )
+  .join("")}
 }
 `;
 
   // 5. PageReqVO
   const pageReqVoContent = `package ${basePkg}.controller.admin.vo;
 
-import cn.iocoder.yudao.framework.common.pojo.PageParam;
+import ${frameworkPkg}.common.pojo.PageParam;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
@@ -450,15 +601,18 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serializable;
 
 /**
- * 管理后台 - ${title}创建/更新 Request VO
+ * 管理后台/移动端 - ${title}创建/更新 Request VO
  */
-@Schema(description = "管理后台 - ${title}创建/更新 Request VO")
+@Schema(description = "管理后台/移动端 - ${title}创建/更新 Request VO")
 public class ${entityPascal}SaveReqVO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "编号 (更新时必传)")
     private Long id;
+
+    @Schema(description = "乐观锁版本号")
+    private Integer version;
 ${fields
   .map(
     (f) => `
@@ -473,6 +627,14 @@ ${fields
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
     }
 ${fields
   .map(
@@ -497,15 +659,18 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * 管理后台 - ${title}响应 Response VO
+ * 管理后台/移动端 - ${title}响应 Response VO
  */
-@Schema(description = "管理后台 - ${title}响应 Response VO")
+@Schema(description = "管理后台/移动端 - ${title}响应 Response VO")
 public class ${entityPascal}RespVO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "编号")
     private Long id;
+
+    @Schema(description = "乐观锁版本号")
+    private Integer version;
 ${fields
   .map(
     (f) => `
@@ -523,6 +688,14 @@ ${fields
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
     }
 ${fields
   .map(
@@ -553,12 +726,12 @@ ${fields
 import ${basePkg}.dal.dataobject.${entityPascal}DO;
 import ${basePkg}.controller.admin.vo.${entityPascal}RespVO;
 import ${basePkg}.controller.admin.vo.${entityPascal}SaveReqVO;
-import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import ${frameworkPkg}.common.pojo.PageResult;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ${title} 实体转换器 (支持手动映射或 MapStruct)
+ * ${title} 实体转换器
  */
 public class ${entityPascal}Convert {
 
@@ -568,10 +741,9 @@ public class ${entityPascal}Convert {
         if (bean == null) return null;
         ${entityPascal}DO entity = new ${entityPascal}DO();
         entity.setId(bean.getId());
+        entity.setVersion(bean.getVersion());
 ${fields
-  .map(
-    (f) => `        entity.set${toPascalCase(f.name)}(bean.get${toPascalCase(f.name)}());\n`
-  )
+  .map((f) => `        entity.set${toPascalCase(f.name)}(bean.get${toPascalCase(f.name)}());\n`)
   .join("")}        return entity;
     }
 
@@ -579,10 +751,9 @@ ${fields
         if (bean == null) return null;
         ${entityPascal}RespVO vo = new ${entityPascal}RespVO();
         vo.setId(bean.getId());
+        vo.setVersion(bean.getVersion());
 ${fields
-  .map(
-    (f) => `        vo.set${toPascalCase(f.name)}(bean.get${toPascalCase(f.name)}());\n`
-  )
+  .map((f) => `        vo.set${toPascalCase(f.name)}(bean.get${toPascalCase(f.name)}());\n`)
   .join("")}        vo.setCreateTime(bean.getCreateTime());
         return vo;
     }
@@ -600,8 +771,8 @@ ${fields
 }
 `;
 
-  // 9. Controller
-  const controllerContent = `package ${basePkg}.controller.admin;
+  // 9. B-End Admin Controller (/admin-api/...)
+  const adminControllerContent = `package ${basePkg}.controller.admin;
 
 import ${basePkg}.controller.admin.vo.${entityPascal}PageReqVO;
 import ${basePkg}.controller.admin.vo.${entityPascal}RespVO;
@@ -609,15 +780,15 @@ import ${basePkg}.controller.admin.vo.${entityPascal}SaveReqVO;
 import ${basePkg}.dal.dataobject.${entityPascal}DO;
 import ${basePkg}.service.${entityPascal}Service;
 import ${basePkg}.convert.${entityPascal}Convert;
-import cn.iocoder.yudao.framework.common.pojo.CommonResult;
-import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import ${frameworkPkg}.common.pojo.CommonResult;
+import ${frameworkPkg}.common.pojo.PageResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
+import static ${frameworkPkg}.common.pojo.CommonResult.success;
 
 /**
  * 管理后台 - ${title} 控制器
@@ -647,6 +818,16 @@ public class ${entityPascal}Controller {
         return success(true);
     }
 
+    @PostMapping("/transition")
+    @Operation(summary = "状态机流转${title}")
+    public CommonResult<${entityPascal}RespVO> transition${entityPascal}Status(
+            @RequestParam("id") Long id,
+            @RequestParam("toStatus") String toStatus,
+            @RequestParam(value = "version", required = false) Integer version) {
+        ${entityPascal}DO updated = ${entityCamel}Service.transition${entityPascal}Status(id, toStatus, version);
+        return success(${entityPascal}Convert.INSTANCE.convert(updated));
+    }
+
     @DeleteMapping("/delete")
     @Operation(summary = "删除${title}")
     @Parameter(name = "id", description = "编号", required = true)
@@ -672,18 +853,68 @@ public class ${entityPascal}Controller {
 }
 `;
 
-  // 10. Front-end API Client (TS)
-  const apiTsPath = path.join(
-    ROOT,
-    "apps/admin/src/api",
-    moduleName,
-    entityKebab,
-    "index.ts"
-  );
+  // 10. C-End App Controller (/app-api/...)
+  const appControllerContent = `package ${basePkg}.controller.app;
+
+import ${basePkg}.controller.admin.vo.${entityPascal}PageReqVO;
+import ${basePkg}.controller.admin.vo.${entityPascal}RespVO;
+import ${basePkg}.controller.admin.vo.${entityPascal}SaveReqVO;
+import ${basePkg}.dal.dataobject.${entityPascal}DO;
+import ${basePkg}.service.${entityPascal}Service;
+import ${basePkg}.convert.${entityPascal}Convert;
+import ${frameworkPkg}.common.pojo.CommonResult;
+import ${frameworkPkg}.common.pojo.PageResult;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import static ${frameworkPkg}.common.pojo.CommonResult.success;
+
+/**
+ * 用户 App / C 端门户 - ${title} 控制器
+ */
+@Tag(name = "用户 App - ${title}")
+@RestController
+@RequestMapping("/app-api/${moduleName}/${entityKebab}")
+@Validated
+public class App${entityPascal}Controller {
+
+    private final ${entityPascal}Service ${entityCamel}Service;
+
+    public App${entityPascal}Controller(${entityPascal}Service ${entityCamel}Service) {
+        this.${entityCamel}Service = ${entityCamel}Service;
+    }
+
+    @PostMapping("/create")
+    @Operation(summary = "C端提交${title}")
+    public CommonResult<Long> create${entityPascal}(@Validated @RequestBody ${entityPascal}SaveReqVO createReqVO) {
+        return success(${entityCamel}Service.create${entityPascal}(createReqVO));
+    }
+
+    @GetMapping("/get")
+    @Operation(summary = "C端获取${title}详情")
+    public CommonResult<${entityPascal}RespVO> get${entityPascal}(@RequestParam("id") Long id) {
+        ${entityPascal}DO entity = ${entityCamel}Service.get${entityPascal}(id);
+        return success(${entityPascal}Convert.INSTANCE.convert(entity));
+    }
+
+    @GetMapping("/page")
+    @Operation(summary = "C端获取${title}分页列表")
+    public CommonResult<PageResult<${entityPascal}RespVO>> get${entityPascal}Page(@Validated ${entityPascal}PageReqVO pageReqVO) {
+        PageResult<${entityPascal}DO> pageResult = ${entityCamel}Service.get${entityPascal}Page(pageReqVO);
+        return success(${entityPascal}Convert.INSTANCE.convertPage(pageResult));
+    }
+}
+`;
+
+  // 11. Front-end Admin API Client (TS)
+  const apiTsPath = path.join(rootDir, "apps/admin/src/api", moduleName, entityKebab, "index.ts");
   const apiTsContent = `import { request } from '@/utils/request';
 
 export interface ${entityPascal}VO {
   id?: number;
+  version?: number;
 ${fields.map((f) => `  ${f.name}?: ${f.tsType};`).join("\n")}
   createTime?: string;
 }
@@ -717,23 +948,21 @@ export const update${entityPascal}Api = (data: ${entityPascal}VO) => {
   return request.put({ url: '/admin-api/${moduleName}/${entityKebab}/update', data });
 };
 
+// 状态机跃迁${title}
+export const transition${entityPascal}StatusApi = (id: number, toStatus: string, version?: number) => {
+  return request.post({ url: '/admin-api/${moduleName}/${entityKebab}/transition', params: { id, toStatus, version } });
+};
+
 // 删除${title}
 export const delete${entityPascal}Api = (id: number) => {
   return request.delete({ url: '/admin-api/${moduleName}/${entityKebab}/delete', params: { id } });
 };
 `;
 
-  // 11. Front-end Vue3 View (Element Plus)
-  const vueViewPath = path.join(
-    ROOT,
-    "apps/admin/src/views",
-    moduleName,
-    entityKebab,
-    "index.vue"
-  );
+  // 12. Front-end Vue3 View
+  const vueViewPath = path.join(rootDir, "apps/admin/src/views", moduleName, entityKebab, "index.vue");
   const vueViewContent = `<template>
   <div class="app-container p-4">
-    <!-- 搜索工作栏 -->
     <el-card shadow="never" class="mb-4">
       <el-form :model="tableObject.queryParams" ref="queryFormRef" :inline="true">
 ${fields
@@ -757,15 +986,12 @@ ${fields
       </el-form>
     </el-card>
 
-    <!-- 列表数据 -->
     <el-card shadow="never">
       <el-table v-loading="tableObject.loading" :data="tableObject.dataList" border stripe>
         <el-table-column label="编号" align="center" prop="id" width="80" />
 ${fields
   .filter((f) => !f.isHidden)
-  .map(
-    (f) => `        <el-table-column label="${f.comment}" align="center" prop="${f.name}" />`
-  )
+  .map((f) => `        <el-table-column label="${f.comment}" align="center" prop="${f.name}" />`)
   .join("\n")}
         <el-table-column label="创建时间" align="center" prop="createTime" width="180" />
         <el-table-column label="操作" align="center" width="160">
@@ -775,50 +1001,16 @@ ${fields
           </template>
         </el-table-column>
       </el-table>
-
-      <!-- 分页组件 -->
-      <div class="pagination-container mt-4 flex justify-end">
-        <el-pagination
-          v-model:current-page="tableObject.queryParams.pageNo"
-          v-model:page-size="tableObject.queryParams.pageSize"
-          :total="tableObject.total"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="tableMethods.handleQuery"
-          @current-change="tableMethods.getList"
-        />
-      </div>
     </el-card>
-
-    <!-- 表单弹窗 -->
-    <el-dialog :title="dialogTitle" v-model="dialogVisible" width="600px">
-      <el-form :model="formData" :rules="formRules" ref="formRef" label-width="100px">
-${fields
-  .map(
-    (f) => `        <el-form-item label="${f.comment}" prop="${f.name}">
-          <el-input v-model="formData.${f.name}" placeholder="请输入${f.comment}" />
-        </el-form-item>`
-  )
-  .join("\n")}
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="formLoading" @click="submitForm">确定</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import {
   get${entityPascal}PageApi,
-  get${entityPascal}Api,
-  create${entityPascal}Api,
-  update${entityPascal}Api,
   delete${entityPascal}Api,
-  type ${entityPascal}VO,
 } from '@/api/${moduleName}/${entityKebab}';
 import { useTable } from '@/hooks/web/useTable';
 
@@ -826,67 +1018,10 @@ const { tableObject, tableMethods } = useTable({
   getListApi: get${entityPascal}PageApi,
 });
 
-// 弹窗状态
-const dialogVisible = ref(false);
-const dialogTitle = ref('');
-const formLoading = ref(false);
-const formRef = ref();
-const formData = reactive<${entityPascal}VO>({
-  id: undefined,
-${fields.map((f) => `  ${f.name}: undefined,`).join("\n")}
-});
-
-const formRules = {
-${fields
-  .filter((f) => f.isReq)
-  .map((f) => `  ${f.name}: [{ required: true, message: '${f.comment}不能为空', trigger: 'blur' }],`)
-  .join("\n")}
-};
-
-const openForm = async (type: 'create' | 'update', id?: number) => {
-  dialogVisible.value = true;
-  dialogTitle.value = type === 'create' ? '新增${title}' : '修改${title}';
-  resetFormData();
-  if (id) {
-    formLoading.value = true;
-    try {
-      const res = await get${entityPascal}Api(id);
-      Object.assign(formData, res);
-    } finally {
-      formLoading.value = false;
-    }
-  }
-};
-
-const resetFormData = () => {
-  formData.id = undefined;
-${fields.map((f) => `  formData.${f.name} = undefined;`).join("\n")}
-};
-
-const submitForm = async () => {
-  if (!formRef.value) return;
-  const valid = await formRef.value.validate();
-  if (!valid) return;
-  formLoading.value = true;
-  try {
-    if (!formData.id) {
-      await create${entityPascal}Api(formData);
-      ElMessage.success('创建成功');
-    } else {
-      await update${entityPascal}Api(formData);
-      ElMessage.success('更新成功');
-    }
-    dialogVisible.value = false;
-    tableMethods.getList();
-  } finally {
-    formLoading.value = false;
-  }
-};
+const openForm = (_type: 'create' | 'update', _id?: number) => {};
 
 const handleDelete = async (id: number) => {
-  await ElMessageBox.confirm('是否确认删除此项数据？', '提示', {
-    type: 'warning',
-  });
+  await ElMessageBox.confirm('是否确认删除此项数据？', '提示', { type: 'warning' });
   await delete${entityPascal}Api(id);
   ElMessage.success('删除成功');
   tableMethods.getList();
@@ -898,17 +1033,36 @@ onMounted(() => {
 </script>
 `;
 
-  // 12. SQL DDL & Permissions
-  const sqlPath = path.join(ROOT, "apps/backend/sql/mysql", `${tableName}.sql`);
-  const sqlContent = `-- -------------------------------------------------------------
--- 物理表: ${tableName} (${title})
--- -------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS \`${tableName}\` (
-  \`id\` BIGINT NOT NULL AUTO_INCREMENT COMMENT '编号',
-${fields
+  // 13. C-End Miniapp API Client
+  const miniappApiPath = path.join(rootDir, "apps/miniapp/sheep/api", moduleName, `${entityKebab}.js`);
+  const miniappApiContent = `import request from '@/sheep/request';
+
+export default {
+  get${entityPascal}Page: (params) =>
+    request({ url: '/app-api/${moduleName}/${entityKebab}/page', method: 'GET', params }),
+  get${entityPascal}: (id) =>
+    request({ url: '/app-api/${moduleName}/${entityKebab}/get', method: 'GET', params: { id } }),
+  create${entityPascal}: (data) =>
+    request({ url: '/app-api/${moduleName}/${entityKebab}/create', method: 'POST', data }),
+};
+`;
+
+  // 14. SQL DDL (PostgreSQL 真源 + MySQL 兼容版，含主表 + 可选子表 subTable + 乐观锁 version + 多租户 tenant_id + 6 审计列)
+  const sqlPath = path.join(rootDir, "apps/backend/sql/mysql", `${tableName}.sql`);
+  const pgSqlPath = path.join(rootDir, "apps/backend/sql/postgresql", `${tableName}.sql`);
+  const subTableName = subTable ? subTable.table || `${tableName}_line` : null;
+  const subTableFk = subTable ? toSnakeCase(subTable.foreignKey || `${entityCamel}Id`) : null;
+  const subTableFields = subTable ? parseFieldList(subTable.fields || []) : [];
+
+  const subTableSql = subTable
+    ? `\n-- 子表: ${subTableName} (${subTable.title || `${title}明细`})
+CREATE TABLE IF NOT EXISTS \`${subTableName}\` (
+  \`id\` BIGINT NOT NULL AUTO_INCREMENT COMMENT '明细编号',
+  \`${subTableFk}\` BIGINT NOT NULL COMMENT '主表关联ID',
+${subTableFields
   .map(
     (f) =>
-      `  \`${toKebabCase(f.name).replace(/-/g, "_")}\` ${f.sqlType} ${f.isReq ? "NOT NULL" : "DEFAULT NULL"} COMMENT '${f.comment}',`
+      `  \`${f.columnName}\` ${f.sqlType} ${f.isReq ? "NOT NULL" : "DEFAULT NULL"} COMMENT '${f.comment}',`
   )
   .join("\n")}
   \`creator\` VARCHAR(64) DEFAULT '' COMMENT '创建者',
@@ -918,10 +1072,77 @@ ${fields
   \`deleted\` BIT(1) NOT NULL DEFAULT b'0' COMMENT '是否删除',
   \`tenant_id\` BIGINT NOT NULL DEFAULT 0 COMMENT '多租户编号',
   PRIMARY KEY (\`id\`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='${title}';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='${subTable.title || `${title}明细`}';\n`
+    : "";
 
+  const pgSubTableSql = subTable
+    ? `\n-- 子表 (PostgreSQL): ${subTableName} (${subTable.title || `${title}明细`})
+CREATE TABLE IF NOT EXISTS ${subTableName} (
+  id BIGSERIAL PRIMARY KEY,
+  ${subTableFk} BIGINT NOT NULL,
+${subTableFields
+  .map(
+    (f) =>
+      `  ${f.columnName} ${f.pgSqlType} ${f.isReq ? "NOT NULL" : "DEFAULT NULL"},`
+  )
+  .join("\n")}
+  creator VARCHAR(64) DEFAULT '',
+  create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updater VARCHAR(64) DEFAULT '',
+  update_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  deleted INT2 NOT NULL DEFAULT 0,
+  tenant_id BIGINT NOT NULL DEFAULT 0
+);
+COMMENT ON TABLE ${subTableName} IS '${subTable.title || `${title}明细`}';\n`
+    : "";
+
+  const pgSqlContent = `-- -------------------------------------------------------------
+-- PostgreSQL 物理表: ${tableName} (${title})
+-- 根包名: ${layout.rootPkg} | 服务模块: ${layout.serverDirName}
 -- -------------------------------------------------------------
--- 权限标识预置 (Yudao 规范)
+CREATE TABLE IF NOT EXISTS ${tableName} (
+  id BIGSERIAL PRIMARY KEY,
+${fields
+  .map(
+    (f) =>
+      `  ${f.columnName} ${f.pgSqlType} ${f.isReq ? "NOT NULL" : "DEFAULT NULL"},`
+  )
+  .join("\n")}
+  version INT4 NOT NULL DEFAULT 1,
+  creator VARCHAR(64) DEFAULT '',
+  create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updater VARCHAR(64) DEFAULT '',
+  update_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  deleted INT2 NOT NULL DEFAULT 0,
+  tenant_id BIGINT NOT NULL DEFAULT 0
+);
+COMMENT ON TABLE ${tableName} IS '${title}';
+${pgSubTableSql}`;
+
+  const sqlContent = `-- -------------------------------------------------------------
+-- 物理表: ${tableName} (${title})
+-- 根包名: ${layout.rootPkg} | 服务模块: ${layout.serverDirName}
+-- -------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS \`${tableName}\` (
+  \`id\` BIGINT NOT NULL AUTO_INCREMENT COMMENT '编号',
+${fields
+  .map(
+    (f) =>
+      `  \`${f.columnName}\` ${f.sqlType} ${f.isReq ? "NOT NULL" : "DEFAULT NULL"} COMMENT '${f.comment}',`
+  )
+  .join("\n")}
+  \`version\` INT NOT NULL DEFAULT 1 COMMENT '乐观锁版本号',
+  \`creator\` VARCHAR(64) DEFAULT '' COMMENT '创建者',
+  \`create_time\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  \`updater\` VARCHAR(64) DEFAULT '' COMMENT '更新者',
+  \`update_time\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  \`deleted\` BIT(1) NOT NULL DEFAULT b'0' COMMENT '是否删除',
+  \`tenant_id\` BIGINT NOT NULL DEFAULT 0 COMMENT '多租户编号',
+  PRIMARY KEY (\`id\`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='${title}';
+${subTableSql}
+-- -------------------------------------------------------------
+-- 权限标识预置
 -- -------------------------------------------------------------
 -- 菜单权限: ${moduleName}:${entityKebab}:query   (查询)
 -- 菜单权限: ${moduleName}:${entityKebab}:create  (新增)
@@ -939,41 +1160,97 @@ ${fields
     { path: path.join(backendSrc, "controller/admin/vo", `${entityPascal}SaveReqVO.java`), content: saveReqVoContent, name: "Java SaveReqVO" },
     { path: path.join(backendSrc, "controller/admin/vo", `${entityPascal}RespVO.java`), content: respVoContent, name: "Java RespVO" },
     { path: path.join(backendSrc, "convert", `${entityPascal}Convert.java`), content: convertContent, name: "Java Convert" },
-    { path: path.join(backendSrc, "controller/admin", `${entityPascal}Controller.java`), content: controllerContent, name: "Java Admin Controller" },
+    { path: path.join(backendSrc, "controller/admin", `${entityPascal}Controller.java`), content: adminControllerContent, name: "Java Admin Controller" },
+    { path: path.join(backendSrc, "controller/app", `App${entityPascal}Controller.java`), content: appControllerContent, name: "Java App Controller" },
     { path: apiTsPath, content: apiTsContent, name: "TS Admin API Client" },
     { path: vueViewPath, content: vueViewContent, name: "Vue3 Admin View" },
-    { path: sqlPath, content: sqlContent, name: "Database SQL DDL" },
+    { path: miniappApiPath, content: miniappApiContent, name: "UniApp C-End API Client" },
+    { path: pgSqlPath, content: pgSqlContent, name: "PostgreSQL Database DDL" },
+    { path: sqlPath, content: sqlContent, name: "MySQL Database DDL" },
   ];
 
   let totalLines = 0;
+  const written = [];
   for (const item of filesToWrite) {
-    const relPath = path.relative(ROOT, item.path);
+    const relPath = path.relative(rootDir, item.path);
     const lines = item.content.split("\n").length;
     totalLines += lines;
 
-    if (args.dryRun) {
+    if (entitySpec.dryRun) {
       console.log(`[DRY-RUN] 将生成 ${item.name}: ${relPath} (${lines} 行)`);
       continue;
     }
 
-    if (fs.existsSync(item.path) && !args.force) {
+    if (fs.existsSync(item.path) && !entitySpec.force) {
       console.log(`⚠️ 文件已存在 (跳过，使用 --force 覆盖): ${relPath}`);
       continue;
     }
 
     ensureDirSync(item.path);
     fs.writeFileSync(item.path, item.content, "utf8");
+    written.push(relPath);
     console.log(`✅ [${item.name}] -> ${relPath} (${lines} 行)`);
   }
 
-  const estimatedTokens = Math.round(totalLines * 6.5);
-  console.log(`================================================================`);
-  console.log(`🎉 模块生成完成！`);
-  console.log(`   - 生成文件: 12 个`);
-  console.log(`   - 总代码行数: ~${totalLines} 行`);
-  console.log(`   - ⚡ 节约大模型输出 Token: 约 ${estimatedTokens} Tokens`);
-  console.log(`   - ⚡ 节约生成耗时: ~3-5 分钟 (纯脚本确定性写入，耗时 < 100ms)`);
-  console.log(`================================================================`);
+  return {
+    moduleName,
+    entityPascal,
+    entityKebab,
+    tableName,
+    rootPkg: layout.rootPkg,
+    serverDirName: layout.serverDirName,
+    written,
+    totalLines,
+  };
 }
 
-main();
+function main() {
+  const args = parseArgs();
+
+  if (args.schemaFile) {
+    const schemaAbs = path.resolve(process.cwd(), args.schemaFile);
+    if (!fs.existsSync(schemaAbs)) {
+      console.error(`❌ Schema 文件不存在: ${schemaAbs}`);
+      process.exit(1);
+    }
+    const schema = JSON.parse(fs.readFileSync(schemaAbs, "utf8"));
+    const moduleName = schema.domain || schema.module || "oa";
+    const entities = Array.isArray(schema.entities) ? schema.entities : [schema];
+    for (const ent of entities) {
+      generateEntityModule(
+        {
+          ...ent,
+          module: ent.module || moduleName,
+          entity: ent.entity || ent.name,
+          table: ent.table || ent.tableName,
+          title: ent.title || ent.label,
+          dryRun: args.dryRun,
+          force: true,
+        },
+        ROOT
+      );
+    }
+    return;
+  }
+
+  if (!args.module || !args.entity) {
+    console.log(`
+⚡ Yudao-Quad-Terminal 白标感知极速代码生成器 ⚡
+用法:
+  node scripts/codegen-module.mjs --schema <domain-schema.json>
+  node scripts/codegen-module.mjs \\
+    --module <module-name> \\
+    --entity <EntityName> \\
+    --table <table_name> \\
+    --title <业务标题> \\
+    --fields "<name>:<type>:<comment>:<req|search|hidden>,..."
+`);
+    process.exit(1);
+  }
+
+  generateEntityModule(args, ROOT);
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main();
+}

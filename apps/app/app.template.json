@@ -13,8 +13,17 @@
     "android": {
       "package": "{{ANDROID_PACKAGE}}"
     },
+    "extra": {
+      "projectName": "{{PROJECT_NAME}}",
+      "platformTitle": "{{PLATFORM_TITLE}}",
+      "basePath": "{{BASE_PATH}}",
+      "apiBaseUrl": "http://127.0.0.1:{{GATEWAY_PORT}}{{BASE_PATH}}/app-api",
+      "adminApiBaseUrl": "http://127.0.0.1:{{GATEWAY_PORT}}{{BASE_PATH}}/admin-api",
+      "h5PortalUrl": "http://127.0.0.1:{{GATEWAY_PORT}}{{BASE_PATH}}/2c/",
+      "openApiDocsUrl": "http://127.0.0.1:{{GATEWAY_PORT}}{{BASE_PATH}}/v3/api-docs"
+    },
     "updates": {
-      "url": "https://api.yourdomain.com/ota/manifest",
+      "url": "http://127.0.0.1:{{GATEWAY_PORT}}{{BASE_PATH}}/app-api/infra/ota/manifest",
       "enabled": true,
       "checkAutomatically": "ON_LOAD"
     }

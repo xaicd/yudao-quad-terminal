@@ -1,0 +1,211 @@
+{
+  "name": "yudao-blueprint-engine-parity",
+  "domain": "platform",
+  "title": "Yudao 四端蓝图底座与 CoolieBase 全能力对标升级：四端 BasePath 同源、无污染沙箱派生、极简蓝图一键交付与 6 阶段真库 Spec E2E 闭环",
+  "type": "enhancement",
+  "goal": "对标姊妹底座 cooliebase-all 最新落地的蓝图工程标准，全面消除 yudao-quad-terminal 在『四端 BasePath 同源契约、无污染沙箱秒级派生 (hatch.sh/project-reactor.mjs)、白标后代码生成器包路径动态自适应 (codegen-module.mjs)、<500 Tokens 声明式蓝图一键交付引擎 (blueprint-engine.cjs doctor/deliver --verify-e2e)、母本原生模块纯净度守卫与 6 阶段真实数据库 Spec E2E 验证』上的 6 大审计断层，确保两大底座在 Coolie 工坊自动化生产流水线中具备 100% 对等的能力契约与验收标准。",
+  "roles": [
+    {
+      "role": "掌柜 / 交付总指挥",
+      "can": "用同一套声明式蓝图提示词在 yudao-quad-terminal 上执行无污染沙箱派生、四端 BasePath 挂载、新业务域一键生成与 6 阶段真实数据库 E2E 验收"
+    },
+    {
+      "role": "AI 数字员工（全能工 Solo / 墨斗 FDA / 铁匠 SWE / 门神 FDSE）",
+      "can": "仅编写 <500 Tokens 的 <domain>.blueprint.json，通过 node scripts/blueprint-engine.cjs doctor 与 deliver --verify-e2e 一键产出 Spring Boot (Admin+App 双端 Controller/Service/DO/Mapper/状态机/乐观锁) + Vue3 Admin + UniApp 2C + 14 份 SDD 规格资产 + 6 阶段真库 E2E 测试"
+    },
+    {
+      "role": "Coolie 工坊层B 交付管线与 23 项门禁引擎",
+      "can": "统一拨测 /<slug>/2c/、/<slug>/admin/、/<slug>/admin-api & /<slug>/app-api、/<slug>/v3/api-docs 四端同源入口，并运行 6 阶段真实 PostgreSQL/MySQL E2E 对账"
+    }
+  ],
+  "stories": [
+    {
+      "priority": "P0",
+      "text": "作为架构师，我要求 blueprint.template.json、apps/admin/.env*.template、apps/miniapp、apps/app/app.template.json 与 generate-gateway-config.mjs 全面接入 BASE_PATH (/<slug>) 变量，使四端入口（/<slug>/2c/、/<slug>/admin/、/<slug>/admin-api & /<slug>/app-api、/<slug>/v3/api-docs 及 Expo 客户端）100% 同源对齐。"
+    },
+    {
+      "priority": "P0",
+      "text": "作为研发工程师，我要求修复 hatch.sh 与 project-reactor.mjs 的 CLI 参数错位 Bug（兼容 --target/--name 与位置参数），并补齐从母本向 /tmp/<slug>-sandbox 无污染瘦身拷贝 + 共享根 node_modules 软链能力，使无污染沙箱派生在 10 秒内完成且母本 0 dirty。"
+    },
+    {
+      "priority": "P0",
+      "text": "作为 AI 数字员工，我要求 codegen-module.mjs 动态探测当前工作区的真实后端模块目录 (apps/backend/<slug>-server) 与 Java 根包名 (如 com.<slug>)，彻底根除硬编码 cn.iocoder.yudao 导致白标派生后生成代码即编译失败的致命缺陷，并同时生成 AdminController (/admin-api) 与 AppController (/app-api)。"
+    },
+    {
+      "priority": "P0",
+      "text": "作为 AI 数字员工，我要求升级 scripts/blueprint-engine.cjs 支持 --preset (5大行业词包)、doctor (27B 口语化 JSON 自愈)、compile-domain 与 deliver --file <domain>.blueprint.json --verify-e2e，从 <500 Tokens 蓝图一键展开 14 份 SDD 资产、Java+Vue3+UniApp 全栈代码（含状态机守卫、乐观锁、跨表 convertActions、主子表 sub_table）与 6 阶段真实数据库 E2E 测试套件。"
+    },
+    {
+      "priority": "P1",
+      "text": "作为质量守门员，我要求在 gate-check.mjs 中新增母本原生 19 模块纯净度守卫 (base-native-module-boundary) 与蓝图占位符闭合守卫，拦截任何测试残留在母本的临时业务域。"
+    }
+  ],
+  "constraints": [
+    "零 Token 浪费：严禁 AI 手写冗长的 Java DO/Mapper/Service/Controller/VO/Convert 或 Vue3/UniApp 样板代码，必须由 <500 Tokens 的 <domain>.blueprint.json 经 blueprint-engine.cjs deliver --verify-e2e 确定性展开。",
+    "子模块只读铁律：apps/{backend,admin,miniapp} 为上游子模块，母本静态门禁保持子模块只读；新业务域生成与白标重构仅在派生的独立沙箱工作区 (--target /tmp/<slug>-sandbox) 中落地执行。",
+    "四端 BasePath 同源：对外统一经单一网关端口 (:48120) 暴露 /<slug>/2c/、/<slug>/admin/、/<slug>/admin-api/*、/<slug>/app-api/* 与 /<slug>/v3/api-docs，严禁前端写死 localhost:48080 绕过网关。",
+    "真实数据库驱动：6 阶段 E2E 测试必须针对真实嵌入式 PostgreSQL (lite-pg 55432) 或 MySQL 执行，严禁假 Mock。"
+  ],
+  "acceptance": [
+    {
+      "check": "node scripts/blueprint-engine.cjs check 退出码 0，且 blueprint.template.json 包含 BASE_PATH 变量与 C/B/API/App 四端模板映射"
+    },
+    {
+      "check": "bash scripts/hatch.sh /tmp/oa-yudao-sandbox --title \"智能协同办公平台\" 退出码 0，自动完成瘦身拷贝、白标置换 (com.oa_yudao_sandbox)、BASE_PATH=/oa-yudao-sandbox 渲染与独立 Git 首提交，且母本 git status 保持 0 新增污染"
+    },
+    {
+      "check": "在白标后的 /tmp/oa-yudao-sandbox 中执行 node scripts/blueprint-engine.cjs doctor --file oa.blueprint.json --write && node scripts/blueprint-engine.cjs deliver --file oa.blueprint.json --verify-e2e 退出码 0，生成的 Java 代码准确落位在 apps/backend/oa-yudao-sandbox-server/src/main/java/com/oa_yudao_sandbox/module/oa/"
+    },
+    {
+      "check": "deliver 自动生成 docs/specs/oa/oa-blueprint/ 下完整 14 份 Spec-Kit SDD 工程资产，且 node scripts/speckit.cjs check --spec oa-blueprint 退出码 0"
+    },
+    {
+      "check": "deliver --verify-e2e 自动生成并跑通 6 阶段真实数据库 E2E 验证套件 (scripts/tests/oa-blueprint-e2e.test.mjs)，覆盖 CRUD、tenant_id 多租户隔离、乐观锁 version 冲突、状态机非法跃迁 400 拦截、跨表 convertActions 与逻辑删除 deleted=1"
+    },
+    {
+      "check": "deploy/gateway/caddy/<slug>.caddy 与 nginx/<slug>.conf 包含 /<slug>/2c/、/<slug>/admin/、/<slug>/admin-api/*、/<slug>/app-api/*、/<slug>/v3/api-docs 五路同源转发规则"
+    },
+    {
+      "check": "pnpm gate:fast && pnpm compat:check && pnpm test:scripts 全部退出码 0"
+    }
+  ],
+  "nonGoals": [
+    "不破坏上游三个 git submodule (apps/backend, apps/admin, apps/miniapp) 在母本中的远端提交指针一致性",
+    "不改变现有 lite-pg (55432) 与 lite-redis (63799) 的嵌入式运行时端口契约"
+  ],
+  "architecture": "四层对齐架构：① 模板与四端 BasePath 层 (blueprint.template.json + apps/admin/.env*.template + apps/app/app.template.json + scripts/generate-gateway-config.mjs)：引入 BASE_PATH=/<slug>，统一网关 (:48120) 收口 /<slug>/2c/、/<slug>/admin/、/<slug>/admin-api/、/<slug>/app-api/、/<slug>/v3/api-docs；② 无污染沙箱孵化层 (scripts/hatch.sh + scripts/project-reactor.mjs)：支持目标沙箱目录自动瘦身拷贝、根 node_modules 软链、--target/--project 参数双向兼容与 Phase 1/2/3 白标渲染；③ 声明式蓝图编译与全栈生成层 (scripts/blueprint-engine.cjs + scripts/codegen-module.mjs)：动态解析白标后包名与模块路径，支持 doctor 自愈、compile-domain 与 deliver --verify-e2e，从 <500 Tokens blueprint.json 展开 Java 双端 Controller (Admin+App) + Service (含状态机守卫/乐观锁/convertActions) + DO/Mapper + Vue3 + UniApp + 14 份 SDD 资产；④ 6 阶段真库 E2E 与门禁层 (scripts/gate-check.mjs + scripts/tests/*-blueprint-e2e.test.mjs)：基于真实数据库与 node:test 执行 6 阶段端到端契约与状态机验证。",
+  "entities": [
+    {
+      "table": "<domain>_<entity>",
+      "note": "由 <domain>.blueprint.json 声明并自动继承 BaseDO 6 大基础列 (creator, create_time, updater, update_time, deleted, tenant_id) 及 version 乐观锁列"
+    }
+  ],
+  "invariants": [
+    {
+      "name": "母本零污染与子模块只读",
+      "how": "gate-check.mjs 强制校验 19 个原生模块边界与 submodule 指针；一切新业务域试炼均通过 hatch.sh 在 /tmp/<slug>-sandbox 独立沙箱内完成"
+    },
+    {
+      "name": "白标包路径与代码生成同源",
+      "how": "codegen-module.mjs 自动扫描 apps/backend/*-server 与 application.yaml / pom.xml 解析当前真实 packagePrefix，绝不硬编码 cn.iocoder.yudao"
+    },
+    {
+      "name": "四端 BasePath 单一入口",
+      "how": "所有端统一通过 :48120/<slug>/{2c,admin,admin-api,app-api,v3/api-docs} 通信，compat-check.mjs 与 gate-check.mjs 双重把关"
+    },
+    {
+      "name": "6 阶段真库 E2E 闭环",
+      "how": "deliver --verify-e2e 强制运行覆盖 CRUD、多租户隔离、乐观锁 409、状态机 400、跨表转换与软删除的 6 阶段真实入库测试"
+    }
+  ],
+  "ui": [
+    "B端管理后台 (/<slug>/admin/)：Element Plus 搜索栏 + 表格 + 状态标签 + 乐观锁编辑弹窗 + 跨表转换动作按钮 + 主子表抽屉",
+    "C端移动门户 (/<slug>/2c/)：Uni-App H5 自适应行业预设词包与 /<slug>/app-api 同源数据接口",
+    "OpenAPI 契约文档 (/<slug>/v3/api-docs & /<slug>/doc.html)：SpringDoc / Knife4j 实时暴露新生成业务域契约"
+  ],
+  "ops": [
+    "无污染沙箱一键命令：bash scripts/hatch.sh /tmp/<slug>-sandbox --title \"<标题>\"",
+    "蓝图一键交付命令：node scripts/blueprint-engine.cjs doctor --file <domain>.blueprint.json --write && node scripts/blueprint-engine.cjs deliver --file <domain>.blueprint.json --verify-e2e",
+    "门禁校验命令：pnpm gate:fast && pnpm compat:check"
+  ],
+  "risks": [
+    {
+      "risk": "白标置换后 Java 源码目录已从 cn/iocoder/yudao 迁移至 com/<slug>，若 codegen-module.mjs 仍写死 cn.iocoder.yudao 会导致生成代码无法编译",
+      "mitigation": "在 T3 中新增 resolveBackendModuleLayout(ROOT) 函数，动态识别 *-server 目录与真实根包名（自动适配未白标母本 cn.iocoder.yudao 与已白标派生仓 com.<slug>）"
+    },
+    {
+      "risk": "沙箱环境下未启动完整 Spring Boot 进程时如何秒级完成 6 阶段真实数据库 E2E 验证",
+      "mitigation": "在 T4/T6 中提供双模 E2E 执行器：若 :48080/:48120 已在线则走 HTTP 全链路拨测；若在轻量沙箱则自动连接真实数据库（嵌入式 PG/SQLite 兼容层）+ 领域服务契约执行器跑完 6 阶段状态机、乐观锁、租户隔离、跨表动作与软删除验证（<2s 完成）"
+    }
+  ],
+  "screens": [
+    {
+      "name": "四端同源网关入口 (:<gatewayPort>/<slug>/{2c,admin,admin-api,app-api,v3/api-docs})",
+      "wireframe": "C端 H5 (/<slug>/2c/) · B端 Vue3 中台 (/<slug>/admin/) · 双端 API (/<slug>/admin-api & /<slug>/app-api) · OpenAPI 3.0 (/<slug>/v3/api-docs)"
+    }
+  ],
+  "interactions": [
+    "搜索回车触发分页查询、新增/修改弹窗带表单校验与 {{ $form.xxx }} 响应式联动、状态流转按钮触发状态机守卫、跨表动作按钮一键生成下游单据"
+  ],
+  "states": [
+    "加载中：表格 v-loading 骨架态。",
+    "空数据：el-table empty-text 空状态占位。",
+    "出错：ElMessage.error 提示状态机非法跃迁 (400) 或乐观锁版本冲突 (409)。",
+    "成功：数据落库并刷新分页列表。"
+  ],
+  "candidates": [
+    {
+      "name": "升级本仓 scripts/blueprint-engine.cjs + scripts/codegen-module.mjs + scripts/hatch.sh（与 cooliebase-all 同构 CLI 契约）",
+      "type": "自研",
+      "license": "MIT",
+      "risk": "零外部依赖，100% 复用现有 Node 24 原生能力与 Spek-Kit 引擎"
+    }
+  ],
+  "benchmarks": [
+    "姊妹仓 xaicd/cooliebase-all (commit 2ceb8a0a)：已实现 project-init.cjs 无污染沙箱派生 + blueprint-engine.cjs (render/check/doctor/compile-domain/deliver --verify-e2e) + 四端 BasePath 同源 + 6 阶段真实 DB E2E 695ms 全绿"
+  ],
+  "scan": [
+    "全面审计 yudao-quad-terminal 的 blueprint.template.json、scripts/blueprint-engine.cjs、scripts/codegen-module.mjs、scripts/hatch.sh、scripts/project-reactor.mjs、scripts/generate-gateway-config.mjs、scripts/gate-check.mjs 共 7 个核心文件"
+  ],
+  "licenseConclusion": "自有 MIT 脚本演进，零第三方新增依赖，合规无风险",
+  "tasks": [
+    {
+      "id": "T1",
+      "parent": "main",
+      "title": "四端 BasePath 同源模板与网关契约补齐：blueprint.template.json 增 BASE_PATH + admin/miniapp/app 模板对齐 + generate-gateway-config.mjs 暴露 /<slug>/v3/api-docs",
+      "files": [
+        "blueprint.template.json",
+        "apps/admin/.env.local.template",
+        "apps/admin/.env.template",
+        "apps/app/app.template.json",
+        "scripts/generate-gateway-config.mjs"
+      ]
+    },
+    {
+      "id": "T2",
+      "parent": "T1",
+      "title": "无污染沙箱秒级派生修复：修复 hatch.sh 与 project-reactor.mjs CLI 参数错位 (--target/--project 兼容) + 支持目标沙箱自动瘦身拷贝与根 node_modules 软链",
+      "files": [
+        "scripts/hatch.sh",
+        "scripts/project-reactor.mjs"
+      ]
+    },
+    {
+      "id": "T3",
+      "parent": "T2",
+      "title": "代码生成器白标自适应与全栈能力升级：codegen-module.mjs 动态解析 <slug>-server 与真实 Java 包名 + 补齐 AppController (/app-api) + 状态机守卫 + 乐观锁 + convertActions + sub_table",
+      "files": [
+        "scripts/codegen-module.mjs"
+      ]
+    },
+    {
+      "id": "T4",
+      "parent": "T3",
+      "title": "声明式蓝图引擎全能力对齐：升级 scripts/blueprint-engine.cjs 支持 --preset、doctor 自愈、compile-domain 与 deliver --verify-e2e（自动生成 14 份 SDD 资产 + 全栈模块 + 6 阶段 E2E 测试）",
+      "files": [
+        "scripts/blueprint-engine.cjs",
+        "package.json"
+      ]
+    },
+    {
+      "id": "T5",
+      "parent": "T4",
+      "title": "底座纯净度与门禁守卫加固：gate-check.mjs 与 compat-check.mjs 新增母本 19 原生模块边界守卫与蓝图 BASE_PATH 闭合检查",
+      "files": [
+        "scripts/gate-check.mjs",
+        "scripts/compat-check.mjs",
+        "compat-manifest.json"
+      ]
+    },
+    {
+      "id": "T6",
+      "parent": "T5",
+      "title": "无污染沙箱端到端实测与回归验证：在 /tmp/oa-yudao-sandbox 真跑 hatch -> blueprint deliver --verify-e2e -> 6 阶段 E2E 全绿并清理沙箱",
+      "files": [
+        "scripts/tests/blueprint-engine-e2e.test.mjs"
+      ]
+    }
+  ],
+  "dependencies": "T1 → T2 → T3 → T4 → T5 → T6",
+  "windowMinutes": 60
+}

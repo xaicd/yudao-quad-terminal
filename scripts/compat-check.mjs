@@ -73,16 +73,34 @@ function checkEntrypoints(manifest) {
   }
   ok(`入口契约：${flat.length} 个脚本全部存在`);
 
-  // 派生的实现文件必须真实存在（入口脚本只是个壳）
+  // 派生与统一 CJS 标准入口文件必须真实存在（与 cooliebase-all 100% 同名对齐）
   for (const [rel, why] of [
     ["scripts/hatch.sh", "派生入口"],
+    ["scripts/project-init.cjs", "统一项目初始化入口"],
     ["scripts/project-reactor.mjs", "派生引擎"],
+    ["scripts/blueprint-engine.cjs", "统一蓝图编译与交付引擎"],
+    ["scripts/speckit.cjs", "统一 Spec-Kit 引擎"],
+    ["scripts/codegen-module.cjs", "统一全栈代码生成入口"],
+    ["scripts/gate-check.cjs", "统一门禁入口"],
+    ["scripts/compat-check.cjs", "统一兼容契约自检入口"],
+    ["scripts/harness.cjs", "统一 Harness 9 阶段调度器"],
+    ["scripts/lib/ephemeral-pg.cjs", "统一嵌入式 PostgreSQL 端点解析器"],
+    ["scripts/cmmi-00-meta.cjs", "CMMI-00 规范与元契约"],
+    ["scripts/cmmi-01-management.cjs", "CMMI-01 立项策划与沙箱孵化"],
+    ["scripts/cmmi-02-requirements.cjs", "CMMI-02 需求分诊与规格立项"],
+    ["scripts/cmmi-03-design.cjs", "CMMI-03 蓝图自愈与架构设计"],
+    ["scripts/cmmi-04-implementation.cjs", "CMMI-04 全栈生成与实现"],
+    ["scripts/cmmi-05-verification.cjs", "CMMI-05 嵌入式真 PG E2E 验收"],
+    ["scripts/cmmi-06-quality.cjs", "CMMI-06 质量门禁与审计"],
+    ["scripts/cmmi-07-release.cjs", "CMMI-07 制品构建与发布"],
+    ["scripts/cmmi-08-sre.cjs", "CMMI-08 SRE 服务运维与探活"],
+    ["scripts/cmmi-09-operations.cjs", "CMMI-09 持续运营与归档"],
     ["scripts/run-all.cjs", "多项目启动器"],
     [".mcp.json", "Agent 端点"],
   ]) {
     if (!exists(rel)) fail(`${why} ${rel} 不存在`);
   }
-  ok("派生/启动/Agent 端点实现文件齐备");
+  ok("派生/蓝图/嵌入式PG/Harness 统一 CJS 入口实现文件齐备");
 }
 
 /* ------------------------------- 2. 运行时 ------------------------------- */
@@ -227,6 +245,45 @@ async function checkJdkAndDocs(manifest) {
     if (!exists(rel)) fail(`docs.${k}: ${rel} 不存在`);
   }
   ok("文档面契约齐备");
+
+  // 5. 四端同源 BASE_PATH 模板契约与网关第 4 平面 (/v3/api-docs) 校验
+  const bpTpl = JSON.parse(read("blueprint.template.json") || "null");
+  if (!bpTpl || !bpTpl.variables?.BASE_PATH) {
+    fail("blueprint.template.json 缺少四端同源变量 BASE_PATH");
+  } else {
+    const bpCheck = spawnSync(process.execPath, [path.join(ROOT, "scripts/blueprint-engine.cjs"), "check"], {
+      cwd: ROOT,
+      encoding: "utf8",
+    });
+    if (bpCheck.status !== 0) {
+      fail(`blueprint-engine check 未通过: ${(bpCheck.stderr || bpCheck.stdout || "").trim()}`);
+    } else {
+      ok("蓝图模板与四端 BASE_PATH 契约闭合");
+    }
+  }
+
+  const gwSrc = read("scripts/generate-gateway-config.mjs") || "";
+  if (!gwSrc.includes("/v3/api-docs") || !gwSrc.includes("/doc.html")) {
+    fail("scripts/generate-gateway-config.mjs 未包含第 4 契约平面 (/v3/api-docs 与 /doc.html) 路由转发");
+  } else {
+    ok("统一网关四平面路由齐备 (/2c, /admin, /admin-api & /app-api, /v3/api-docs)");
+  }
+
+  // 6. 母本 19 原生业务模块纯净度守卫（防止临时测试模块污染母本）
+  if (exists(".gitmodules") && exists("apps/backend")) {
+    const { MODULES } = await import("./lib/module-catalog.mjs");
+    const officialDirs = new Set(MODULES.map((m) => m.dir));
+    const onDiskModuleDirs = fs
+      .readdirSync(path.join(ROOT, "apps/backend"), { withFileTypes: true })
+      .filter((d) => d.isDirectory() && d.name.startsWith("yudao-module-"))
+      .map((d) => d.name);
+    const nonNative = onDiskModuleDirs.filter((d) => !officialDirs.has(d));
+    if (nonNative.length > 0) {
+      fail(`apps/backend 存在非原生污染模块: ${nonNative.join(", ")}`);
+    } else {
+      ok(`母本原生模块纯净度：${onDiskModuleDirs.length}/19 官方模块边界受控`);
+    }
+  }
 }
 
 /* --------------------------------- main --------------------------------- */
