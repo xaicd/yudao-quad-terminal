@@ -46,42 +46,42 @@
 
 ## 2. 交互式任务清单 (Interactive Execution Tasks)
 
-- [ ] **T1**: module-catalog 单一真源（19 模块元数据 + profiles + 依赖闭包）
+- [x] **T1**: module-catalog 单一真源（19 模块元数据 + profiles + 依赖闭包）
   - 归属: `main`
   - 文件白名单: `scripts/lib/module-catalog.mjs`
   - 验收要求: 必须携带提交标识 `[T1]` 并附带真实测试验证
 
-- [ ] **T2**: trim-modules CLI（dry-run/apply/check/sql/json + 依赖闭包校验 + 子模块语义与 --recover）
+- [x] **T2**: trim-modules CLI（dry-run/apply/check/sql/json + 依赖闭包校验 + 子模块语义与 --recover）
   - 归属: `T1`
   - 文件白名单: `scripts/trim-modules.mjs`
   - 验收要求: 必须携带提交标识 `[T2]` 并附带真实测试验证
 
-- [ ] **T3**: trim CLI 自测：三档 profile 全量覆盖、漂移时 exit 1、重复执行幂等
+- [x] **T3**: trim CLI 自测：三档 profile 全量覆盖、漂移时 exit 1、重复执行幂等
   - 归属: `T2`
   - 文件白名单: `scripts/lib/module-catalog.mjs, scripts/trim-modules.mjs`
   - 验收要求: 必须携带提交标识 `[T3]` 并附带真实测试验证
 
-- [ ] **T4**: MCP stdio server + 8 个工具（全程复用既有脚本）
+- [x] **T4**: MCP stdio server + 8 个工具（全程复用既有脚本）
   - 归属: `T1`
   - 文件白名单: `scripts/mcp/yudao-mcp-server.cjs, .mcp.json`
   - 验收要求: 必须携带提交标识 `[T4]` 并附带真实测试验证
 
-- [ ] **T5**: yudao-mcp-server 技能 + wiki 注册（含悬空 mcp-builder 改名）
+- [x] **T5**: yudao-mcp-server 技能 + wiki 注册（含悬空 mcp-builder 改名）
   - 归属: `T4`
   - 文件白名单: `.agents/skills/yudao-mcp-server/SKILL.md, scripts/sync-openwiki.mjs, wiki/`
   - 验收要求: 必须携带提交标识 `[T5]` 并附带真实测试验证
 
-- [ ] **T6**: bootstrap SKILL 收敛到真实脚本（删除假 bash 模板）
+- [x] **T6**: bootstrap SKILL 收敛到真实脚本（删除假 bash 模板）
   - 归属: `T2`
   - 文件白名单: `.agents/skills/yudao-cloud-bootstrap/SKILL.md`
   - 验收要求: 必须携带提交标识 `[T6]` 并附带真实测试验证
 
-- [ ] **T7**: package.json 接线（trim:*/mcp:yudao/openwiki:*）
+- [x] **T7**: package.json 接线（trim:*/mcp:yudao/openwiki:*）
   - 归属: `T1`
   - 文件白名单: `package.json`
   - 验收要求: 必须携带提交标识 `[T7]` 并附带真实测试验证
 
-- [ ] **T8**: 修同族工具 SQL 路径 bug（codegen 写到不存在的 apps/backend/scripts/sql）
+- [x] **T8**: 修同族工具 SQL 路径 bug（codegen 写到不存在的 apps/backend/scripts/sql）
   - 归属: `main`
   - 文件白名单: `scripts/codegen-module.mjs, scripts/agent-context-compressor.mjs`
   - 验收要求: 必须携带提交标识 `[T8]` 并附带真实测试验证
@@ -98,14 +98,14 @@
 
 | ID | 归属 | 任务 | 文件白名单 | 状态 |
 |---|---|---|---|---|
-| T1 | main | module-catalog 单一真源（19 模块元数据 + profiles + 依赖闭包） | scripts/lib/module-catalog.mjs | 未开始 |
-| T2 | T1 | trim-modules CLI（dry-run/apply/check/sql/json + 依赖闭包校验 + 子模块语义与 --recover） | scripts/trim-modules.mjs | 未开始 |
-| T3 | T2 | trim CLI 自测：三档 profile 全量覆盖、漂移时 exit 1、重复执行幂等 | scripts/lib/module-catalog.mjs, scripts/trim-modules.mjs | 未开始 |
-| T4 | T1 | MCP stdio server + 8 个工具（全程复用既有脚本） | scripts/mcp/yudao-mcp-server.cjs, .mcp.json | 未开始 |
-| T5 | T4 | yudao-mcp-server 技能 + wiki 注册（含悬空 mcp-builder 改名） | .agents/skills/yudao-mcp-server/SKILL.md, scripts/sync-openwiki.mjs, wiki/ | 未开始 |
-| T6 | T2 | bootstrap SKILL 收敛到真实脚本（删除假 bash 模板） | .agents/skills/yudao-cloud-bootstrap/SKILL.md | 未开始 |
-| T7 | T1 | package.json 接线（trim:*/mcp:yudao/openwiki:*） | package.json | 未开始 |
-| T8 | main | 修同族工具 SQL 路径 bug（codegen 写到不存在的 apps/backend/scripts/sql） | scripts/codegen-module.mjs, scripts/agent-context-compressor.mjs | 未开始 |
+| T1 | main | module-catalog 单一真源（19 模块元数据 + profiles + 依赖闭包） | scripts/lib/module-catalog.mjs | 已完成 |
+| T2 | T1 | trim-modules CLI（dry-run/apply/check/sql/json + 依赖闭包校验 + 子模块语义与 --recover） | scripts/trim-modules.mjs | 已完成 |
+| T3 | T2 | trim CLI 自测：三档 profile 全量覆盖、漂移时 exit 1、重复执行幂等 | scripts/lib/module-catalog.mjs, scripts/trim-modules.mjs | 已完成 |
+| T4 | T1 | MCP stdio server + 8 个工具（全程复用既有脚本） | scripts/mcp/yudao-mcp-server.cjs, .mcp.json | 已完成 |
+| T5 | T4 | yudao-mcp-server 技能 + wiki 注册（含悬空 mcp-builder 改名） | .agents/skills/yudao-mcp-server/SKILL.md, scripts/sync-openwiki.mjs, wiki/ | 已完成 |
+| T6 | T2 | bootstrap SKILL 收敛到真实脚本（删除假 bash 模板） | .agents/skills/yudao-cloud-bootstrap/SKILL.md | 已完成 |
+| T7 | T1 | package.json 接线（trim:*/mcp:yudao/openwiki:*） | package.json | 已完成 |
+| T8 | main | 修同族工具 SQL 路径 bug（codegen 写到不存在的 apps/backend/scripts/sql） | scripts/codegen-module.mjs, scripts/agent-context-compressor.mjs | 已完成 |
 
 ## 4. 依赖说明与波次流转 (Dependencies & Progression)
 
@@ -114,5 +114,5 @@ T1 → {T2, T4, T7, T8}；T2 → {T3, T6}；T4 → T5
 ## 5. 阶段状态基线 (Phase Baseline)
 
 * 规划：`PLAN_APPROVED`（由 Spec-Kit 生成）
-* 开发：待开始
-* 独立测试：待开始
+* 开发：已完成
+* 独立测试：已通过

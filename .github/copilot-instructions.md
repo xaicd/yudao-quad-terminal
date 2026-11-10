@@ -3,8 +3,9 @@
 This workspace is `yudao-quad-terminal`, an enterprise-grade quad-terminal fullstack platform built on Spring Boot 3 + Vue 3 + Uni-App + Expo React Native, with zero-Docker Embedded PostgreSQL 18.4 (`embedded-postgres`).
 
 - Two-Pillar Architecture:
-  - Pillar 1 (`harness` = Master Workflow): `pnpm harness <install|check|build|start|health|status|stop|e2e|deliver>` (`scripts/harness.cjs`)
-  - Pillar 2 (`speckit` + CMMI 00~09 Stage Document Extensions): `pnpm run speckit -- cmmi <00..09> [docs|check|asset|...]` (`scripts/cmmi-00-meta.cjs` ~ `scripts/cmmi-09-operations.cjs`)
+  - Project PMO Radar (First Step on Open): `pnpm run pmo` / `node scripts/cmmi-01-management.cjs pmo` (`docs/01_management/pmo-dashboard.md`)
+  - Pillar 1 (`harness` = Master Workflow): `pnpm harness <install|check|build|start|health|status|stop|e2e|deliver|pmo>` (`scripts/harness.cjs`)
+  - Pillar 2 (`speckit` + CMMI 00~09 Stage Document Extensions): `pnpm run speckit -- cmmi <00..09> [docs|check|asset|pmo|...]` (`scripts/cmmi-00-meta.cjs` ~ `scripts/cmmi-09-operations.cjs`)
 - Spec & Prototype Standard (`FEATURE-SPEC-AND-PROTOTYPE-STANDARD`): `pnpm run spec:new`, `pnpm run spec:build`, `pnpm run spec:check`, `pnpm run spec:archive`
 - Zero-Pollution Sandbox Hatching: `pnpm run project:init -- --name <slug> --title "<系统名>" --target /tmp/<slug>-sandbox`
 - `<500 Tokens` Blueprint + Embedded PostgreSQL 18.4 E2E: `pnpm run blueprint:deliver -- --file <domain>.blueprint.json --verify-e2e`

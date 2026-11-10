@@ -30,6 +30,15 @@ const CMMI_MAP = {
 const argv = process.argv.slice(2);
 const sub = (argv[0] || "").toLowerCase();
 
+if (sub === "pmo") {
+  const res = spawnSync(
+    process.execPath,
+    [path.join(__dirname, "cmmi-01-management.cjs"), "pmo", ...argv.slice(1)],
+    { stdio: "inherit", cwd: process.cwd(), env: process.env }
+  );
+  process.exit(res.status ?? 1);
+}
+
 if (CMMI_MAP[sub]) {
   const res = spawnSync(
     process.execPath,

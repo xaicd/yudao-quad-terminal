@@ -117,6 +117,7 @@
     "cmmi:07": "node scripts/cmmi-07-release.cjs",
     "cmmi:08": "node scripts/cmmi-08-sre.cjs",
     "cmmi:09": "node scripts/cmmi-09-operations.cjs",
+    "pmo": "node scripts/cmmi-01-management.cjs pmo",
     "gateway:gen": "node scripts/generate-gateway-config.mjs"
   },
   "packageManager": "pnpm@9.15.4"
