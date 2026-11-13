@@ -16,6 +16,14 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
 
+const localRequire = createRequire(import.meta.url);
+const {
+  UPSTREAM_MENU_RENAMES,
+  UPSTREAM_PROMO_MENU_NAMES,
+} = localRequire("../../../scripts/lib/menu-standard.cjs");
+
+export { UPSTREAM_MENU_RENAMES, UPSTREAM_PROMO_MENU_NAMES };
+
 export const PG_RUNTIME_DIR = path.dirname(fileURLToPath(import.meta.url));
 export const PG_MODULES_DIR = path.join(PG_RUNTIME_DIR, "node_modules");
 
@@ -151,6 +159,55 @@ export async function isSeeded({ port, user, password, database }) {
 }
 
 /**
+ * 对导入后的 system_menu 执行确定性 4 字规范收敛与上游推广外链隐藏（幂等安全）：
+ * 1. 将上游 >4 字可见目录/页面菜单（如 id=17 'Redis 监控' -> '缓存监控', id=88 'API 日志' -> '接口日志',
+ *    id=195 '数据源配置' -> '库源配置' 等）归一化为 <= 4 字短名；
+ * 2. 递归停用并隐藏作者动态、Boot/Cloud 开发文档、官方源码、交流社区及 http(s)/iocoder 外链菜单。
+ */
+export async function sanitizeUpstreamMenus(client) {
+  const existsRes = await client.query(
+    "SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'system_menu'"
+  );
+  if (!existsRes.rows[0] || existsRes.rows[0].n === 0) {
+    return { renamedCount: 0, hiddenPromoCount: 0 };
+  }
+
+  let renamedCount = 0;
+  for (const [idStr, cleanName] of Object.entries(UPSTREAM_MENU_RENAMES)) {
+    const id = Number(idStr);
+    const upd = await client.query(
+      "UPDATE system_menu SET name = $1 WHERE id = $2 AND name <> $1",
+      [cleanName, id]
+    );
+    renamedCount += upd.rowCount || 0;
+  }
+
+  const hidePromoRes = await client.query(
+    `
+      WITH RECURSIVE promo_menus AS (
+        SELECT id FROM system_menu
+        WHERE name = ANY($1::text[])
+           OR path ILIKE 'http%'
+           OR path ILIKE ('%' || 'iocoder' || '.cn%')
+        UNION ALL
+        SELECT m.id FROM system_menu m
+        INNER JOIN promo_menus p ON m.parent_id = p.id
+      )
+      UPDATE system_menu
+      SET visible = false, status = 1
+      WHERE id IN (SELECT id FROM promo_menus)
+        AND (visible = true OR status = 0)
+    `,
+    [UPSTREAM_PROMO_MENU_NAMES]
+  );
+
+  return {
+    renamedCount,
+    hiddenPromoCount: hidePromoRes.rowCount || 0,
+  };
+}
+
+/**
  * 导入官方 SQL 脚本（多语句 simple query，pg 原生支持整文件执行）。
  * 返回规模画像用于与 EXPECTED 对账 —— 本档的验收靠「表数对账」而不是「启动没报错」。
  */
@@ -164,6 +221,7 @@ export async function importOfficialSql({ port, user, password, database, files,
       if (onProgress) onProgress({ file: rel, bytes: Buffer.byteLength(sql), startedAt: Date.now() });
       await client.query(sql);
     }
+    const menuSanitized = await sanitizeUpstreamMenus(client);
     const t = await client.query(
       "select count(*)::int as n from information_schema.tables where table_schema='public'"
     );
@@ -171,7 +229,13 @@ export async function importOfficialSql({ port, user, password, database, files,
       "select count(*)::int as n from information_schema.sequences where sequence_schema='public'"
     );
     const u = await client.query("select count(*)::int as n from system_users");
-    return { tables: t.rows[0].n, sequences: s.rows[0].n, users: u.rows[0].n };
+    return {
+      tables: t.rows[0].n,
+      sequences: s.rows[0].n,
+      users: u.rows[0].n,
+      renamedMenus: menuSanitized.renamedCount,
+      hiddenPromoMenus: menuSanitized.hiddenPromoCount,
+    };
   } finally {
     await client.end();
   }

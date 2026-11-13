@@ -21,6 +21,12 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
+const {
+  MAX_MENU_NAME_LENGTH,
+  compactMenuName,
+  isValidMenuName,
+  menuCharLength,
+} = require("./lib/menu-standard.cjs");
 
 const ROOT = path.resolve(__dirname, "..");
 const MANIFEST_PATH = path.join(ROOT, "blueprint.template.json");
@@ -322,7 +328,25 @@ function healDomainBlueprint(rawBp) {
   bp.domain = String(bp.domain || bp.module || "oa").toLowerCase().replace(/[^a-z0-9_]/g, "");
   bp.slug = toKebabCase(bp.slug || bp.feature || `${bp.domain}-management`);
   bp.title = bp.title || bp.name || `${bp.domain.toUpperCase()} 业务模块`;
+  bp.remark = bp.remark || bp.description || bp.title;
   bp.basePath = bp.basePath || `/${bp.domain}`;
+
+  if (!bp.menuName) {
+    bp.menuName = compactMenuName(bp.title, "业务管理");
+    if (menuCharLength(bp.title) > MAX_MENU_NAME_LENGTH) {
+      fixes.push(
+        `领域 ${bp.domain} 自动收敛 ${MAX_MENU_NAME_LENGTH} 字目录菜单名: "${bp.title}" -> "${bp.menuName}"（完整标题保留于 remark）`
+      );
+    }
+  } else if (!isValidMenuName(bp.menuName)) {
+    const compacted = compactMenuName(bp.menuName, "业务管理");
+    fixes.push(
+      `领域 ${bp.domain} 目录菜单名超 ${MAX_MENU_NAME_LENGTH} 字自愈: "${bp.menuName}" -> "${compacted}"（完整标题保留于 remark）`
+    );
+    bp.menuName = compacted;
+  } else {
+    bp.menuName = String(bp.menuName).trim();
+  }
 
   if (!Array.isArray(bp.entities) || bp.entities.length === 0) {
     throw new Error("blueprint.json 必须包含非空的 entities 数组");
@@ -338,6 +362,23 @@ function healDomainBlueprint(rawBp) {
       ent.table = ent.table || ent.tableName;
     }
     ent.title = ent.title || ent.label || ent.entity;
+    ent.remark = ent.remark || ent.description || ent.title;
+    if (!ent.menuName) {
+      ent.menuName = compactMenuName(ent.title, "单据管理");
+      if (menuCharLength(ent.title) > MAX_MENU_NAME_LENGTH) {
+        fixes.push(
+          `实体 ${ent.entity} 自动收敛 ${MAX_MENU_NAME_LENGTH} 字页面菜单名: "${ent.title}" -> "${ent.menuName}"（完整标题保留于 remark）`
+        );
+      }
+    } else if (!isValidMenuName(ent.menuName)) {
+      const compacted = compactMenuName(ent.menuName, "单据管理");
+      fixes.push(
+        `实体 ${ent.entity} 页面菜单名超 ${MAX_MENU_NAME_LENGTH} 字自愈: "${ent.menuName}" -> "${compacted}"（完整标题保留于 remark）`
+      );
+      ent.menuName = compacted;
+    } else {
+      ent.menuName = String(ent.menuName).trim();
+    }
 
     // 归一化字段列表
     if (typeof ent.fields === "string") {
@@ -1053,3 +1094,9 @@ function main() {
 if (require.main === module) {
   main();
 }
+
+module.exports = {
+  healDomainBlueprint,
+  runDoctor,
+  runCompileDomain,
+};

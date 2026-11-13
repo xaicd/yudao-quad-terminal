@@ -20,8 +20,12 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+
+const localRequire = createRequire(import.meta.url);
+const { UPSTREAM_DOC_RESIDUE_REGEX } = localRequire("../lib/menu-standard.cjs");
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -153,6 +157,66 @@ try {
   const yudaoFiles = walk(TARGET).filter((p) => /yudao/i.test(path.basename(p)));
   record("文件名旧品牌已清零", yudaoFiles.length === 0, yudaoFiles.length ? `残留 ${yudaoFiles.length} 个: ${yudaoFiles.slice(0, 3).map((p) => path.relative(TARGET, p)).join(", ")}` : "0 个含 yudao 的文件名");
 
+  /* -------------------- ⑥.b 子包 README 与推广残留清零 -------------------- */
+  const CLEAN_DOCS = [
+    "README.md",
+    "CLAUDE.md",
+    "HARNESS.md",
+    "apps/backend/README.md",
+    "apps/admin/README.md",
+    "apps/miniapp/README.md",
+  ];
+  const docResidues = [];
+  for (const relDoc of CLEAN_DOCS) {
+    const absDoc = path.join(TARGET, relDoc);
+    if (!fs.existsSync(absDoc)) {
+      docResidues.push(`${relDoc} 缺失`);
+      continue;
+    }
+    const content = fs.readFileSync(absDoc, "utf8");
+    const hit = UPSTREAM_DOC_RESIDUE_REGEX.exec(content);
+    if (hit) docResidues.push(`${relDoc} 含 "${hit[0]}"`);
+  }
+  record(
+    "多端 README/CLAUDE 零上游残留",
+    docResidues.length === 0,
+    docResidues.length ? docResidues.join("; ") : `${CLEAN_DOCS.length} 份核心文档齐备且 0 上游署名/外链残留`
+  );
+
+  const walkDirsAndFiles = (dir, acc = { dirs: [], files: [] }) => {
+    if (!fs.existsSync(dir)) return acc;
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) {
+        acc.dirs.push(p);
+        walkDirsAndFiles(p, acc);
+      } else {
+        acc.files.push(p);
+      }
+    }
+    return acc;
+  };
+  const appsTree = walkDirsAndFiles(path.join(TARGET, "apps"));
+  const yudaoTutorials = appsTree.files.filter((p) => /芋道/.test(path.basename(p)) && p.endsWith(".md"));
+  const imageDirs = appsTree.dirs.filter((d) => path.basename(d) === ".image");
+  const extraBloat = [
+    "apps/backend/.gitee",
+    "apps/backend/.github",
+    "apps/backend/script/livekit-poc",
+    "apps/backend/yudao-ui",
+    `apps/backend/${NAME}-ui`,
+  ].filter((rel) => fs.existsSync(path.join(TARGET, rel)));
+  const bloatIssues = [
+    ...(yudaoTutorials.length ? [`教程md残留=${yudaoTutorials.length}`] : []),
+    ...(imageDirs.length ? [`.image目录残留=${imageDirs.length}`] : []),
+    ...(extraBloat.length ? [`冗余目录=${extraBloat.join(",")}`] : []),
+  ];
+  record(
+    "上游教程与 .image 目录物理清零",
+    bloatIssues.length === 0,
+    bloatIssues.length ? bloatIssues.join("; ") : "0 个 *芋道*.md / 0 个 .image 目录 / 0 个 *-ui 空壳"
+  );
+
   /* --------------------------- ⑦ workspace 无悬空 --------------------------- */
   const WS_DIRS = ["apps/admin", "apps/miniapp", "apps/app", "packages/api-client", "packages/shared-types"];
   const packages = new Map();
@@ -176,13 +240,13 @@ try {
   /* ------------------------- ⑧ 派生项目能自跑门禁 ------------------------- */
   const selfGate = spawnSync(
     process.execPath,
-    ["scripts/gate-check.mjs", "--only", "ci-files,script-targets,doc-commands"],
+    ["scripts/gate-check.mjs", "--only", "ci-files,script-targets,doc-commands,menu-standard"],
     { cwd: TARGET, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 300000 }
   );
   record(
     "派生项目可自跑门禁（无依赖子集）",
     selfGate.status === 0,
-    `gate --only ci-files,script-targets,doc-commands → exit ${selfGate.status}`
+    `gate --only ci-files,script-targets,doc-commands,menu-standard → exit ${selfGate.status}`
   );
 
   /* ------------------------------- 汇总 ------------------------------- */

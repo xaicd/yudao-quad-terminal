@@ -534,6 +534,12 @@ async function main() {
       });
       console.log(`   引导账号: ${applied.username}（bcrypt cost 10）`);
       console.log(`   已禁用其余种子弱演示账号: ${applied.disabledSeededUsers} 个`);
+      const menuSanitized = await pgRuntime.sanitizeUpstreamMenus(client);
+      if (menuSanitized.renamedCount > 0 || menuSanitized.hiddenPromoCount > 0) {
+        console.log(
+          `   4字菜单与推广外链清洗: 收敛 ${menuSanitized.renamedCount} 项命名 / 隐藏 ${menuSanitized.hiddenPromoCount} 项外链`
+        );
+      }
     } finally {
       await client.end();
     }

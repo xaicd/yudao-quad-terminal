@@ -150,11 +150,11 @@ export async function pruneDatabaseMenus(client, domain = 'mall', apply = false)
     WHERE path LIKE '#%' OR path LIKE 'http%'
   `);
 
-  // 将 MALL 商城系统置顶 (sort = 1)
+  // 将商城系统置顶 (sort = 1)，同时确保 4 字菜单名规范
   await client.query(`
     UPDATE system_menu 
-    SET sort = 1, visible = true, status = 0 
-    WHERE name = 'MALL 商城系统'
+    SET sort = 1, name = '商城系统', visible = true, status = 0 
+    WHERE id = 449 OR name IN ('MALL 商城系统', '商城系统')
   `);
 
   // 会员中心紧随其后 (sort = 2)

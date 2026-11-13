@@ -14,11 +14,40 @@ const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
 const args = process.argv.slice(2);
-const hasTarget = args.some((a) => a === "--target" || a.startsWith("--target="));
-const hasInPlace = args.includes("--in-place");
+const VALUE_FLAGS = new Set([
+  "--target",
+  "--name",
+  "--project",
+  "--title",
+  "--title-file",
+  "--group-id",
+  "--package",
+  "--package-prefix",
+  "--artifact-id",
+  "--base-path",
+  "--port",
+]);
 
-// 若未传 --target 且未传 --in-place，兼容 cooliebase-all 默认原地重构语义
-const finalArgs = !hasTarget && !hasInPlace ? ["--in-place", ...args] : args;
+let hasPositionalTarget = false;
+for (let i = 0; i < args.length; i++) {
+  const a = args[i];
+  if (VALUE_FLAGS.has(a)) {
+    i++;
+    continue;
+  }
+  if (!a.startsWith("-")) {
+    hasPositionalTarget = true;
+    break;
+  }
+}
+
+const hasTarget =
+  hasPositionalTarget || args.some((a) => a === "--target" || a.startsWith("--target="));
+const hasInPlace = args.includes("--in-place");
+const hasHelp = args.includes("--help") || args.includes("-h");
+
+// 若未传 --target（含位置参数）且未传 --in-place/--help，兼容 cooliebase-all 默认原地重构语义
+const finalArgs = !hasTarget && !hasInPlace && !hasHelp ? ["--in-place", ...args] : args;
 
 const res = spawnSync(
   process.execPath,

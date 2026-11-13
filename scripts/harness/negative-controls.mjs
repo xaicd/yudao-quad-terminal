@@ -126,6 +126,16 @@ const CONTROLS = [
     files: ["packages/shared-types/src/index.ts"],
     mutate: () => append("packages/shared-types/src/index.ts", '\nexport const __negativeControl: number = "not a number";\n'),
   },
+  {
+    id: "menu-standard",
+    label: "蓝图声明了超过 4 字上限的导航菜单名",
+    files: ["docs/.negative-control.blueprint.json"],
+    mutate: () =>
+      write(
+        "docs/.negative-control.blueprint.json",
+        JSON.stringify({ domain: "nc", menuName: "超长违规导航菜单名称", entities: [{ entity: "Demo", menuName: "超长违规页面菜单" }] })
+      ),
+  },
 ];
 
 /* ---------------------------------- main ---------------------------------- */

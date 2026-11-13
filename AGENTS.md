@@ -88,13 +88,15 @@ node scripts/cmmi-09-operations.cjs archive --name <spec>
 
 ## 0. 工具与能力索引（Agent 必读：先看这里，不要全盘扫源码）
 
-### 0.1 四条硬约束
+### 0.1 六条硬约束
 
 1. **pnpm 唯一**：只用 pnpm；禁止任何 npm 操作（run / install / exec / ci 四类），由门禁 `pkg-manager` 拦截。
 2. **`apps/backend` / `apps/admin` / `apps/miniapp` 是第三方 git submodule（只读）**：严禁修改其中任何文件；所有差异一律落主仓（`deploy/`、`scripts/`、`.agents/`、`docs/`）。
    对子模块的**代码级差异**收敛为 `deploy/patches/<submodule>/*.patch`，由 `pnpm patch:apply` 注入（`lite:up` 与 `lifecycle build` 会自动调用）；**子模块指针只钉远端真实存在的上游提交**，否则别人 clone 不到指向本地提交的 gitlink。新不变式由门禁 `submodule-patches` 强制：子模块工作区改动必须**恰好等于**声明的补丁。
 3. **禁止弱默认凭据**（`admin` / `admin123` 之类）：引导凭据由 CSPRNG 生成，写入 gitignored 的凭据文件（0600）。
 4. **声明必须可执行**：文档里的命令必须真实存在；`pnpm check` 通过才算完工（No Artifact, No Done）。
+5. **导航菜单严格 `<= 4` 字硬标准**：所有可见目录与页面级导航菜单（`system_menu.type IN (1, 2)`）的 `name` 必须严格满足 `char_length(name) <= 4`（完整业务标题保留于 `remark` / OpenAPI 描述）；`deploy/lite/runtime/lite-pg.mjs` 在导入种子 SQL 后自动归一化上游超长菜单（如 `id=17` `缓存监控`、`id=88` `接口日志`、`id=195` `库源配置`）并隐藏外链推广菜单，`scripts/blueprint-engine.cjs`、`scripts/codegen-module.mjs` 与门禁 `menu-standard` 全链路强制执行。
+6. **派生工程子包文档与推广残留零容忍**：通过 `pnpm project:hatch` / `pnpm project:init`（`scripts/project-reactor.mjs`）孵化新项目时，自动生成品牌中立的 `README.md`、`CLAUDE.md`、`HARNESS.md` 及 `apps/{backend,admin,miniapp}/README.md`，并物理清除 `apps/backend` 下全部上游教程 Markdown、`apps/*/.image` 二维码截图目录与未入 Maven 的 `*-ui` 空壳目录，由 `pnpm harness:hatch` 逐项断言守卫。
 
 ### 0.2 能力速查
 

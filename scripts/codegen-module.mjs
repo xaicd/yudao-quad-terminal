@@ -17,7 +17,14 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
+
+const localRequire = createRequire(import.meta.url);
+const {
+  compactMenuName,
+  isValidMenuName,
+} = localRequire("./lib/menu-standard.cjs");
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,6 +36,9 @@ function parseArgs(argv = process.argv.slice(2)) {
     entity: "",
     table: "",
     title: "",
+    menuName: "",
+    parentMenuName: "",
+    remark: "",
     fields: "",
     schemaFile: "",
     optimisticLock: true,
@@ -45,6 +55,13 @@ function parseArgs(argv = process.argv.slice(2)) {
     else if (arg === "--entity" && argv[i + 1]) params.entity = argv[++i];
     else if (arg === "--table" && argv[i + 1]) params.table = argv[++i];
     else if (arg === "--title" && argv[i + 1]) params.title = argv[++i];
+    else if (arg.startsWith("--title=")) params.title = arg.split("=")[1];
+    else if (arg === "--menu-name" && argv[i + 1]) params.menuName = argv[++i];
+    else if (arg.startsWith("--menu-name=")) params.menuName = arg.split("=")[1];
+    else if (arg === "--parent-menu-name" && argv[i + 1]) params.parentMenuName = argv[++i];
+    else if (arg.startsWith("--parent-menu-name=")) params.parentMenuName = arg.split("=")[1];
+    else if (arg === "--remark" && argv[i + 1]) params.remark = argv[++i];
+    else if (arg.startsWith("--remark=")) params.remark = arg.split("=")[1];
     else if (arg === "--fields" && argv[i + 1]) params.fields = argv[++i];
     else if (arg === "--schema" && argv[i + 1]) params.schemaFile = argv[++i];
     else if (arg.startsWith("--schema=")) params.schemaFile = arg.split("=")[1];
@@ -257,6 +274,16 @@ export function generateEntityModule(entitySpec, rootDir = ROOT) {
   const entityKebab = toKebabCase(entitySpec.entity);
   const tableName = entitySpec.table || `${moduleName}_${toSnakeCase(entitySpec.entity)}`;
   const title = entitySpec.title || entityPascal;
+  const remark = entitySpec.remark || entitySpec.description || title;
+  const rawMenuName = entitySpec.menuName || title;
+  const menuName = isValidMenuName(rawMenuName)
+    ? String(rawMenuName).trim()
+    : compactMenuName(rawMenuName, "单据管理");
+  const rawParentMenuName =
+    entitySpec.parentMenuName || entitySpec.domainMenuName || `${moduleName.toUpperCase()}管理`;
+  const parentMenuName = isValidMenuName(rawParentMenuName)
+    ? String(rawParentMenuName).trim()
+    : compactMenuName(rawParentMenuName, "业务管理");
   const fields = parseFieldList(entitySpec.fields);
   const optimisticLock = entitySpec.optimisticLock !== false;
   const stateMachine = entitySpec.stateMachine || null;
@@ -1096,9 +1123,51 @@ ${subTableFields
 COMMENT ON TABLE ${subTableName} IS '${subTable.title || `${title}明细`}';\n`
     : "";
 
+  const sqlEscape = (s) => String(s ?? "").replace(/'/g, "''");
+  const safeParentMenu = sqlEscape(parentMenuName);
+  const safePageMenu = sqlEscape(menuName);
+  const safeRemark = sqlEscape(remark);
+
+  const pgMenuSql = `
+-- -------------------------------------------------------------
+-- 导航菜单与按钮权限种子（严格执行目录/页面菜单 <= 4 字规范，完整描述保留于注释: ${safeRemark}）
+-- 目录菜单: '${safeParentMenu}' (len=${[...parentMenuName].length}) | 页面菜单: '${safePageMenu}' (len=${[...menuName].length})
+-- -------------------------------------------------------------
+DO $$
+DECLARE
+  v_parent_id BIGINT;
+  v_page_id BIGINT;
+BEGIN
+  IF to_regclass('public.system_menu') IS NOT NULL THEN
+    SELECT id INTO v_parent_id FROM system_menu WHERE parent_id = 0 AND path = '/${moduleName}' AND deleted = 0 LIMIT 1;
+    IF v_parent_id IS NULL THEN
+      SELECT COALESCE(MAX(id), 9000) + 1 INTO v_parent_id FROM system_menu;
+      INSERT INTO system_menu (id, name, permission, type, sort, parent_id, path, icon, component, component_name, status, visible, keep_alive, always_show, creator, updater, deleted)
+      VALUES (v_parent_id, '${safeParentMenu}', '', 1, 50, 0, '/${moduleName}', 'ep:grid', NULL, NULL, 0, true, true, true, 'admin', 'admin', 0);
+    END IF;
+
+    SELECT id INTO v_page_id FROM system_menu WHERE parent_id = v_parent_id AND path = '${entityKebab}' AND deleted = 0 LIMIT 1;
+    IF v_page_id IS NULL THEN
+      SELECT COALESCE(MAX(id), v_parent_id) + 1 INTO v_page_id FROM system_menu;
+      INSERT INTO system_menu (id, name, permission, type, sort, parent_id, path, icon, component, component_name, status, visible, keep_alive, always_show, creator, updater, deleted)
+      VALUES (v_page_id, '${safePageMenu}', '${moduleName}:${entityKebab}:query', 2, 10, v_parent_id, '${entityKebab}', 'ep:document', '${moduleName}/${entityKebab}/index', '${entityPascal}', 0, true, true, true, 'admin', 'admin', 0);
+
+      INSERT INTO system_menu (id, name, permission, type, sort, parent_id, path, icon, component, component_name, status, visible, keep_alive, always_show, creator, updater, deleted)
+      VALUES
+        (v_page_id + 1, '查询', '${moduleName}:${entityKebab}:query', 3, 1, v_page_id, '', '#', '', NULL, 0, true, true, true, 'admin', 'admin', 0),
+        (v_page_id + 2, '新增', '${moduleName}:${entityKebab}:create', 3, 2, v_page_id, '', '#', '', NULL, 0, true, true, true, 'admin', 'admin', 0),
+        (v_page_id + 3, '修改', '${moduleName}:${entityKebab}:update', 3, 3, v_page_id, '', '#', '', NULL, 0, true, true, true, 'admin', 'admin', 0),
+        (v_page_id + 4, '删除', '${moduleName}:${entityKebab}:delete', 3, 4, v_page_id, '', '#', '', NULL, 0, true, true, true, 'admin', 'admin', 0),
+        (v_page_id + 5, '导出', '${moduleName}:${entityKebab}:export', 3, 5, v_page_id, '', '#', '', NULL, 0, true, true, true, 'admin', 'admin', 0);
+    END IF;
+  END IF;
+END $$;
+`;
+
   const pgSqlContent = `-- -------------------------------------------------------------
 -- PostgreSQL 物理表: ${tableName} (${title})
 -- 根包名: ${layout.rootPkg} | 服务模块: ${layout.serverDirName}
+-- 导航菜单 (<=4字): ${parentMenuName} / ${menuName} | 完整描述: ${remark}
 -- -------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ${tableName} (
   id BIGSERIAL PRIMARY KEY,
@@ -1116,12 +1185,13 @@ ${fields
   deleted INT2 NOT NULL DEFAULT 0,
   tenant_id BIGINT NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE ${tableName} IS '${title}';
-${pgSubTableSql}`;
+COMMENT ON TABLE ${tableName} IS '${safeRemark}';
+${pgSubTableSql}${pgMenuSql}`;
 
   const sqlContent = `-- -------------------------------------------------------------
 -- 物理表: ${tableName} (${title})
 -- 根包名: ${layout.rootPkg} | 服务模块: ${layout.serverDirName}
+-- 导航菜单 (<=4字): ${parentMenuName} / ${menuName} | 完整描述: ${remark}
 -- -------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS \`${tableName}\` (
   \`id\` BIGINT NOT NULL AUTO_INCREMENT COMMENT '编号',
@@ -1139,16 +1209,26 @@ ${fields
   \`deleted\` BIT(1) NOT NULL DEFAULT b'0' COMMENT '是否删除',
   \`tenant_id\` BIGINT NOT NULL DEFAULT 0 COMMENT '多租户编号',
   PRIMARY KEY (\`id\`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='${title}';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='${safeRemark}';
 ${subTableSql}
 -- -------------------------------------------------------------
--- 权限标识预置
+-- 导航菜单与按钮权限种子（严格执行目录/页面菜单 <= 4 字规范，完整描述: ${safeRemark}）
 -- -------------------------------------------------------------
--- 菜单权限: ${moduleName}:${entityKebab}:query   (查询)
--- 菜单权限: ${moduleName}:${entityKebab}:create  (新增)
--- 菜单权限: ${moduleName}:${entityKebab}:update  (修改)
--- 菜单权限: ${moduleName}:${entityKebab}:delete  (删除)
--- 菜单权限: ${moduleName}:${entityKebab}:export  (导出)
+INSERT INTO system_menu (name, permission, type, sort, parent_id, path, icon, component, component_name, status, visible, keep_alive, always_show)
+VALUES ('${safeParentMenu}', '', 1, 50, 0, '/${moduleName}', 'ep:grid', NULL, NULL, 0, b'1', b'1', b'1');
+SET @parentId := LAST_INSERT_ID();
+
+INSERT INTO system_menu (name, permission, type, sort, parent_id, path, icon, component, component_name, status, visible, keep_alive, always_show)
+VALUES ('${safePageMenu}', '${moduleName}:${entityKebab}:query', 2, 10, @parentId, '${entityKebab}', 'ep:document', '${moduleName}/${entityKebab}/index', '${entityPascal}', 0, b'1', b'1', b'1');
+SET @menuId := LAST_INSERT_ID();
+
+INSERT INTO system_menu (name, permission, type, sort, parent_id, path, icon, component, status, visible, keep_alive, always_show)
+VALUES
+  ('查询', '${moduleName}:${entityKebab}:query', 3, 1, @menuId, '', '#', '', 0, b'1', b'1', b'1'),
+  ('新增', '${moduleName}:${entityKebab}:create', 3, 2, @menuId, '', '#', '', 0, b'1', b'1', b'1'),
+  ('修改', '${moduleName}:${entityKebab}:update', 3, 3, @menuId, '', '#', '', 0, b'1', b'1', b'1'),
+  ('删除', '${moduleName}:${entityKebab}:delete', 3, 4, @menuId, '', '#', '', 0, b'1', b'1', b'1'),
+  ('导出', '${moduleName}:${entityKebab}:export', 3, 5, @menuId, '', '#', '', 0, b'1', b'1', b'1');
 `;
 
   const filesToWrite = [
@@ -1197,6 +1277,10 @@ ${subTableSql}
     entityPascal,
     entityKebab,
     tableName,
+    title,
+    remark,
+    menuName,
+    parentMenuName,
     rootPkg: layout.rootPkg,
     serverDirName: layout.serverDirName,
     written,
@@ -1215,6 +1299,7 @@ function main() {
     }
     const schema = JSON.parse(fs.readFileSync(schemaAbs, "utf8"));
     const moduleName = schema.domain || schema.module || "oa";
+    const domainMenuName = schema.menuName || schema.title || `${moduleName.toUpperCase()}管理`;
     const entities = Array.isArray(schema.entities) ? schema.entities : [schema];
     for (const ent of entities) {
       generateEntityModule(
@@ -1224,6 +1309,9 @@ function main() {
           entity: ent.entity || ent.name,
           table: ent.table || ent.tableName,
           title: ent.title || ent.label,
+          remark: ent.remark || ent.description || ent.title || ent.label,
+          menuName: ent.menuName,
+          parentMenuName: ent.parentMenuName || domainMenuName,
           dryRun: args.dryRun,
           force: true,
         },
@@ -1242,7 +1330,9 @@ function main() {
     --module <module-name> \\
     --entity <EntityName> \\
     --table <table_name> \\
-    --title <业务标题> \\
+    --title <完整业务标题> \\
+    [--menu-name <=4字导航短名] \\
+    [--parent-menu-name <=4字目录短名] \\
     --fields "<name>:<type>:<comment>:<req|search|hidden>,..."
 `);
     process.exit(1);

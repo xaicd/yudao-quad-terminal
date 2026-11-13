@@ -23,8 +23,19 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+
+const localRequire = createRequire(import.meta.url);
+const {
+  MAX_MENU_NAME_LENGTH,
+  UPSTREAM_MENU_RENAMES,
+  UPSTREAM_PROMO_MENU_NAMES,
+  UPSTREAM_DOC_RESIDUE_REGEX,
+  isValidMenuName,
+  menuCharLength,
+} = localRequire("./lib/menu-standard.cjs");
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -303,6 +314,123 @@ function checkCiAndShell() {
 }
 
 // ---------------------------------------------------------------------------
+// inline 检查：导航菜单 <= 4 字标准与派生文档无上游残留守卫
+// ---------------------------------------------------------------------------
+
+function checkMenuStandardAndHygiene() {
+  const problems = [];
+
+  // 1. 核验上游种子归一化映射与推广外链清洗钩子齐备
+  for (const [id, expected] of [
+    [17, "缓存监控"],
+    [88, "接口日志"],
+    [195, "库源配置"],
+  ]) {
+    if (UPSTREAM_MENU_RENAMES[id] !== expected) {
+      problems.push(`menu-standard 缺少关键上游菜单收敛映射: id=${id} 期望 "${expected}"`);
+    }
+  }
+  for (const [id, label] of Object.entries(UPSTREAM_MENU_RENAMES)) {
+    if (!isValidMenuName(label)) {
+      problems.push(`UPSTREAM_MENU_RENAMES[${id}]="${label}" 违反 <=${MAX_MENU_NAME_LENGTH} 字约束`);
+    }
+  }
+  if (!Array.isArray(UPSTREAM_PROMO_MENU_NAMES) || UPSTREAM_PROMO_MENU_NAMES.length < 5) {
+    problems.push("UPSTREAM_PROMO_MENU_NAMES 推广外链屏蔽清单不完整");
+  }
+  const litePgSrc = fs.existsSync(path.join(ROOT, "deploy/lite/runtime/lite-pg.mjs"))
+    ? fs.readFileSync(path.join(ROOT, "deploy/lite/runtime/lite-pg.mjs"), "utf8")
+    : "";
+  if (!litePgSrc.includes("sanitizeUpstreamMenus")) {
+    problems.push("deploy/lite/runtime/lite-pg.mjs 未挂载 sanitizeUpstreamMenus 清洗钩子");
+  }
+
+  // 2. 扫描仓库内所有 *.blueprint.json，校验显式声明的 menuName 严格 <= 4 字
+  const EXCLUDE_DIRS = new Set(["node_modules", ".git", ".commandcode", "apps", "data", "dist", "build", "target"]);
+  const blueprintFiles = [];
+  const customSqlFiles = [];
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (e.isDirectory()) {
+        if (EXCLUDE_DIRS.has(e.name)) continue;
+        walk(path.join(dir, e.name));
+      } else if (e.name.endsWith(".blueprint.json")) {
+        blueprintFiles.push(path.join(dir, e.name));
+      } else if (e.name.endsWith(".sql")) {
+        customSqlFiles.push(path.join(dir, e.name));
+      }
+    }
+  };
+  walk(ROOT);
+
+  for (const bpFile of blueprintFiles) {
+    try {
+      const bp = JSON.parse(fs.readFileSync(bpFile, "utf8"));
+      const rel = path.relative(ROOT, bpFile);
+      if (bp.menuName !== undefined && !isValidMenuName(bp.menuName)) {
+        problems.push(`${rel}: menuName="${bp.menuName}" 长度 ${menuCharLength(bp.menuName)} > ${MAX_MENU_NAME_LENGTH}`);
+      }
+      for (const ent of Array.isArray(bp.entities) ? bp.entities : []) {
+        if (ent.menuName !== undefined && !isValidMenuName(ent.menuName)) {
+          problems.push(
+            `${rel} (${ent.entity || "entity"}): menuName="${ent.menuName}" 长度 ${menuCharLength(ent.menuName)} > ${MAX_MENU_NAME_LENGTH}`
+          );
+        }
+      }
+    } catch (err) {
+      problems.push(`${path.relative(ROOT, bpFile)}: JSON 解析失败 (${err.message})`);
+    }
+  }
+
+  // 3. 派生工程（无 .gitmodules）额外核验生成的 SQL 菜单与多端 README 零上游推广残留
+  const isDerivedProject = !fs.existsSync(path.join(ROOT, ".gitmodules"));
+  if (isDerivedProject) {
+    for (const sqlDir of ["apps/backend/sql/postgresql", "apps/backend/sql/mysql"]) {
+      const absSqlDir = path.join(ROOT, sqlDir);
+      if (!fs.existsSync(absSqlDir)) continue;
+      for (const f of fs.readdirSync(absSqlDir)) {
+        if (!f.endsWith(".sql") || f === "ruoyi-vue-pro.sql" || f === "quartz.sql") continue;
+        customSqlFiles.push(path.join(absSqlDir, f));
+      }
+    }
+
+    for (const docRel of [
+      "README.md",
+      "CLAUDE.md",
+      "HARNESS.md",
+      "apps/backend/README.md",
+      "apps/admin/README.md",
+      "apps/miniapp/README.md",
+    ]) {
+      const absDoc = path.join(ROOT, docRel);
+      if (!fs.existsSync(absDoc)) continue;
+      const text = fs.readFileSync(absDoc, "utf8");
+      const m = UPSTREAM_DOC_RESIDUE_REGEX.exec(text);
+      if (m) problems.push(`${docRel}: 残留上游推广/品牌词 "${m[0]}"`);
+    }
+  }
+
+  for (const sqlFile of customSqlFiles) {
+    const sqlText = fs.readFileSync(sqlFile, "utf8");
+    const rel = path.relative(ROOT, sqlFile);
+    for (const m of sqlText.matchAll(/VALUES\s*\(\s*(?:[a-zA-Z0-9_]+\s*,\s*)?'([^']+)'\s*,\s*'[^']*'\s*,\s*([12])\s*,/g)) {
+      const menuLabel = m[1];
+      if (!isValidMenuName(menuLabel)) {
+        problems.push(`${rel}: system_menu(type=${m[2]}) name="${menuLabel}" 超过 ${MAX_MENU_NAME_LENGTH} 字`);
+      }
+    }
+  }
+
+  return {
+    passed: problems.length === 0,
+    detail:
+      problems.length === 0
+        ? `菜单 <=${MAX_MENU_NAME_LENGTH} 字规范一致（检查 ${blueprintFiles.length} 份蓝图 / ${customSqlFiles.length} 份自定义 SQL）`
+        : problems.join("；"),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // 门禁定义
 // ---------------------------------------------------------------------------
 
@@ -411,6 +539,13 @@ const GATES = [
     tier: "fast",
     severity: "blocking",
     inline: checkCiAndShell,
+  },
+  {
+    id: "menu-standard",
+    label: "导航菜单 <=4 字规范与派生文档洁净度守卫",
+    tier: "fast",
+    severity: "blocking",
+    inline: checkMenuStandardAndHygiene,
   },
   {
     id: "socratic",

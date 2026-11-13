@@ -9,6 +9,8 @@ All engineering rules and architectural standards are unified in [`AGENTS.md`](A
 - **Pillar 2 — `speckit` (`pnpm run speckit`) + CMMI 00~09 Extensions (`scripts/cmmi-00-meta.cjs` ~ `scripts/cmmi-09-operations.cjs`) = Stage Document & Process Asset Engine**:
   `pnpm run speckit -- cmmi <00..09> [docs|check|asset|...]` (or `node scripts/cmmi-0X-*.cjs`)
 - **Mandatory Submodule Rule**: `apps/backend`, `apps/admin`, `apps/miniapp` are read-only upstream git submodules; all customizations go to `deploy/patches/` or derived sandboxes (`/tmp/<slug>-sandbox`).
+- **Strict 4-Character Navigation Menu Standard**: All visible directory/page menus (`system_menu.type IN (1, 2)`) MUST satisfy `char_length(name) <= 4` (`scripts/lib/menu-standard.cjs`, `deploy/lite/runtime/lite-pg.mjs`, `scripts/blueprint-engine.cjs`, `scripts/codegen-module.mjs`, and gate `menu-standard`).
+- **Clean Derived Project Hatching**: `scripts/project-reactor.mjs` (`pnpm project:init` / `pnpm project:hatch`) regenerates clean branded `README.md`, `CLAUDE.md`, `HARNESS.md`, and `apps/{backend,admin,miniapp}/README.md` while purging upstream tutorial `.md` files, `.image/` directories, and `*-ui` stubs (verified by `pnpm harness:hatch`).
 - **Unified Spec & Prototype Standard**: `docs/specs/<domain>/<name>/` governed by `scripts/speckit.cjs` (`FEATURE-SPEC-AND-PROTOTYPE-STANDARD`).
 
 ## Project PMO & 4-Scenario AI Agent Playbook (Identical Across `coolie`, `yudao-quad-terminal` & `cooliebase-all`)
