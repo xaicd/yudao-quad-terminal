@@ -22,7 +22,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const requireFromRepo = createRequire(path.join(ROOT, "package.json"));
-const { listAllSpecs } = requireFromRepo("./scripts/lib/spec-resolver.cjs");
+const { listAllSpecs } = requireFromRepo("./scripts/lib/spec-path-resolver.cjs");
 
 const EXPECTED_ASSETS = [
   "brief.json",

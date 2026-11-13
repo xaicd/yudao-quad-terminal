@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const requireRepo = createRequire(path.join(ROOT, "package.json"));
-const { resolveSpecDir, getTargetSpecDir, listAllSpecs } = requireRepo("./scripts/lib/spec-resolver.cjs");
+const { resolveSpecDir, getTargetSpecDir, listAllSpecs } = requireRepo("./scripts/lib/spec-path-resolver.cjs");
 
 test("spec-resolver：能解析已存在的规格目录", () => {
   const dir = resolveSpecDir("module-trim-and-mcp");
