@@ -81,8 +81,22 @@ const PG_DRIVER_HINT = "mvn -B -q dependency:get -Dartifact=org.postgresql:postg
 // 参数
 // ---------------------------------------------------------------------------
 
+function loadEnvPorts(rootDir) {
+  const out = {};
+  const file = path.join(rootDir, ".env.ports");
+  if (!fs.existsSync(file)) return out;
+  for (const line of fs.readFileSync(file, "utf8").split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const idx = trimmed.indexOf("=");
+    if (idx > 0) out[trimmed.slice(0, idx).trim()] = trimmed.slice(idx + 1).trim();
+  }
+  return out;
+}
+
 function parseArgs() {
   const args = process.argv.slice(2);
+  const envPorts = loadEnvPorts(ROOT);
   const has = (f) => args.includes(f);
   const value = (f) => {
     const i = args.indexOf(f);
@@ -95,10 +109,11 @@ function parseArgs() {
     forceImport: has("--force-import"),
     rotateCredentials: has("--rotate-credentials"),
     noProbe: has("--no-probe"),
-    pgPort: Number(value("--pg-port") || process.env.LITE_PG_PORT || pgRuntime.DEFAULTS.port),
-    redisPort: Number(value("--redis-port") || process.env.LITE_REDIS_PORT || redisRuntime.DEFAULTS.port),
+    domainProfile: value("--domain") || process.env.LITE_DOMAIN_PROFILE || envPorts.DOMAIN_PROFILE || undefined,
+    pgPort: Number(value("--pg-port") || process.env.LITE_PG_PORT || process.env.DB_PORT || envPorts.DB_PORT || pgRuntime.DEFAULTS.port),
+    redisPort: Number(value("--redis-port") || process.env.LITE_REDIS_PORT || process.env.REDIS_PORT || envPorts.REDIS_PORT || redisRuntime.DEFAULTS.port),
     redisVariant: value("--redis-variant") || process.env.LITE_REDIS_VARIANT || undefined,
-    serverPort: Number(value("--server-port") || process.env.LITE_SERVER_PORT || 48080),
+    serverPort: Number(value("--server-port") || process.env.LITE_SERVER_PORT || process.env.BACKEND_PORT || envPorts.BACKEND_PORT || 48080),
     help: has("--help") || has("-h"),
   };
 }
@@ -161,7 +176,7 @@ function checkFatJar() {
   const moduleJar = (list.stdout || "")
     .split("\n")
     .map((l) => l.trim().split(/\s+/).pop())
-    .find((n) => n && /^BOOT-INF\/lib\/yudao-module-infra-server-.*\.jar$/.test(n));
+    .find((n) => n && /^BOOT-INF\/lib\/[a-z0-9-]+-module-infra-server-.*\.jar$/.test(n));
 
   if (moduleJar) {
     const tmp = path.join(ROOT, ".commandcode/lite/tmp-check");
@@ -518,6 +533,23 @@ async function main() {
       console.log("📥 已存在数据（跳过导入；--force-import 可强制重导）");
     }
 
+    // --- 3.5 自动发现并幂等导入派生领域 SQL ---
+    if (!opts.skipImport) {
+      const customSql = pgRuntime.discoverCustomDomainSql(ROOT);
+      if (customSql.length > 0) {
+        console.log(`📥 幂等同步领域 SQL（${customSql.length} 个文件）…`);
+        await pgRuntime.importCustomDomainSql({
+          port: opts.pgPort,
+          user: pgRuntime.DEFAULTS.user,
+          password: pgRuntime.DEFAULTS.password,
+          database: pgRuntime.DEFAULTS.database,
+          files: customSql,
+          rootDir: ROOT,
+          onProgress: (p) => console.log(`   ${p.file}（${(p.bytes / 1024).toFixed(1)}KB）`),
+        });
+      }
+    }
+
     // --- 4. 注入引导凭据 ---
     console.log("🔐 注入引导凭据并列装禁种子弱账号…");
     const client = pgRuntime.makeClient({
@@ -531,8 +563,12 @@ async function main() {
       const applied = await credentialsRuntime.applyBootstrapCredentials(client, {
         username: creds.username,
         password: creds.password,
+        rolePasswords: creds.rolePasswords,
       });
       console.log(`   引导账号: ${applied.username}（bcrypt cost 10）`);
+      if (applied.syncedRoleUsers && applied.syncedRoleUsers.length > 0) {
+        console.log(`   已同步三员分立/值班账号: ${applied.syncedRoleUsers.join(", ")}`);
+      }
       console.log(`   已禁用其余种子弱演示账号: ${applied.disabledSeededUsers} 个`);
       const menuSanitized = await pgRuntime.sanitizeUpstreamMenus(client);
       if (menuSanitized.renamedCount > 0 || menuSanitized.hiddenPromoCount > 0) {
@@ -550,6 +586,8 @@ async function main() {
       console.log("🧹 自动化执行领域业务纯粹化与脚手架噪声清洗…");
       try {
         const pruneMod = await import("./domain-prune.mjs");
+        const activeDomain =
+          opts.domainProfile || (fs.existsSync(path.join(ROOT, ".gitmodules")) ? "mall" : "general");
         const clientPrune = pgRuntime.makeClient({
           port: opts.pgPort,
           user: pgRuntime.DEFAULTS.user,
@@ -558,8 +596,14 @@ async function main() {
         });
         await clientPrune.connect();
         try {
-          const pruneRes = await pruneMod.pruneDatabaseMenus(clientPrune, "mall", true);
-          console.log(`   领域清洗已生效: 已停用并隐藏 ${pruneRes.prunedTopNames.length} 个无关模块 (${pruneRes.totalPrunedCount} 个菜单节点)`);
+          const pruneRes = await pruneMod.pruneDatabaseMenus(clientPrune, activeDomain, true);
+          console.log(`   领域清洗已生效 (${activeDomain}): 已停用并隐藏 ${pruneRes.prunedTopNames.length} 个无关模块 (${pruneRes.totalPrunedCount} 个菜单节点)`);
+          if (typeof pruneMod.flushRedisMenuCache === "function") {
+            await pruneMod.flushRedisMenuCache({
+              redisPort: opts.redisPort,
+              redisPassword: creds.redisPassword,
+            });
+          }
         } finally {
           await clientPrune.end();
         }
@@ -574,6 +618,10 @@ async function main() {
     app = spawn(
       "java",
       [
+        "--add-opens=java.base/java.nio=ALL-UNNAMED",
+        "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+        "--add-opens=java.base/java.lang=ALL-UNNAMED",
+        "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
         "-cp",
         `${path.join(ROOT, FAT_JAR)}${sep}${pgDriver}`,
         "org.springframework.boot.loader.launch.JarLauncher",
@@ -584,6 +632,7 @@ async function main() {
         cwd: ROOT,
         env: {
           ...process.env,
+          LITE_SERVER_PORT: String(opts.serverPort),
           LITE_PG_PORT: String(opts.pgPort),
           LITE_PG_USER: pgRuntime.DEFAULTS.user,
           LITE_PG_PASSWORD: pgRuntime.DEFAULTS.password,

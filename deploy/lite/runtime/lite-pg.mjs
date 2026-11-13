@@ -41,6 +41,56 @@ export const OFFICIAL_SQL = [
   "apps/backend/sql/postgresql/quartz.sql",
 ];
 
+/**
+ * 自动发现派生项目新增的领域 PostgreSQL 脚本（排除官方基线脚本），按确定性拓扑顺序排列：
+ *   1) *_schema.sql / *ddl*.sql
+ *   2) *three_role*.sql / *audit*.sql
+ *   3) *rbac*.sql / *menu*.sql
+ *   4) *seed*.sql
+ *   5) 其余自定义 .sql
+ */
+export function discoverCustomDomainSql(rootDir) {
+  const sqlDir = path.join(rootDir, "apps/backend/sql/postgresql");
+  if (!fs.existsSync(sqlDir)) return [];
+  const officialBase = new Set(["ruoyi-vue-pro.sql", "quartz.sql"]);
+  const files = fs
+    .readdirSync(sqlDir)
+    .filter((f) => f.endsWith(".sql") && !officialBase.has(f));
+
+  const rank = (name) => {
+    const lower = name.toLowerCase();
+    if (lower.includes("schema") || lower.includes("ddl")) return 10;
+    if (lower.includes("three_role") || lower.includes("audit")) return 20;
+    if (lower.includes("rbac") || lower.includes("menu")) return 30;
+    if (lower.includes("seed")) return 40;
+    return 50;
+  };
+
+  return files
+    .sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
+    .map((f) => path.join("apps/backend/sql/postgresql", f));
+}
+
+export async function importCustomDomainSql({ port, user, password, database, files, rootDir = process.cwd(), onProgress }) {
+  if (!files || files.length === 0) return { importedFiles: [] };
+  const client = makeClient({ port, user, password, database });
+  await client.connect();
+  try {
+    const importedFiles = [];
+    for (const rel of files) {
+      const abs = path.isAbsolute(rel) ? rel : path.join(rootDir, rel);
+      if (!fs.existsSync(abs)) continue;
+      const sql = fs.readFileSync(abs, "utf8");
+      if (onProgress) onProgress({ file: rel, bytes: Buffer.byteLength(sql), startedAt: Date.now() });
+      await client.query(sql);
+      importedFiles.push(rel);
+    }
+    return { importedFiles };
+  } finally {
+    await client.end();
+  }
+}
+
 /** 实测基线（2026-10-21）：官方脚本导入后应有的规模，作为验收对账依据 */
 export const EXPECTED = { tables: 60, sequences: 48 };
 

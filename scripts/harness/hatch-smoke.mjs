@@ -90,11 +90,23 @@ try {
     "compat-manifest.json",
     "HARNESS.md",
     "AGENTS.md",
+    "SWARM.md",
     "llms.txt",
+    ".env.ports",
+    "start.sh",
+    "playwright.config.mjs",
     "scripts/gate-check.mjs",
     "scripts/compat-check.mjs",
+    "scripts/audit-23-gates.mjs",
+    "scripts/scaffold-three-role-audit.mjs",
+    "scripts/verify-stage-b0.sh",
+    "scripts/verify-stage-b4.sh",
+    "scripts/verify-stage-b5-cwall.sh",
     "scripts/harness/negative-controls.mjs",
     "scripts/hatch.sh",
+    "e2e/helpers/env-and-playwright.mjs",
+    "e2e/helpers/pg-verifier.mjs",
+    "deploy/cwall/cwall.caddy.tpl",
     "deploy/lite/application-lite.yaml",
     "deploy/patches/README.md",
   ];
@@ -247,6 +259,72 @@ try {
     "派生项目可自跑门禁（无依赖子集）",
     selfGate.status === 0,
     `gate --only ci-files,script-targets,doc-commands,menu-standard → exit ${selfGate.status}`
+  );
+
+  /* ------------- ⑨ 连字符安全 SQL/Java、净室前端与四平面网关自证 ------------- */
+  const snakeSlug = NAME.replace(/-/g, "_");
+  const pascalSlug = NAME.split(/[-_]+/)
+    .filter(Boolean)
+    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+    .join("");
+  const sqlFiles = walk(path.join(TARGET, "apps/backend/sql")).filter((p) => p.endsWith(".sql"));
+  const hyphenSqlHits = NAME.includes("-")
+    ? sqlFiles.filter((sf) => new RegExp(`\\b${NAME.replace(/-/g, "\\-")}_[a-z0-9_]+`, "i").test(fs.readFileSync(sf, "utf8")))
+    : [];
+  const expectedAppJava = path.join(newPkgPath, "server", `${pascalSlug}ServerApplication.java`);
+  record(
+    "连字符安全 SQL 标识符与 Pascal 主类",
+    hyphenSqlHits.length === 0 && fs.existsSync(expectedAppJava),
+    `sql非法连字符=${hyphenSqlHits.length}, 主类=${path.basename(expectedAppJava)}(exists=${fs.existsSync(expectedAppJava)}), snake=${snakeSlug}`
+  );
+
+  const mockHomeLeftovers = ["Index2.vue", "echarts-data.ts", "types.ts"].filter((f) =>
+    fs.existsSync(path.join(TARGET, "apps/admin/src/views/Home", f))
+  );
+  const loginFormText = fs.readFileSync(
+    path.join(TARGET, "apps/admin/src/views/Login/components/LoginForm.vue"),
+    "utf8"
+  );
+  const cleanRoomUiOk =
+    mockHomeLeftovers.length === 0 &&
+    loginFormText.includes('data-testid="login-username"') &&
+    loginFormText.includes('data-testid="login-password"') &&
+    loginFormText.includes('data-testid="login-submit"') &&
+    !loginFormText.includes("萌新必读");
+  record(
+    "前端净室零 Home Mock 与登录 testid",
+    cleanRoomUiOk,
+    `mock残留=${mockHomeLeftovers.length}, loginTestIds=${loginFormText.includes('data-testid="login-submit"')}`
+  );
+
+  const caddyConfPath = path.join(TARGET, "deploy/gateway/caddy", `${NAME}.caddy`);
+  const caddyConfText = fs.existsSync(caddyConfPath) ? fs.readFileSync(caddyConfPath, "utf8") : "";
+  const caddyOk =
+    /admin\s+off/.test(caddyConfText) &&
+    caddyConfText.includes(`/${NAME}/cockpit/*`) &&
+    caddyConfText.includes(`/${NAME}/admin/*`) &&
+    caddyConfText.includes(`/${NAME}/2c/*`) &&
+    caddyConfText.includes(`/${NAME}/admin-api/*`);
+  record(
+    "四平面 { admin off } Caddy 网关配置",
+    caddyOk,
+    caddyOk ? `${path.relative(TARGET, caddyConfPath)} 齐备` : "Caddyfile 缺失 admin off 或四平面"
+  );
+
+  const selfCompat = spawnSync(process.execPath, ["scripts/compat-check.mjs"], {
+    cwd: TARGET,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  const self23Static = spawnSync(process.execPath, ["scripts/audit-23-gates.mjs", "--static-only"], {
+    cwd: TARGET,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  record(
+    "派生项目通过 compat:check 与 G1-G23 静态门禁",
+    selfCompat.status === 0 && self23Static.status === 0,
+    `compat=${selfCompat.status}, gates23Static=${self23Static.status}`
   );
 
   /* ------------------------------- 汇总 ------------------------------- */

@@ -44,6 +44,22 @@ const IGNORE_DIRS = new Set([
   ".claude", ".commandcode", ".next", ".cache"
 ]);
 
+export function deriveSlugForms(rawSlug) {
+  const projectName = String(rawSlug || "app")
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, "")
+    .replace(/^[-_]+|[-_]+$/g, "") || "app";
+  const snakeSlug = projectName.replace(/-/g, "_");
+  const upperSnakeSlug = snakeSlug.toUpperCase();
+  const pascalSlug = projectName
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((seg) => seg.charAt(0).toUpperCase() + seg.slice(1))
+    .join("");
+  const camelSlug = pascalSlug ? pascalSlug.charAt(0).toLowerCase() + pascalSlug.slice(1) : snakeSlug;
+  return { projectName, snakeSlug, upperSnakeSlug, pascalSlug, camelSlug };
+}
+
 function parseArgs(argv = process.argv.slice(2)) {
   const options = {
     inPlace: false,
@@ -55,8 +71,12 @@ function parseArgs(argv = process.argv.slice(2)) {
     packageName: null,
     artifactId: null,
     basePath: null,
-    port: 48080,
-    gatewayPort: 48120,
+    port: parseInt(process.env.BACKEND_PORT || process.env.LITE_SERVER_PORT || "48080", 10),
+    gatewayPort: parseInt(process.env.GATEWAY_PORT || process.env.PORT || "48120", 10),
+    adminPort: parseInt(process.env.ADMIN_PORT || "5173", 10),
+    miniappPort: parseInt(process.env.MINIAPP_PORT || "5174", 10),
+    dbPort: parseInt(process.env.DB_PORT || process.env.LITE_PG_PORT || "55432", 10),
+    redisPort: parseInt(process.env.REDIS_PORT || process.env.LITE_REDIS_PORT || "63799", 10),
     dryRun: false,
     quiet: false,
     help: false,
@@ -84,8 +104,18 @@ function parseArgs(argv = process.argv.slice(2)) {
     else if (arg.startsWith("--artifact-id=")) options.artifactId = arg.split("=")[1];
     else if (arg === "--base-path" && argv[i + 1]) options.basePath = argv[++i];
     else if (arg.startsWith("--base-path=")) options.basePath = arg.split("=")[1];
-    else if (arg === "--port" && argv[i + 1]) options.port = parseInt(argv[++i], 10);
-    else if (arg.startsWith("--port=")) options.port = parseInt(arg.split("=")[1], 10);
+    else if ((arg === "--port" || arg === "--backend-port") && argv[i + 1]) options.port = parseInt(argv[++i], 10);
+    else if (arg.startsWith("--port=") || arg.startsWith("--backend-port=")) options.port = parseInt(arg.split("=")[1], 10);
+    else if (arg === "--gateway-port" && argv[i + 1]) options.gatewayPort = parseInt(argv[++i], 10);
+    else if (arg.startsWith("--gateway-port=")) options.gatewayPort = parseInt(arg.split("=")[1], 10);
+    else if (arg === "--admin-port" && argv[i + 1]) options.adminPort = parseInt(argv[++i], 10);
+    else if (arg.startsWith("--admin-port=")) options.adminPort = parseInt(arg.split("=")[1], 10);
+    else if (arg === "--miniapp-port" && argv[i + 1]) options.miniappPort = parseInt(argv[++i], 10);
+    else if (arg.startsWith("--miniapp-port=")) options.miniappPort = parseInt(arg.split("=")[1], 10);
+    else if ((arg === "--db-port" || arg === "--pg-port") && argv[i + 1]) options.dbPort = parseInt(argv[++i], 10);
+    else if (arg.startsWith("--db-port=") || arg.startsWith("--pg-port=")) options.dbPort = parseInt(arg.split("=")[1], 10);
+    else if (arg === "--redis-port" && argv[i + 1]) options.redisPort = parseInt(argv[++i], 10);
+    else if (arg.startsWith("--redis-port=")) options.redisPort = parseInt(arg.split("=")[1], 10);
     else if (!arg.startsWith("-") && !options.target) options.target = arg;
   }
 
@@ -323,6 +353,7 @@ function renameJavaPackagePaths(targetDir, oldPkgDot, newPkgDot) {
 }
 
 function renameFilesWithKeyword(targetDir, projectName, packageName = "") {
+  const { snakeSlug, pascalSlug, camelSlug } = deriveSlugForms(projectName);
   const pkgSegments = new Set(String(packageName).split(".").filter(Boolean));
   function walk(dir) {
     let entries;
@@ -339,10 +370,12 @@ function renameFilesWithKeyword(targetDir, projectName, packageName = "") {
         if (
           /yudao/i.test(entry.name) &&
           !entry.name.includes(projectName) &&
+          !entry.name.includes(snakeSlug) &&
           !pkgSegments.has(entry.name)
         ) {
           const newName = entry.name
-            .replace(/Yudao/g, projectName.charAt(0).toUpperCase() + projectName.slice(1))
+            .replace(/Yudao/g, pascalSlug)
+            .replace(/yudao_/gi, `${snakeSlug}_`)
             .replace(/yudao/gi, projectName);
           const newDirPath = path.join(dir, newName);
           if (!fs.existsSync(newDirPath)) {
@@ -352,10 +385,26 @@ function renameFilesWithKeyword(targetDir, projectName, packageName = "") {
           }
         }
       } else if (entry.isFile()) {
-        if (/yudao/i.test(entry.name) && !entry.name.includes(projectName)) {
-          const newName = entry.name
-            .replace(/Yudao/g, projectName.charAt(0).toUpperCase() + projectName.slice(1))
-            .replace(/yudao/gi, projectName);
+        if (
+          /yudao/i.test(entry.name) &&
+          !entry.name.includes(projectName) &&
+          !entry.name.includes(snakeSlug) &&
+          !entry.name.includes(pascalSlug)
+        ) {
+          const ext = path.extname(entry.name).toLowerCase();
+          let newName;
+          if (ext === ".java" || /^[A-Z]/.test(entry.name)) {
+            newName = entry.name
+              .replace(/Yudao/g, pascalSlug)
+              .replace(/yudao/gi, camelSlug);
+          } else if (ext === ".sql") {
+            newName = entry.name.replace(/yudao/gi, snakeSlug);
+          } else {
+            newName = entry.name
+              .replace(/Yudao/g, pascalSlug)
+              .replace(/yudao_/gi, `${snakeSlug}_`)
+              .replace(/yudao/gi, projectName);
+          }
           const newFilePath = path.join(dir, newName);
           if (!fs.existsSync(newFilePath)) {
             try {
@@ -370,10 +419,9 @@ function renameFilesWithKeyword(targetDir, projectName, packageName = "") {
   walk(targetDir);
 }
 
-function replaceContent(targetDir, config) {
+export function replaceContent(targetDir, config) {
   const { projectName, projectTitle, groupId, packageName } = config;
-  const projectCap = projectName.charAt(0).toUpperCase() + projectName.slice(1);
-  const projectUpper = projectName.toUpperCase();
+  const { snakeSlug, upperSnakeSlug, pascalSlug, camelSlug } = deriveSlugForms(projectName);
 
   const replacements = [
     // 1. 中文品牌词长词优先置换
@@ -414,42 +462,41 @@ function replaceContent(targetDir, config) {
     // 4. 上游作者署名、推广链接与开源托管标识脱敏
     [/上海艰苦奋斗/g, "企业级工程研发"],
     [/艿艿/g, "平台工程团队"],
-    [/zhijiantianya/gi, projectName],
+    [/zhijiantianya/gi, snakeSlug],
     [/YunaiV\/[a-zA-Z0-9_-]+(?:@[a-zA-Z0-9._/-]+)?/g, `${projectName}/backend`],
-    [/YunaiV/g, projectName],
+    [/YunaiV/g, pascalSlug],
     [/yudaocode\/[a-zA-Z0-9_-]+/g, `${projectName}/frontend`],
     [/yunai@iocoder\.cn/gi, `ops@${projectName}.local`],
     [/yuanma@iocoder\.cn/gi, `dev@${projectName}.local`],
     [/https?:\/\/[a-z0-9.-]*iocoder\.cn[^\s"')>`]*/gi, `http://127.0.0.1:${config.gatewayPort || 48120}${config.basePath || `/${projectName}`}`],
     [/iocoder\.cn/gi, `${projectName}.local`],
 
-    // 5. 短词全量置换与大小写自适应 (对标 ProjectReactor.java: artifactIdNew)
-    [/yudaocode/g, projectName],
+    // 5. 连字符安全标识符置换：SQL 表名/索引 (yudao_xxx -> snake_slug_xxx)、Java 常量/类名/驼峰变量
+    [/yudaocode/g, snakeSlug],
+    [/YUDAO_([A-Z0-9_]+)/g, (_, tail) => `${upperSnakeSlug}_${tail}`],
+    [/yudao_([a-zA-Z0-9_]+)/g, (_, tail) => `${snakeSlug}_${tail}`],
+    [/_yudao\b/g, `_${snakeSlug}`],
+    [/Yudao([A-Za-z0-9_]*)/g, (_, tail) => `${pascalSlug}${tail}`],
+    [/yudao([A-Z][A-Za-z0-9_]*)/g, (_, tail) => `${camelSlug}${tail}`],
     [/yudao/gi, (match) => {
-      if (match === "Yudao") return projectCap;
-      if (match === "YUDAO") return projectUpper;
+      if (match === "Yudao") return pascalSlug;
+      if (match === "YUDAO") return upperSnakeSlug;
       return projectName;
     }],
   ];
 
-  const combinedRe = new RegExp(
-    replacements.map(([re]) => `(?:${re.source})`).join("|"),
-    "gi"
-  );
-
-  function replaceSinglePass(text) {
-    let modified = false;
-    const out = text.replace(combinedRe, (match) => {
-      for (const [re, rep] of replacements) {
-        const single = new RegExp(`^(?:${re.source})$`, re.flags.includes("i") ? "i" : "");
-        if (single.test(match)) {
-          modified = true;
-          return typeof rep === "function" ? rep(match) : rep;
-        }
-      }
-      return match;
-    });
-    return { out, modified };
+  function applySequential(text, ext) {
+    let out = text;
+    for (const [re, rep] of replacements) {
+      out = out.replace(re, rep);
+    }
+    // SQL 文件兜底守卫：严禁未加引号的连字符标识符（如 tele-pulse_demo01_contact）进入 DDL
+    if (ext === ".sql" && projectName.includes("-")) {
+      const escapedProj = projectName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      out = out.replace(new RegExp(`${escapedProj}_`, "g"), `${snakeSlug}_`);
+      out = out.replace(new RegExp(`_${escapedProj}\\b`, "g"), `_${snakeSlug}`);
+    }
+    return out;
   }
 
   function walk(dir) {
@@ -470,8 +517,8 @@ function replaceContent(targetDir, config) {
 
         try {
           const content = fs.readFileSync(fullPath, "utf8");
-          const { out, modified } = replaceSinglePass(content);
-          if (modified && out !== content) {
+          const out = applySequential(content, ext);
+          if (out !== content) {
             fs.writeFileSync(fullPath, out, "utf8");
           }
         } catch {}
@@ -482,14 +529,283 @@ function replaceContent(targetDir, config) {
   walk(targetDir);
 }
 
+function bakeSubmodulePatchesIntoTarget(targetDir) {
+  for (const sub of ["backend", "admin", "miniapp"]) {
+    const patchDir = path.join(targetDir, "deploy", "patches", sub);
+    const appDir = path.join(targetDir, "apps", sub);
+    if (!fs.existsSync(patchDir) || !fs.existsSync(appDir)) continue;
+    const patches = fs
+      .readdirSync(patchDir)
+      .filter((f) => f.endsWith(".patch"))
+      .sort();
+    for (const p of patches) {
+      const patchAbs = path.join(patchDir, p);
+      const check = spawnSync("git", ["apply", "--check", patchAbs], {
+        cwd: appDir,
+        stdio: "ignore",
+      });
+      if (check.status === 0) {
+        spawnSync("git", ["apply", patchAbs], { cwd: appDir, stdio: "ignore" });
+      }
+    }
+  }
+}
+
+/**
+ * 净室化清洗派生项目的 Admin 前端：
+ * 1. 物理删除上游假图表组件 Home/{Index2.vue,echarts-data.ts,types.ts}；
+ * 2. 将 Home/Index.vue 替换为零假数据、零死引用（不引 ./types 与 ./echarts-data）的真实会话门户工作台；
+ * 3. 为 LoginForm.vue 注入零脆弱 E2E 钩子 data-testid="login-username|login-password|login-submit" 并剥离「萌新必读」外包广告；
+ * 4. 守护 routerHelper.ts 的动态视图 glob (../views/**\/*.{vue,tsx}) 并支持全屏 /cockpit 顶层大屏路由。
+ */
+export function sanitizeAdminFrontendForDerivedProject(targetDir, config) {
+  const adminSrc = path.join(targetDir, "apps", "admin", "src");
+  if (!fs.existsSync(adminSrc)) return;
+
+  // 1. 物理移除脚手架 Mock 图表与假统计数据文件
+  const homeDir = path.join(adminSrc, "views", "Home");
+  for (const mockFile of ["Index2.vue", "echarts-data.ts", "types.ts"]) {
+    const absMock = path.join(homeDir, mockFile);
+    if (fs.existsSync(absMock)) {
+      fs.rmSync(absMock, { force: true });
+    }
+  }
+
+  // 2. 生成零假数据、100% 编译安全的门户首页 Home/Index.vue
+  if (fs.existsSync(homeDir)) {
+    const cleanHomeVue = `<template>
+  <div class="portal-workbench" data-testid="portal-home">
+    <el-card shadow="never" class="mb-16px">
+      <div class="flex items-center justify-between flex-wrap gap-12px">
+        <div class="flex items-center gap-14px">
+          <el-avatar :size="52" :src="avatar || undefined">
+            {{ displayName.slice(0, 1) }}
+          </el-avatar>
+          <div>
+            <div class="text-18px font-600">{{ projectTitle }}</div>
+            <div class="text-13px text-gray-500 mt-4px">
+              当前操作员：{{ displayName }} ｜ 角色数：{{ roleCount }} ｜ 已授权导航模块：{{ visibleModuleCount }}
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-8px">
+          <el-button type="primary" @click="goFirstBusinessRoute">进入中台</el-button>
+        </div>
+      </div>
+    </el-card>
+
+    <el-row :gutter="16">
+      <el-col
+        v-for="item in authorizedEntries"
+        :key="item.path"
+        :xs="24"
+        :sm="12"
+        :md="8"
+        :lg="6"
+        class="mb-16px"
+      >
+        <el-card shadow="hover" class="cursor-pointer h-full" @click="router.push(item.path)">
+          <div class="text-15px font-600">{{ item.title }}</div>
+          <div class="text-12px text-gray-500 mt-6px">{{ item.path }}</div>
+        </el-card>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+
+<script lang="ts" setup>
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/store/modules/user'
+import { usePermissionStore } from '@/store/modules/permission'
+
+defineOptions({ name: 'HomeIndex' })
+
+const projectTitle = ${JSON.stringify(config.projectTitle)}
+const router = useRouter()
+const userStore = useUserStore()
+const permissionStore = usePermissionStore()
+
+const avatar = computed(() => userStore.getUser?.avatar || '')
+const displayName = computed(() => userStore.getUser?.nickname || '系统管理员')
+const roleCount = computed(() => (userStore.getRoles || []).length)
+
+const authorizedEntries = computed(() => {
+  const routes = permissionStore.getRouters || []
+  const list: Array<{ title: string; path: string }> = []
+  for (const r of routes as any[]) {
+    if (!r || r.meta?.hidden || !r.path || r.path === '/' || r.path === '/login') continue
+    const title = String(r.meta?.title || r.children?.[0]?.meta?.title || '').trim()
+    if (!title) continue
+    list.push({ title, path: String(r.path) })
+  }
+  return list.slice(0, 12)
+})
+
+const visibleModuleCount = computed(() => authorizedEntries.value.length)
+
+const goFirstBusinessRoute = () => {
+  const target = authorizedEntries.value[0]?.path || '/user/profile'
+  router.push(target)
+}
+</script>
+`;
+    fs.writeFileSync(path.join(homeDir, "Index.vue"), cleanHomeVue, "utf8");
+  }
+
+  // 3. LoginForm.vue 注入 data-testid 并物理剥离「萌新必读」外包广告块
+  const loginFormPath = path.join(adminSrc, "views", "Login", "components", "LoginForm.vue");
+  if (fs.existsSync(loginFormPath)) {
+    let lf = fs.readFileSync(loginFormPath, "utf8");
+    if (!lf.includes('data-testid="login-username"')) {
+      lf = lf.replace(
+        /(v-model="loginData\.loginForm\.username")/,
+        'data-testid="login-username"\n            $1'
+      );
+    }
+    if (!lf.includes('data-testid="login-password"')) {
+      lf = lf.replace(
+        /(v-model="loginData\.loginForm\.password")/,
+        'data-testid="login-password"\n            $1'
+      );
+    }
+    if (!lf.includes('data-testid="login-submit"')) {
+      lf = lf.replace(
+        /(<el-button\s+:loading="loginLoading"\s+class="w-full"\s+type="primary")/,
+        '$1 data-testid="login-submit"'
+      );
+    }
+    // 移除萌新必读分割线与紧随其后的教程外链列
+    lf = lf.replace(
+      /\s*<el-divider[^>]*>\s*萌新必读\s*<\/el-divider>\s*<el-col[\s\S]*?<\/el-col>/m,
+      ""
+    );
+    fs.writeFileSync(loginFormPath, lf, "utf8");
+  }
+
+  // 4. routerHelper.ts 守护动态视图 glob 并支持顶层 /cockpit 全屏大屏路由（免除侧边栏包裹）
+  const routerHelperPath = path.join(adminSrc, "utils", "routerHelper.ts");
+  if (fs.existsSync(routerHelperPath)) {
+    let rh = fs.readFileSync(routerHelperPath, "utf8");
+    if (!rh.includes("import.meta.glob('../views/**/*.{vue,tsx}')")) {
+      rh = rh.replace(
+        /const modules = import\.meta\.glob\([^)]+\)/,
+        "const modules = import.meta.glob('../views/**/*.{vue,tsx}')"
+      );
+    }
+    if (!rh.includes("route.path === '/cockpit'")) {
+      const targetBlock = "    //处理顶级非目录路由\n    if (!route.children && Number(route.parentId) === 0 && route.component) {";
+      const replacementBlock = `    // 顶层全屏驾驶舱路由（不套 Layout 侧边栏与顶栏）
+    if (!route.children && Number(route.parentId) === 0 && route.component && (route.path === '/cockpit' || route.meta?.fullScreen)) {
+      const idx = modulesRoutesKeys.findIndex((ev) => ev.includes(route.component))
+      if (idx >= 0) {
+        data.component = modules[modulesRoutesKeys[idx]]
+      }
+    } else if (!route.children && Number(route.parentId) === 0 && route.component) {`;
+      if (rh.includes(targetBlock)) {
+        rh = rh.replace(targetBlock, replacementBlock);
+      }
+    }
+    fs.writeFileSync(routerHelperPath, rh, "utf8");
+  }
+}
+
 function updateConfigFiles(targetDir, config) {
-  // 1. package.json 根目录
+  const { snakeSlug } = deriveSlugForms(config.projectName);
+  const hasRenamedServerDir = fs.existsSync(path.join(targetDir, "apps", "backend", "server"));
+
+  // 0. 写入 .env.ports 零冲突 6 端口矩阵契约
+  const envPortsContent = [
+    `# Generated by ProjectReactor — Zero-Conflict 6-Port Matrix`,
+    `PROJECT_SLUG=${config.projectName}`,
+    `PROJECT_SNAKE=${snakeSlug}`,
+    `BASE_PATH=${config.basePath}`,
+    `GATEWAY_PORT=${config.gatewayPort}`,
+    `BACKEND_PORT=${config.port}`,
+    `ADMIN_PORT=${config.adminPort}`,
+    `MINIAPP_PORT=${config.miniappPort}`,
+    `DB_PORT=${config.dbPort}`,
+    `REDIS_PORT=${config.redisPort}`,
+    "",
+  ].join("\n");
+  fs.writeFileSync(path.join(targetDir, ".env.ports"), envPortsContent, "utf8");
+
+  // 1. package.json 根目录（同步 -pl server 构建与单测入口）
   const rootPkgPath = path.join(targetDir, "package.json");
   if (fs.existsSync(rootPkgPath)) {
     try {
       const pkg = JSON.parse(fs.readFileSync(rootPkgPath, "utf8"));
       pkg.name = config.projectName;
+      if (hasRenamedServerDir && pkg.scripts) {
+        const escapedServerName = `${config.projectName}-server`.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        for (const key of ["build:backend", "backend:run", "test:backend"]) {
+          if (typeof pkg.scripts[key] === "string") {
+            pkg.scripts[key] = pkg.scripts[key]
+              .replace(new RegExp(`apps/backend/${escapedServerName}`, "g"), "apps/backend/server")
+              .replace(/apps\/backend\/yudao-server/g, "apps/backend/server")
+              .replace(new RegExp(`-pl\\s+${escapedServerName}`, "g"), "-pl server")
+              .replace(/-pl\s+yudao-server/g, "-pl server");
+          }
+        }
+      }
       fs.writeFileSync(rootPkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
+    } catch {}
+  }
+
+  // 1.5 锁步对齐 lite-pg / lite-redis / lite-up / compat-manifest.json 端口与用户声明
+  const litePgPath = path.join(targetDir, "deploy", "lite", "runtime", "lite-pg.mjs");
+  if (fs.existsSync(litePgPath)) {
+    let pgSrc = fs.readFileSync(litePgPath, "utf8");
+    pgSrc = pgSrc
+      .replace(/port:\s*\d+,/, `port: ${config.dbPort},`)
+      .replace(/user:\s*"[^"]+",/, `user: "${snakeSlug}",`)
+      .replace(/password:\s*"[^"]+",/, `password: "${snakeSlug}",`);
+    fs.writeFileSync(litePgPath, pgSrc, "utf8");
+  }
+
+  const liteRedisPath = path.join(targetDir, "deploy", "lite", "runtime", "lite-redis.mjs");
+  if (fs.existsSync(liteRedisPath)) {
+    let redisSrc = fs.readFileSync(liteRedisPath, "utf8");
+    redisSrc = redisSrc.replace(/port:\s*\d+,/, `port: ${config.redisPort},`);
+    fs.writeFileSync(liteRedisPath, redisSrc, "utf8");
+  }
+
+  const liteUpPath = path.join(targetDir, "scripts", "lite-up.mjs");
+  if (fs.existsSync(liteUpPath)) {
+    let liteUpSrc = fs.readFileSync(liteUpPath, "utf8");
+    liteUpSrc = liteUpSrc.replace(
+      /(serverPort:\s*Number\([^\n]*\|\|\s*)\d+(\s*\))/,
+      `$1${config.port}$2`
+    );
+    if (hasRenamedServerDir) {
+      const escapedServerName = `${config.projectName}-server`.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      liteUpSrc = liteUpSrc
+        .replace(new RegExp(`-pl\\s+${escapedServerName}`, "g"), "-pl server")
+        .replace(/-pl\s+yudao-server/g, "-pl server");
+    }
+    fs.writeFileSync(liteUpPath, liteUpSrc, "utf8");
+  }
+
+  const compatPath = path.join(targetDir, "compat-manifest.json");
+  if (fs.existsSync(compatPath)) {
+    try {
+      const compat = JSON.parse(fs.readFileSync(compatPath, "utf8"));
+      if (compat.runtime?.lite) {
+        if (compat.runtime.lite.postgres) {
+          compat.runtime.lite.postgres.port = config.dbPort;
+          compat.runtime.lite.postgres.user = snakeSlug;
+        }
+        if (compat.runtime.lite.redis) {
+          compat.runtime.lite.redis.port = config.redisPort;
+        }
+        if (compat.runtime.lite.server) {
+          compat.runtime.lite.server.port = config.port;
+        }
+      }
+      if (compat.artifacts && hasRenamedServerDir) {
+        compat.artifacts.backendJar = `apps/backend/server/target/${config.projectName}-server.jar`;
+      }
+      fs.writeFileSync(compatPath, JSON.stringify(compat, null, 2) + "\n", "utf8");
     } catch {}
   }
 
@@ -504,7 +820,7 @@ function updateConfigFiles(targetDir, config) {
     } catch {}
   }
 
-  // 3. apps/admin/.env.* 环境变量标题与四端 BASE_PATH
+  // 3. apps/admin/.env.* 环境变量标题、端口与四端 BASE_PATH
   const adminDir = path.join(targetDir, "apps", "admin");
   if (fs.existsSync(adminDir)) {
     const envFiles = fs.readdirSync(adminDir).filter((f) => f.startsWith(".env"));
@@ -513,6 +829,7 @@ function updateConfigFiles(targetDir, config) {
       try {
         let envContent = fs.readFileSync(envPath, "utf8");
         envContent = envContent.replace(/VITE_APP_TITLE=.*$/m, `VITE_APP_TITLE=${config.projectTitle}`);
+        envContent = envContent.replace(/VITE_PORT=.*$/m, `VITE_PORT=${config.adminPort}`);
         fs.writeFileSync(envPath, envContent, "utf8");
       } catch {}
     }
@@ -848,6 +1165,11 @@ function renderBlueprintAndGateway(targetDir, config) {
     if (fs.existsSync(nginxDir)) fs.rmSync(nginxDir, { recursive: true, force: true });
     spawnSync(process.execPath, [gwScript], {
       cwd: targetDir,
+      env: {
+        ...process.env,
+        GATEWAY_PORT: String(config.gatewayPort),
+        BACKEND_PORT: String(config.port),
+      },
       stdio: config.quiet ? "ignore" : "inherit",
     });
   }
@@ -872,15 +1194,15 @@ export async function runProjectReactor(rawOptions) {
     process.exit(2);
   }
 
-  const projectName = (options.name || options.projectName || path.basename(targetDir))
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]/g, "");
+  const { projectName, snakeSlug } = deriveSlugForms(
+    options.name || options.projectName || path.basename(targetDir)
+  );
   const projectTitle = options.title || options.projectTitle || projectName;
   // Java 包名不能含连字符，故默认值先做标识符化处理（`my-store` → `com.my_store.server`）
   const packageName =
     options.packageName ||
     options.packagePrefix ||
-    `com.${projectName.replace(/[^a-zA-Z0-9_]/g, "_")}.server`;
+    `com.${snakeSlug}.server`;
   // groupId 必须与 Java 包同源：直接从项目名硬拼会得到 `com.demo-mall` 这种
   // 既非法又与包名不一致的值（派生金路径验证 harness/hatch-smoke.mjs 会断言这一点）
   const groupId = options.groupId || packageName.replace(/\.server$/, "");
@@ -894,8 +1216,12 @@ export async function runProjectReactor(rawOptions) {
     packageName,
     artifactId,
     basePath,
-    port: options.port || 48080,
+    port: options.port || options.backendPort || 48080,
     gatewayPort: options.gatewayPort || 48120,
+    adminPort: options.adminPort || 5173,
+    miniappPort: options.miniappPort || 5174,
+    dbPort: options.dbPort || 55432,
+    redisPort: options.redisPort || 63799,
     quiet: Boolean(options.quiet),
   };
 
@@ -903,11 +1229,14 @@ export async function runProjectReactor(rawOptions) {
     console.log("================================================================");
     console.log("⚡ [ProjectReactor] 启动全自动化项目重塑与品牌中立化清洗...");
     console.log(`   目标目录:   ${targetDir}`);
-    console.log(`   工程名称:   ${projectName}`);
+    console.log(`   工程名称:   ${projectName} (SQL/Java安全标识: ${snakeSlug})`);
     console.log(`   系统标题:   ${projectTitle}`);
     console.log(`   Maven 组织: ${groupId}`);
     console.log(`   Java 包名:  ${packageName}`);
-    console.log(`   统一路径:   ${basePath}/{2c,admin,admin-api,app-api,v3/api-docs}`);
+    console.log(`   统一路径:   ${basePath}/{cockpit,admin,2c,admin-api,app-api,v3/api-docs}`);
+    console.log(
+      `   端口矩阵:   GW :${config.gatewayPort} | BE :${config.port} | Admin :${config.adminPort} | H5 :${config.miniappPort} | PG :${config.dbPort} | Redis :${config.redisPort}`
+    );
     console.log("================================================================");
   }
 
@@ -915,35 +1244,40 @@ export async function runProjectReactor(rawOptions) {
     return { targetDir, ...config, dryRun: true };
   }
 
-  // 0. 先基于 blueprint.template.json 渲染四端配置模板 (此时 yudao-server 目录尚未改名)
+  // 0. 派生脱钩前先幂等烘焙 deploy/patches 补丁（如 ApiEncrypt 开箱即用），再渲染四端模板
+  bakeSubmodulePatchesIntoTarget(targetDir);
   renderBlueprintAndGateway(targetDir, config);
 
   // 1. 深度修剪旧竞品/历史架构归档、上游教程 Markdown、宣传二维码图片与空壳 *-ui 目录
-  if (!config.quiet) console.log("🧹 [1/6] 清理历史框架归档、上游教程与推广产物...");
+  if (!config.quiet) console.log("🧹 [1/7] 清理历史框架归档、上游教程与推广产物...");
   pruneHistoricalArchives(targetDir);
   purgeUpstreamPromoAndTutorialBloat(targetDir);
 
   // 2. 规范化 apps/ 子目录名称
-  if (!config.quiet) console.log("📂 [2/6] 规范化子包目录结构 (admin, miniapp, app, server)...");
+  if (!config.quiet) console.log("📂 [2/7] 规范化子包目录结构 (admin, miniapp, app, server)...");
   normalizeAppDirectories(targetDir);
 
-  // 3. 物理重命名 Java 包路径 (cn/iocoder/yudao -> packageName)
-  if (!config.quiet) console.log(`📦 [3/6] 重构 Java 源码包路径 (cn.iocoder.yudao -> ${packageName})...`);
+  // 3. 净室化清洗管理端前端（删除 Home/Index2.vue 等 Mock 图表、注入 Login data-testid、挂载 /cockpit 路由）
+  if (!config.quiet) console.log("🧼 [3/7] 净室化清洗管理端前端 (清除假图表 / 注入 E2E testid / 守护动态路由)...");
+  sanitizeAdminFrontendForDerivedProject(targetDir, config);
+
+  // 4. 物理重命名 Java 包路径 (cn/iocoder/yudao -> packageName)
+  if (!config.quiet) console.log(`📦 [4/7] 重构 Java 源码包路径 (cn.iocoder.yudao -> ${packageName})...`);
   renameJavaPackagePaths(targetDir, "cn.iocoder.yudao", packageName);
 
-  // 4. 重命名包含 yudao 关键字的文件与目录
-  if (!config.quiet) console.log("🏷️  [4/6] 重命名含旧标识的文件与类名...");
+  // 5. 重命名包含 yudao 关键字的文件与目录（连字符安全 PascalCase / snake_case）
+  if (!config.quiet) console.log("🏷️  [5/7] 重命名含旧标识的文件与类名...");
   renameFilesWithKeyword(targetDir, projectName, packageName);
   purgeUpstreamPromoAndTutorialBloat(targetDir);
 
-  // 5. 深度替换文本内容与配置文件，并重新生成网关配置
-  if (!config.quiet) console.log("📝 [5/6] 批量替换开源品牌词与配置契约...");
+  // 6. 深度替换文本内容与配置文件（含 .env.ports 与 compat-manifest 锁步对齐），并重新生成网关配置
+  if (!config.quiet) console.log("📝 [6/7] 批量替换开源品牌词、连字符安全 SQL 标识符与端口契约...");
   replaceContent(targetDir, config);
   updateConfigFiles(targetDir, config);
   renderBlueprintAndGateway(targetDir, config);
 
-  // 6. 生成零上游残留的专属多端 README.md / CLAUDE.md / HARNESS.md
-  if (!config.quiet) console.log("📘 [6/6] 生成项目专属无残留标准文档集 (README / CLAUDE / HARNESS)...");
+  // 7. 生成零上游残留的专属多端 README.md / CLAUDE.md / HARNESS.md
+  if (!config.quiet) console.log("📘 [7/7] 生成项目专属无残留标准文档集 (README / CLAUDE / HARNESS)...");
   generateCleanProjectDocs(targetDir, config);
 
   // 6. 沙箱软链 lite 运行时依赖（零安装启动 embedded-postgres 与 pg 驱动，且不触发根 node_modules 泄漏门禁）

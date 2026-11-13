@@ -14,6 +14,8 @@
 | 项目宪法 | `.specify/memory/constitution.md` | Spec-Kit 门禁（Gate 1~6） |
 | 规格包模板（10 份） | `.specify/templates/` | `speckit build` 用它展开 16 份资产 |
 | 多智能体工作流配方 | `.agents/workflows/*.workflow.json` | 由 `workflow-engine.cjs` 驱动 |
+| 蜂群协同与零返工宪法 | `SWARM.md` | 多团队单写者矩阵、Doris 307 双跳范式与 23 门禁手册 |
+| 母本回灌基准审计报告 | `docs/00_meta_standards/blueprint-backport-audit.md` | `tele-pulse` Stage B0–B5 全生命周期差距回灌审计 |
 | LLM 导航入口 | `wiki/index.md`、`llms.txt` | 进场必读，避免 Token 浪费 |
 
 ## 本阶段可执行的入口

@@ -118,7 +118,17 @@
     "cmmi:08": "node scripts/cmmi-08-sre.cjs",
     "cmmi:09": "node scripts/cmmi-09-operations.cjs",
     "pmo": "node scripts/cmmi-01-management.cjs pmo",
-    "gateway:gen": "node scripts/generate-gateway-config.mjs"
+    "gateway:gen": "node scripts/generate-gateway-config.mjs",
+    "gates:23": "node scripts/audit-23-gates.mjs",
+    "gates:23:static": "node scripts/audit-23-gates.mjs --static-only",
+    "verify:b0": "bash scripts/verify-stage-b0.sh",
+    "verify:b1": "bash scripts/verify-stage-b1.sh",
+    "verify:b2": "bash scripts/verify-stage-b2.sh",
+    "verify:b3": "bash scripts/verify-stage-b3.sh",
+    "verify:b4": "bash scripts/verify-stage-b4.sh",
+    "verify:b5": "bash scripts/verify-stage-b5-cwall.sh",
+    "gen:three-role": "node scripts/scaffold-three-role-audit.mjs",
+    "domain:prune": "node scripts/domain-prune.mjs"
   },
   "packageManager": "pnpm@9.15.4"
 }

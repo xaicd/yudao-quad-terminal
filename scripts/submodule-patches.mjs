@@ -11,6 +11,7 @@
  * 退出码：0 通过 / 1 状态不合法 / 2 用法错误
  */
 
+import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -52,6 +53,11 @@ function collect() {
 }
 
 function cmdStatus(json) {
+  if (!fs.existsSync(path.join(ROOT, ".gitmodules"))) {
+    if (json) console.log(JSON.stringify({ ok: true, flattenedDerivedRepo: true, sets: [] }, null, 2));
+    else console.log("✅ 状态合法（派生扁平化仓库无子模块，补丁已在孵化阶段固化）");
+    return EXIT_OK;
+  }
   const sets = collect();
   let ok = true;
   const rows = sets.map((s) => {
@@ -83,6 +89,10 @@ function cmdStatus(json) {
 }
 
 function cmdApply({ dryRun, quiet }) {
+  if (!fs.existsSync(path.join(ROOT, ".gitmodules"))) {
+    if (!quiet) console.log("  ✅ 派生扁平化仓库无子模块，无需注入补丁");
+    return EXIT_OK;
+  }
   const sets = collect();
   let failed = false;
 

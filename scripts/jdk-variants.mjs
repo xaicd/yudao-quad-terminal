@@ -238,6 +238,14 @@ function cmdStatus(json) {
 /* ----------------------------------- check --------------------------------- */
 
 function cmdCheck(json) {
+  if (!fs.existsSync(path.join(ROOT, ".gitmodules"))) {
+    if (json) {
+      console.log(JSON.stringify({ passed: true, flattenedDerivedRepo: true, findings: [] }, null, 2));
+    } else {
+      console.log("✅ 派生扁平化仓库（无 .gitmodules）：跳过母本上游子模块 JDK 变体 ref 追溯");
+    }
+    return EXIT_OK;
+  }
   const findings = [];
   const refs = readRefs();
   const resolved = resolveVariants(refs);

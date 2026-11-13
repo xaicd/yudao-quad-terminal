@@ -1,29 +1,49 @@
 # ==============================================================================
-# [yudao] 工业级标准 Caddy 网关配置 (自动生成，严禁手动篡改)
+# [yudao] 工业级标准四平面 Caddy 网关配置 (自动生成，严禁手动篡改)
 # 单一入口标准: http://127.0.0.1:48120/yudao/
+# 覆盖四平面: /cockpit/ | /admin/ | /2c/ | /admin-api/ (+ /app-api/ & /v3/api-docs)
 # ==============================================================================
+{
+    admin off
+}
+
 :48120 {
-    # 根入口智能引导至 C 端前台商城
+    # 根入口智能引导
     redir / /yudao/2c/ 302
     redir /yudao /yudao/2c/ 302
     redir /yudao/ /yudao/2c/ 302
+    redir /yudao/admin /yudao/admin/ 308
+    redir /yudao/cockpit /yudao/cockpit/ 308
     redir /yudao/2c /yudao/2c/ 308
 
-    # 1. C端前台商城 H5 静态资源 (零代理层极速挂载)
-    handle_path /yudao/2c/* {
-        root * /Users/mac/workspace/xaicd/yudao-quad-terminal/apps/miniapp/dist/build/h5
+    # 1. 领导驾驶舱 / 实时监控大屏平面 (/cockpit/)
+    handle_path /yudao/cockpit/* {
+        root * {$CADDY_HOST_ROOT:/Users/mac/workspace/xaicd/yudao-quad-terminal}/apps/admin/dist
         file_server
         try_files {path} /index.html
     }
 
-    # 2. B端管理中台 Web 静态资源
+    # 2. B端运营管理中台 Web 静态资源 (/admin/)
     handle_path /yudao/admin/* {
-        root * /Users/mac/workspace/xaicd/yudao-quad-terminal/apps/admin/dist
+        root * {$CADDY_HOST_ROOT:/Users/mac/workspace/xaicd/yudao-quad-terminal}/apps/admin/dist
         file_server
         try_files {path} /index.html
     }
 
-    # 3. 管理端 API 穿透 (Spring Boot 48080)
+    # 3. C端移动商城 / 掌上运维 H5 静态资源 (/2c/)
+    handle_path /yudao/2c/* {
+        root * {$CADDY_HOST_ROOT:/Users/mac/workspace/xaicd/yudao-quad-terminal}/apps/miniapp/dist/build/h5
+        file_server
+        try_files {path} /index.html
+    }
+
+    # 3.5 验收证据只读归档平面 (/evidence/)
+    handle_path /yudao/evidence/* {
+        root * {$CADDY_HOST_ROOT:/Users/mac/workspace/xaicd/yudao-quad-terminal}/docs/evidence
+        file_server
+    }
+
+    # 4. 管理端 API 穿透 (Spring Boot 127.0.0.1:48080，双前缀同源支持)
     handle /yudao/admin-api/* {
         uri strip_prefix /yudao
         reverse_proxy 127.0.0.1:48080 {
@@ -31,13 +51,87 @@
             header_up tenant-id 1
         }
     }
+    handle /admin-api/* {
+        reverse_proxy 127.0.0.1:48080 {
+            header_up Host {host}
+            header_up tenant-id 1
+        }
+    }
 
-    # 4. 移动端/商城 API 穿透 (Spring Boot 48080)
+    # 5. 移动端 API 穿透 (/app-api/*)
     handle /yudao/app-api/* {
         uri strip_prefix /yudao
         reverse_proxy 127.0.0.1:48080 {
             header_up Host {host}
             header_up tenant-id 1
+        }
+    }
+    handle /app-api/* {
+        reverse_proxy 127.0.0.1:48080 {
+            header_up Host {host}
+            header_up tenant-id 1
+        }
+    }
+
+    # 6. 开放平台 API 穿透 (/open-api/*)
+    handle /yudao/open-api/* {
+        uri strip_prefix /yudao
+        reverse_proxy 127.0.0.1:48080 {
+            header_up Host {host}
+            header_up tenant-id 1
+        }
+    }
+    handle /open-api/* {
+        reverse_proxy 127.0.0.1:48080 {
+            header_up Host {host}
+            header_up tenant-id 1
+        }
+    }
+
+    # 7. OpenAPI 3.0 契约文档平面穿透 (/v3/api-docs, /doc.html, /swagger-ui/*)
+    handle /yudao/v3/api-docs* {
+        uri strip_prefix /yudao
+        reverse_proxy 127.0.0.1:48080 {
+            header_up Host {host}
+        }
+    }
+    handle /v3/api-docs* {
+        reverse_proxy 127.0.0.1:48080 {
+            header_up Host {host}
+        }
+    }
+    handle /yudao/doc.html* {
+        uri strip_prefix /yudao
+        reverse_proxy 127.0.0.1:48080 {
+            header_up Host {host}
+        }
+    }
+    handle /doc.html* {
+        reverse_proxy 127.0.0.1:48080 {
+            header_up Host {host}
+        }
+    }
+    handle /yudao/swagger-ui/* {
+        uri strip_prefix /yudao
+        reverse_proxy 127.0.0.1:48080 {
+            header_up Host {host}
+        }
+    }
+
+    # 8. WebSocket 长连接通道 (/infra/ws/*)
+    handle /yudao/infra/ws/* {
+        uri strip_prefix /yudao
+        reverse_proxy 127.0.0.1:48080 {
+            header_up Host {host}
+            header_up Upgrade {>Upgrade}
+            header_up Connection {>Connection}
+        }
+    }
+    handle /infra/ws/* {
+        reverse_proxy 127.0.0.1:48080 {
+            header_up Host {host}
+            header_up Upgrade {>Upgrade}
+            header_up Connection {>Connection}
         }
     }
 }

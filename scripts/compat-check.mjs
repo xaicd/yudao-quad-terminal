@@ -174,10 +174,19 @@ function checkArtifactsAndSubmodules(manifest) {
   }
   const backendBuild = pkg.scripts?.[manifest.artifacts.producers.backendJar] || "";
   const jarRel = manifest.artifacts.backendJar.replace("apps/backend/", "");
-  if (backendBuild && !backendBuild.includes("yudao-server")) {
-    fail(`artifacts.backendJar: build:backend 未产出 yudao-server（声明 ${jarRel}）`);
+  if (
+    backendBuild &&
+    !backendBuild.includes("yudao-server") &&
+    !backendBuild.includes("-pl server")
+  ) {
+    fail(`artifacts.backendJar: build:backend 未产出 yudao-server 或 server（声明 ${jarRel}）`);
   }
   ok("产物契约：jar 与 dist 的生产脚本一致");
+
+  if (!exists(".gitmodules")) {
+    ok("子模块契约：派生项目已脱钩扁平化（无 .gitmodules），跳过上游 gitlink 校验");
+    return;
+  }
 
   for (const sub of manifest.submodules) {
     const url = git(["config", "-f", ".gitmodules", "--get", `submodule.${sub.path}.url`], ROOT);

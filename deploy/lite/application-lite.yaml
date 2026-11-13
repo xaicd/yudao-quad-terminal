@@ -15,7 +15,7 @@
 # ==============================================================================
 
 server:
-  port: 48080
+  port: ${LITE_SERVER_PORT:48080}
 
 --- #################### 数据库相关配置 ####################
 spring:
@@ -175,9 +175,9 @@ yudao:
       - /app-api/product/**
       - /app-api/system/**
   pay:
-    order-notify-url: http://127.0.0.1:48080/admin-api/pay/notify/order
-    refund-notify-url: http://127.0.0.1:48080/admin-api/pay/notify/refund
-    transfer-notify-url: http://127.0.0.1:48080/admin-api/pay/notify/transfer
+    order-notify-url: http://127.0.0.1:${server.port}/admin-api/pay/notify/order
+    refund-notify-url: http://127.0.0.1:${server.port}/admin-api/pay/notify/refund
+    transfer-notify-url: http://127.0.0.1:${server.port}/admin-api/pay/notify/transfer
   access-log:
     enable: false
   demo: false
