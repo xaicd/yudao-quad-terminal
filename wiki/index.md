@@ -12,7 +12,7 @@
 | 工作流配方数 | **1** | `.agents/workflows/*.workflow.json` |
 | 后端业务模块数 | **19** | `apps/backend/yudao-module-*` |
 | 官方 PG 脚本建表数 | **49** | `apps/backend/sql/postgresql/ruoyi-vue-pro.sql` |
-| 活跃/归档规格数 | **4** | `docs/specs/**/brief.json` |
+| 活跃/归档规格数 | **6** | `docs/specs/**/brief.json` |
 
 > ⚠️ 本页其他段落若出现与上表冲突的规模数字（如"324 份契约""263 张表""36 大技能"），均为**来源基座的历史口径**，请以上表为准。
 

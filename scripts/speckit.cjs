@@ -31,8 +31,9 @@ const {
   listAllSpecs,
 } = require("./lib/spec-path-resolver.cjs")
 
-// 参数解析助手
-const args = process.argv.slice(2)
+// 参数解析助手（兼容 pnpm run speckit -- <subcmd> 透传的前导 "--"）
+const rawArgv = process.argv.slice(2)
+const args = rawArgv[0] === "--" ? rawArgv.slice(1) : rawArgv
 let command = args[0] && !args[0].startsWith("-") ? args[0] : ""
 
 // 兼容智能推断：如果未给子命令但给了参数
@@ -852,7 +853,7 @@ switch (command) {
     break
   case "pmo": {
     const { runPmoRadar } = require("./lib/speckit-cmmi-docs.cjs")
-    process.exit(runPmoRadar(process.argv.slice(3)))
+    process.exit(runPmoRadar(args.slice(1)))
     break
   }
   case "00":
@@ -867,7 +868,7 @@ switch (command) {
   case "09": {
     const { CMMI_SPEC_STAGES } = require("./lib/speckit-cmmi-docs.cjs")
     const stage = CMMI_SPEC_STAGES[command]
-    const res = spawnSync(process.execPath, [path.join(ROOT, stage.script), ...process.argv.slice(3)], {
+    const res = spawnSync(process.execPath, [path.join(ROOT, stage.script), ...args.slice(1)], {
       cwd: ROOT,
       stdio: "inherit",
       env: process.env,
@@ -877,10 +878,10 @@ switch (command) {
   }
   case "cmmi": {
     const { CMMI_SPEC_STAGES, printCmmiSpecMatrix } = require("./lib/speckit-cmmi-docs.cjs")
-    const sub = process.argv[3] || "matrix"
+    const sub = args[1] || "matrix"
     if (/^0[0-9]$/.test(sub)) {
       const stage = CMMI_SPEC_STAGES[sub]
-      const res = spawnSync(process.execPath, [path.join(ROOT, stage.script), ...process.argv.slice(4)], {
+      const res = spawnSync(process.execPath, [path.join(ROOT, stage.script), ...args.slice(2)], {
         cwd: ROOT,
         stdio: "inherit",
         env: process.env,
@@ -892,7 +893,7 @@ switch (command) {
       process.exit(0)
     }
     const cmmiScript = path.join(__dirname, "cmmi-asset-scaffold.cjs")
-    const res = spawnSync(process.execPath, [cmmiScript, ...process.argv.slice(3)], {
+    const res = spawnSync(process.execPath, [cmmiScript, ...args.slice(1)], {
       cwd: ROOT,
       stdio: "inherit",
       env: process.env,

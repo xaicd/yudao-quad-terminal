@@ -94,6 +94,8 @@ try {
     "llms.txt",
     ".env.ports",
     "start.sh",
+    "deploy/service.sh",
+    "scripts/service.sh",
     "playwright.config.mjs",
     "scripts/gate-check.mjs",
     "scripts/compat-check.mjs",

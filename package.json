@@ -95,6 +95,8 @@
     "harness:doctor": "node scripts/compat-check.cjs",
     "build:miniapp": "pnpm --filter shopro run build:h5",
     "preview:miniapp": "node scripts/serve-miniapp.cjs",
+    "service:install": "bash deploy/service.sh install",
+    "service:build": "bash deploy/service.sh build",
     "service:start": "bash scripts/service.sh start",
     "service:stop": "bash scripts/service.sh stop",
     "service:restart": "bash scripts/service.sh restart",

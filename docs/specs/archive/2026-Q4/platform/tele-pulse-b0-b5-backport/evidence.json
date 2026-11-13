@@ -1,0 +1,46 @@
+{
+  "feature": "tele-pulse-b0-b5-backport",
+  "domain": "platform",
+  "gates": {
+    "G0_DAR": {
+      "status": "passed",
+      "summary": "基于 docs/00_meta_standards/blueprint-backport-audit.md 完成 Stage B0~B5 十大差距对标与自研参数化回灌论证",
+      "evidence": ["research.md", "selection.md", "docs/00_meta_standards/blueprint-backport-audit.md"],
+      "verifiedAt": "2026-11-13T06:15:00.000Z"
+    },
+    "G1_FDA": {
+      "status": "passed",
+      "summary": "五层回灌架构、6端口 Caddy ({ admin off })、三员分立 Append-Only 审计与 8 动词 service.sh 契约闭合",
+      "evidence": ["plan.md", "design.md", "SWARM.md"],
+      "verifiedAt": "2026-11-13T06:15:00.000Z"
+    },
+    "G2_CoreSWE": {
+      "status": "passed",
+      "summary": "T1 (a6f8f8b)、T2 (2725f98)、T3 (5258602, 5a10a54) 与 T4 (deploy/service.sh + scripts/service.sh) 全部落盘并保持只读子模块零越界改动",
+      "evidence": ["tasks.md", "deploy/service.sh", "scripts/service.sh", "scripts/audit-23-gates.mjs"],
+      "verifiedAt": "2026-11-13T06:15:00.000Z"
+    },
+    "G3_FDSE": {
+      "status": "passed",
+      "summary": "真实嵌入式 PostgreSQL 18.4 防篡改触发器、4字菜单收敛、派生金路径冒烟与 8 动词 service.sh 单元测试全部通过",
+      "evidence": [
+        "scripts/tests/hatch-and-menu-standard.test.mjs",
+        "scripts/tests/tele-pulse-backport.test.mjs",
+        "scripts/tests/service-entrypoint.test.mjs"
+      ],
+      "verifiedAt": "2026-11-13T06:15:00.000Z"
+    },
+    "G4_DS": {
+      "status": "passed",
+      "summary": "16 份 Spec-Kit 标准工程资产齐备，IEEE 29148 / EARS 形式化需求与验收标准零占位符通过 specs-health 核验",
+      "evidence": ["brief.json", "spec.md", "requirements.md", "checklist.md"],
+      "verifiedAt": "2026-11-13T06:15:00.000Z"
+    },
+    "G5_PRE": {
+      "status": "passed",
+      "summary": "gate:fast、compat:check、patch:status、harness:hatch 全部通过，宿主机蓝图镜像同步就绪",
+      "evidence": ["runbook.json", "deployment.md", "deploy/cwall/start-cwall.sh"],
+      "verifiedAt": "2026-11-13T06:15:00.000Z"
+    }
+  }
+}

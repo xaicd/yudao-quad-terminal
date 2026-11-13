@@ -1,0 +1,42 @@
+{
+  "feature": "harness-mutual-audit",
+  "domain": "platform",
+  "gates": {
+    "G0_DAR": {
+      "status": "passed",
+      "summary": "完成家族多仓 Harness 基线横向对比与优劣势客观取舍评估",
+      "evidence": ["self-portrait.md", "research.md", "selection.md"],
+      "verifiedAt": "2026-11-13T06:15:00.000Z"
+    },
+    "G1_FDA": {
+      "status": "passed",
+      "summary": "L0~L7 八层验证体系与双支柱治理架构边界核验闭合",
+      "evidence": ["plan.md", "design.md", "HARNESS.md"],
+      "verifiedAt": "2026-11-13T06:15:00.000Z"
+    },
+    "G2_CoreSWE": {
+      "status": "passed",
+      "summary": "互审识别的生命周期编排、蓝图对齐与门禁守卫已在后续特性规格全部落地",
+      "evidence": ["tasks.md", "scripts/harness.cjs"],
+      "verifiedAt": "2026-11-13T06:15:00.000Z"
+    },
+    "G3_FDSE": {
+      "status": "passed",
+      "summary": "反向控制 negative-controls 与派生冒烟 hatch-smoke 实测全绿",
+      "evidence": ["scripts/harness/negative-controls.mjs", "scripts/harness/hatch-smoke.mjs"],
+      "verifiedAt": "2026-11-13T06:15:00.000Z"
+    },
+    "G4_DS": {
+      "status": "passed",
+      "summary": "16 份 Spec-Kit 标准资产与原始 self-portrait.md 齐全，specs-health 校验通过",
+      "evidence": ["brief.json", "spec.md", "requirements.md", "self-portrait.md"],
+      "verifiedAt": "2026-11-13T06:15:00.000Z"
+    },
+    "G5_PRE": {
+      "status": "passed",
+      "summary": "审计结论已固化入宪并完成 CMMI-09 防污染归档",
+      "evidence": ["runbook.json", "deployment.md"],
+      "verifiedAt": "2026-11-13T06:15:00.000Z"
+    }
+  }
+}

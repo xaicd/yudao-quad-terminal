@@ -109,6 +109,15 @@ function main() {
     process.exit(2);
   }
   if (all.length === 0) {
+    const isDerivedCleanSlate = !fs.existsSync(path.join(ROOT, ".gitmodules"));
+    if (isDerivedCleanSlate) {
+      if (json) {
+        console.log(JSON.stringify({ healthy: true, total: 0, unhealthyCount: 0, specs: [] }, null, 2));
+      } else {
+        console.log("✅ 派生工程尚未立项业务规格（0 份规格，健康基线就绪）");
+      }
+      process.exit(0);
+    }
     console.error("❌ docs/specs 下没有任何规格");
     process.exit(2);
   }

@@ -1,0 +1,14 @@
+{
+  "name": "yudao-blueprint-engine-parity",
+  "domain": "platform",
+  "title": "Yudao 四端蓝图底座与 CoolieBase 全能力对标升级：四端 BasePath 同源、无污染沙箱派生、极简蓝图一键交付与 6 阶段真库 Spec E2E 闭环",
+  "type": "enhancement",
+  "status": "ARCHIVED",
+  "stories": 5,
+  "acceptance": 7,
+  "invariants": 4,
+  "tasks": 6,
+  "updatedAt": "2026-11-10T02:41:22.724Z",
+  "archivedAt": "2026-11-13T06:15:09.200Z",
+  "archivedTo": "docs/specs/archive/2026-Q4/platform/yudao-blueprint-engine-parity"
+}

@@ -1,0 +1,135 @@
+{
+  "name": "harness-mutual-audit",
+  "domain": "platform",
+  "title": "跨底座 Harness 交付闭环十维双向互审与自画像基线沉淀",
+  "type": "enhancement",
+  "goal": "围绕治理入口、验证层级、子模块边界、凭据安全、反向控制与派生金路径等十个维度完成 yudao-quad-terminal 自画像勘察与跨家族双向互审，形成可复核的工程事实底座并为后续双支柱对齐提供依据。",
+  "roles": [
+    {
+      "role": "平台治理架构师 (墨斗 FDA)",
+      "can": "基于 self-portrait.md 与 10 维互审矩阵核对 yudao-quad-terminal 的 L0~L7 验证链路、独有优势 (compat-manifest/llms.txt/negative-controls) 与演进缺口"
+    },
+    {
+      "role": "质量门禁审计员 (百晓生 QA)",
+      "can": "对照互审结论复核 gate:fast、compat:check、harness:controls 与 harness:hatch 的真实拦截与自证能力"
+    }
+  ],
+  "stories": [
+    {
+      "priority": "P0",
+      "text": "作为平台架构师，我要求输出只陈述客观代码路径与实测数据的 self-portrait.md 自画像，覆盖入口文档、L0~L7 验证层、只读子模块补丁与 19 技能体系。"
+    },
+    {
+      "priority": "P0",
+      "text": "作为跨仓治理负责人，我要求对照姊妹仓基线完成『取长』与『会友』双向互审规格，识别门禁总闸、生命周期入口与规格归档闭环等可吸收项。"
+    },
+    {
+      "priority": "P1",
+      "text": "作为 PMO 管理员，我要求将该历史互审专题补齐完整 16 件套 Spec-Kit 过程资产并归档至 docs/specs/archive/，消除半成品文档噪音。"
+    }
+  ],
+  "constraints": [
+    "事实优先：所有审计结论必须绑定仓库内真实存在的脚本路径与门禁命令，严禁主观臆断。",
+    "零破坏归档：保留原始 self-portrait.md 勘察记录，同时满足 specs-health 16 份标准资产校验。"
+  ],
+  "acceptance": [
+    {
+      "check": "pnpm specs:health 校验 harness-mutual-audit 16 份资产齐全且零占位符残留"
+    },
+    {
+      "check": "pnpm compat:check && pnpm gate:fast 全部阻塞门禁退出码 0"
+    }
+  ],
+  "nonGoals": [
+    "不在本互审档案中直接改动上游业务子模块源码。",
+    "不跨仓复制异构技术栈专属的 ORM 或前端框架实现。"
+  ],
+  "architecture": "以 HARNESS.md、AGENTS.md、compat-manifest.json、llms.txt 与 wiki/index.md 五大核心入口为锚点，梳理 L0 兼容契约、L1 静态门禁、L2 脚本单测、L3 真 PG/Redis 验收、L4 构建产物、L5 全量门禁、L6 反向控制与 L7 派生金路径八层验证闭环，并与家族底座形成标准互认。",
+  "entities": [
+    {
+      "table": "compat-manifest.json",
+      "note": "机器可读下游兼容契约文件，锁定入口脚本、lite 运行时端口、子模块指针与构建产物路径"
+    }
+  ],
+  "invariants": [
+    {
+      "name": "门禁必咬人反向控制不变量",
+      "how": "通过 scripts/harness/negative-controls.mjs 对每道 blocking 门禁执行注入违规变红与字节级还原转绿验证"
+    },
+    {
+      "name": "规格包 16 资产齐备不变量",
+      "how": "由 scripts/specs-health.mjs 统一扫描活跃区与 archive 归档区，确保每份规格具备完整 16 件套且零占位符"
+    }
+  ],
+  "ui": [
+    "命令行审计报告输出：specs-health、compat:check、harness:controls 结构化终端与 JSON 报告"
+  ],
+  "ops": [
+    "互审核验命令：pnpm compat:check && pnpm harness:controls && pnpm harness:hatch"
+  ],
+  "risks": [
+    {
+      "risk": "早期手工建立的互审目录仅含散落 Markdown，未纳入 Spec-Kit 16 件套标准管理",
+      "mitigation": "补齐标准 brief.json 并通过 cmmi-02-requirements.cjs build 展开全套 16 份资产后归档至 docs/specs/archive/"
+    }
+  ],
+  "screens": [
+    {
+      "name": "Harness 自画像与互审面板 (docs/specs/archive/*/platform/harness-mutual-audit/)",
+      "wireframe": "项目身份 · 五大入口 · L0~L7 验证矩阵 · 五条红灯线 · 家族互认结论"
+    }
+  ],
+  "interactions": [
+    "通过 node scripts/specs-health.mjs --spec harness-mutual-audit 校验资产健康度"
+  ],
+  "states": [
+    "勘察完成：self-portrait.md 已记录完整事实路径。",
+    "资产齐备：16 份 Spec-Kit 标准文档已生成并核销。",
+    "已归档：移入 docs/specs/archive/ 供后续架构演进查阅。"
+  ],
+  "candidates": [
+    {
+      "name": "按 Spec-Kit 标准补齐 16 件套并执行 CMMI-09 归档",
+      "type": "自研",
+      "license": "MIT",
+      "risk": "无"
+    }
+  ],
+  "benchmarks": [
+    "cooliebase-all 与 yudao-quad-terminal 双支柱 (HARNESS.md + CMMI 00~09) 统一治理规范"
+  ],
+  "scan": [
+    "复核 self-portrait.md 全部 12 节事实记录，所有吸收项已在 yudao-blueprint-engine-parity 与 tele-pulse-b0-b5-backport 中落地闭环"
+  ],
+  "licenseConclusion": "内部工程治理审计文档，MIT 合规",
+  "tasks": [
+    {
+      "id": "T1",
+      "parent": "main",
+      "title": "完成 Yudao-Quad-Terminal 12 节客观事实自画像勘察 (self-portrait.md)",
+      "files": [
+        "HARNESS.md",
+        "compat-manifest.json"
+      ]
+    },
+    {
+      "id": "T2",
+      "parent": "T1",
+      "title": "制定十维双向互审对照基线与取长补短演进清单",
+      "files": [
+        "AGENTS.md",
+        "scripts/harness.cjs"
+      ]
+    },
+    {
+      "id": "T3",
+      "parent": "T2",
+      "title": "补齐 16 件套标准规格资产、核销验证证据并完成 CMMI-09 归档",
+      "files": [
+        "scripts/specs-health.mjs"
+      ]
+    }
+  ],
+  "dependencies": "T1 → T2 → T3",
+  "windowMinutes": 30
+}

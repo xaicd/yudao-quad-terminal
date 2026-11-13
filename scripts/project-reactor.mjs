@@ -834,6 +834,16 @@ function updateConfigFiles(targetDir, config) {
       } catch {}
     }
   }
+
+  // 4. 确保层B标准 8 动词服务入口与启动脚本具备可执行位 (0755)
+  for (const relExec of ["deploy/service.sh", "scripts/service.sh", "start.sh", "scripts/hatch.sh"]) {
+    const absExec = path.join(targetDir, relExec);
+    if (fs.existsSync(absExec)) {
+      try {
+        fs.chmodSync(absExec, 0o755);
+      } catch {}
+    }
+  }
 }
 
 /**

@@ -20,11 +20,22 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
+const localRequire = createRequire(import.meta.url);
+const { resolveSpecDir, listAllSpecs } = localRequire("../lib/spec-path-resolver.cjs");
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const GATE = path.join(ROOT, "scripts/gate-check.mjs");
+
+function pickSpecBriefRel() {
+  const dir = resolveSpecDir("module-trim-and-mcp") || listAllSpecs()[0]?.path;
+  if (!dir) return "docs/specs/platform/module-trim-and-mcp/brief.json";
+  return path.relative(ROOT, path.join(dir, "brief.json"));
+}
+const TARGET_SPEC_BRIEF = pickSpecBriefRel();
 
 const abs = (rel) => path.join(ROOT, rel);
 const write = (rel, text) => {
@@ -117,8 +128,8 @@ const CONTROLS = [
   {
     id: "specs-health",
     label: "规格资产缺失（借走 brief.json）",
-    files: ["docs/specs/platform/module-trim-and-mcp/brief.json", "docs/specs/platform/module-trim-and-mcp/brief.json.nc-bak"],
-    mutate: () => fs.renameSync(abs("docs/specs/platform/module-trim-and-mcp/brief.json"), abs("docs/specs/platform/module-trim-and-mcp/brief.json.nc-bak")),
+    files: [TARGET_SPEC_BRIEF, `${TARGET_SPEC_BRIEF}.nc-bak`],
+    mutate: () => fs.renameSync(abs(TARGET_SPEC_BRIEF), abs(`${TARGET_SPEC_BRIEF}.nc-bak`)),
   },
   {
     id: "typecheck",

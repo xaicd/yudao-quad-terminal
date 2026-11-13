@@ -1,0 +1,14 @@
+{
+  "name": "tele-pulse-b0-b5-backport",
+  "domain": "platform",
+  "title": "河北电信B0-B5全流程守卫、6端口Caddy、SWARM与23门禁反向回灌",
+  "type": "feature",
+  "status": "ARCHIVED",
+  "stories": 4,
+  "acceptance": 4,
+  "invariants": 4,
+  "tasks": 4,
+  "updatedAt": "2026-11-13T06:13:09.074Z",
+  "archivedAt": "2026-11-13T06:15:15.545Z",
+  "archivedTo": "docs/specs/archive/2026-Q4/platform/tele-pulse-b0-b5-backport"
+}

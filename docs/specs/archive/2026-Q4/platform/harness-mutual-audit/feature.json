@@ -1,0 +1,14 @@
+{
+  "name": "harness-mutual-audit",
+  "domain": "platform",
+  "title": "跨底座 Harness 交付闭环十维双向互审与自画像基线沉淀",
+  "type": "enhancement",
+  "status": "ARCHIVED",
+  "stories": 3,
+  "acceptance": 2,
+  "invariants": 2,
+  "tasks": 3,
+  "updatedAt": "2026-11-13T06:13:10.299Z",
+  "archivedAt": "2026-11-13T06:15:12.666Z",
+  "archivedTo": "docs/specs/archive/2026-Q4/platform/harness-mutual-audit"
+}

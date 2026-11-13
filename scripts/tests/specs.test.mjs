@@ -10,8 +10,16 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const requireRepo = createRequire(path.join(ROOT, "package.json"));
 const { resolveSpecDir, getTargetSpecDir, listAllSpecs } = requireRepo("./scripts/lib/spec-path-resolver.cjs");
 
-test("spec-resolver：能解析已存在的规格目录", () => {
-  const dir = resolveSpecDir("module-trim-and-mcp");
+const isMotherBlueprint = fs.existsSync(path.join(ROOT, ".gitmodules"));
+
+test("spec-resolver：能解析已存在的规格目录", (t) => {
+  const all = listAllSpecs();
+  if (!isMotherBlueprint && all.length === 0) {
+    t.skip("派生空仓尚未创建业务规格");
+    return;
+  }
+  const targetName = isMotherBlueprint ? "module-trim-and-mcp" : all[0].name;
+  const dir = resolveSpecDir(targetName);
   assert.ok(dir, "应能解析到该规格");
   assert.ok(fs.existsSync(path.join(dir, "brief.json")), "解析结果必须含 brief.json");
 });
@@ -25,9 +33,15 @@ test("spec-resolver：目标路径遵循 docs/specs/<domain>/<name>", () => {
   assert.ok(p.endsWith(path.join("docs", "specs", "platform", "demo")), p);
 });
 
-test("spec-resolver：能列出全部规格（≥3 份）", () => {
+test("spec-resolver：能列出全部规格（母本 ≥3 份）", (t) => {
   const all = listAllSpecs();
-  assert.ok(all.length >= 3, `仅找到 ${all.length} 份规格`);
+  if (!isMotherBlueprint && all.length === 0) {
+    t.skip("派生空仓尚未创建业务规格");
+    return;
+  }
+  if (isMotherBlueprint) {
+    assert.ok(all.length >= 3, `仅找到 ${all.length} 份规格`);
+  }
   for (const s of all) {
     assert.ok(s.name && s.domain, "每份规格都应有 name 与 domain");
     assert.ok(fs.existsSync(s.path), `${s.path} 不存在`);
