@@ -37,10 +37,33 @@ function parseEnv(filePath) {
   return out;
 }
 
+export function resolveMotherBlueprintDir(rootDir = ROOT, env = process.env) {
+  const candidates = [];
+  if (env.COOLIE_BLUEPRINTS_DIR) {
+    const bpRoot = env.COOLIE_BLUEPRINTS_DIR.trim();
+    if (bpRoot) {
+      candidates.push(path.join(bpRoot, "yudao-quad-terminal"));
+      candidates.push(bpRoot);
+    }
+  }
+  const coolieHome = (env.COOLIE_HOME || "/opt/coolie").trim() || "/opt/coolie";
+  candidates.push(path.join(coolieHome, "blueprints", "yudao-quad-terminal"));
+  candidates.push(path.resolve(rootDir, "..", "yudao-quad-terminal"));
+  candidates.push(path.resolve(rootDir, "..", "..", "xaicd", "yudao-quad-terminal"));
+
+  for (const cand of candidates) {
+    if (fs.existsSync(path.join(cand, "package.json")) && fs.existsSync(path.join(cand, "compat-manifest.json"))) {
+      return cand;
+    }
+  }
+  return null;
+}
+
 function resolveContext() {
   const envPorts = parseEnv(path.join(ROOT, ".env.ports"));
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
   const isMotherBlueprint = fs.existsSync(path.join(ROOT, ".gitmodules"));
+  const motherBlueprintDir = resolveMotherBlueprintDir(ROOT, process.env);
   const rawName = envPorts.PROJECT_SLUG || (pkg.name || "app").replace(/^@.*\//, "").replace(/-quad-terminal$/, "");
   const slug = rawName.toLowerCase().replace(/[^a-z0-9_-]/g, "") || "app";
   const snakeSlug = slug.replace(/-/g, "_");
@@ -52,6 +75,8 @@ function resolveContext() {
 
   return {
     isMotherBlueprint,
+    motherBlueprintDir,
+    pkg,
     slug,
     snakeSlug,
     gatewayPort,
@@ -214,16 +239,28 @@ async function main() {
     liteUpSrc.includes("--add-opens=java.base/sun.nio.ch=ALL-UNNAMED");
   push("G9", "JDK 17 DirectByteBuffer --add-opens 护栏", addOpensOk ? "PASS" : "FAIL", "java.nio & sun.nio.ch 已注入");
 
-  // G10: 零冲突端口矩阵与兼容契约自洽
+  // G10: 零冲突端口矩阵、compat-manifest 与母本 package.json 脚本契约对齐
   const compatRun = spawnSync(process.execPath, [path.join(ROOT, "scripts/compat-check.mjs")], {
     cwd: ROOT,
     encoding: "utf8",
   });
+  let motherParityOk = true;
+  let motherParityNote = "";
+  if (!ctx.isMotherBlueprint && ctx.motherBlueprintDir) {
+    try {
+      const motherPkg = JSON.parse(fs.readFileSync(path.join(ctx.motherBlueprintDir, "package.json"), "utf8"));
+      const motherScripts = Object.keys(motherPkg.scripts || {});
+      const curScripts = new Set(Object.keys(ctx.pkg.scripts || {}));
+      const missingScripts = motherScripts.filter((k) => !curScripts.has(k));
+      motherParityOk = missingScripts.length === 0;
+      motherParityNote = motherParityOk ? " + motherScripts=100%" : ` 缺失母本脚本=[${missingScripts.slice(0, 5).join(",")}]`;
+    } catch {}
+  }
   push(
     "G10",
     "零冲突 6 端口矩阵与 compat-manifest 一致性",
-    compatRun.status === 0 ? "PASS" : "FAIL",
-    `GW:${ctx.gatewayPort} BE:${ctx.backendPort} PG:${ctx.dbPort} Redis:${ctx.redisPort}`
+    compatRun.status === 0 && motherParityOk ? "PASS" : "FAIL",
+    `GW:${ctx.gatewayPort} BE:${ctx.backendPort} PG:${ctx.dbPort} Redis:${ctx.redisPort}${motherParityNote}`
   );
 
   // G11: 声明式 Caddy 四平面网关与 { admin off }
@@ -471,7 +508,10 @@ async function main() {
   process.exit(summary.ok ? 0 : 1);
 }
 
-main().catch((err) => {
-  console.error("❌ 23-gate 审计异常:", err);
-  process.exit(1);
-});
+const isMainModule = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMainModule) {
+  main().catch((err) => {
+    console.error("❌ 23-gate 审计异常:", err);
+    process.exit(1);
+  });
+}
