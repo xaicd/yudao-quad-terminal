@@ -1,0 +1,669 @@
+{
+  "version": 1,
+  "kind": "upstream-contract-baseline",
+  "source": "AGENTS.md §0.4",
+  "description": "Known read-only upstream submodule contract gaps between apps/admin and apps/backend. Tracked transparently as upstreamBaselineOrphans; any newly introduced orphan route or HTTP verb mismatch still fails with exit 1.",
+  "fileScopePrefix": "apps/admin/src/api/",
+  "countsByPrefix": {
+    "/ai1": 66,
+    "/bpm": 3,
+    "/infra": 14,
+    "/promotion": 1,
+    "/mes": 3,
+    "/pay": 5
+  },
+  "total": 92,
+  "routes": [
+    {
+      "path": "/ai1/agent/create",
+      "methods": [
+        "POST"
+      ],
+      "file": "apps/admin/src/api/ai1/agent/index.ts"
+    },
+    {
+      "path": "/ai1/agent/delete",
+      "methods": [
+        "DELETE"
+      ],
+      "file": "apps/admin/src/api/ai1/agent/index.ts"
+    },
+    {
+      "path": "/ai1/agent/get",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/agent/index.ts"
+    },
+    {
+      "path": "/ai1/agent/page",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/agent/index.ts"
+    },
+    {
+      "path": "/ai1/agent/simple-list",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/agent/index.ts"
+    },
+    {
+      "path": "/ai1/agent/update",
+      "methods": [
+        "PUT"
+      ],
+      "file": "apps/admin/src/api/ai1/agent/index.ts"
+    },
+    {
+      "path": "/ai1/agent/update-status",
+      "methods": [
+        "DELETE",
+        "PUT"
+      ],
+      "file": "apps/admin/src/api/ai1/agent/index.ts"
+    },
+    {
+      "path": "/ai1/home/message-summary-by-agent",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/home/index.ts"
+    },
+    {
+      "path": "/ai1/home/message-summary-by-date",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/home/index.ts"
+    },
+    {
+      "path": "/ai1/home/summary",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/home/index.ts"
+    },
+    {
+      "path": "/ai1/knowledge/create",
+      "methods": [
+        "POST"
+      ],
+      "file": "apps/admin/src/api/ai1/knowledge/base/index.ts"
+    },
+    {
+      "path": "/ai1/knowledge/delete",
+      "methods": [
+        "DELETE"
+      ],
+      "file": "apps/admin/src/api/ai1/knowledge/base/index.ts"
+    },
+    {
+      "path": "/ai1/knowledge/document/create",
+      "methods": [
+        "POST"
+      ],
+      "file": "apps/admin/src/api/ai1/knowledge/document/index.ts"
+    },
+    {
+      "path": "/ai1/knowledge/document/delete",
+      "methods": [
+        "DELETE"
+      ],
+      "file": "apps/admin/src/api/ai1/knowledge/document/index.ts"
+    },
+    {
+      "path": "/ai1/knowledge/document/get",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/knowledge/document/index.ts"
+    },
+    {
+      "path": "/ai1/knowledge/document/page",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/knowledge/document/index.ts"
+    },
+    {
+      "path": "/ai1/knowledge/document/update",
+      "methods": [
+        "PUT"
+      ],
+      "file": "apps/admin/src/api/ai1/knowledge/document/index.ts"
+    },
+    {
+      "path": "/ai1/knowledge/document/vectorize",
+      "methods": [
+        "DELETE",
+        "POST"
+      ],
+      "file": "apps/admin/src/api/ai1/knowledge/document/index.ts"
+    },
+    {
+      "path": "/ai1/knowledge/document/vectorize-all",
+      "methods": [
+        "POST"
+      ],
+      "file": "apps/admin/src/api/ai1/knowledge/document/index.ts"
+    },
+    {
+      "path": "/ai1/knowledge/get",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/knowledge/base/index.ts"
+    },
+    {
+      "path": "/ai1/knowledge/page",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/knowledge/base/index.ts"
+    },
+    {
+      "path": "/ai1/knowledge/search",
+      "methods": [
+        "DELETE",
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/knowledge/base/index.ts"
+    },
+    {
+      "path": "/ai1/knowledge/simple-list",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/knowledge/base/index.ts"
+    },
+    {
+      "path": "/ai1/knowledge/update",
+      "methods": [
+        "PUT"
+      ],
+      "file": "apps/admin/src/api/ai1/knowledge/base/index.ts"
+    },
+    {
+      "path": "/ai1/mcp/create",
+      "methods": [
+        "POST"
+      ],
+      "file": "apps/admin/src/api/ai1/mcp/index.ts"
+    },
+    {
+      "path": "/ai1/mcp/delete",
+      "methods": [
+        "DELETE"
+      ],
+      "file": "apps/admin/src/api/ai1/mcp/index.ts"
+    },
+    {
+      "path": "/ai1/mcp/get",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/mcp/index.ts"
+    },
+    {
+      "path": "/ai1/mcp/page",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/mcp/index.ts"
+    },
+    {
+      "path": "/ai1/mcp/simple-list",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/mcp/index.ts"
+    },
+    {
+      "path": "/ai1/mcp/test",
+      "methods": [
+        "DELETE",
+        "POST"
+      ],
+      "file": "apps/admin/src/api/ai1/mcp/index.ts"
+    },
+    {
+      "path": "/ai1/mcp/update",
+      "methods": [
+        "PUT"
+      ],
+      "file": "apps/admin/src/api/ai1/mcp/index.ts"
+    },
+    {
+      "path": "/ai1/model/create",
+      "methods": [
+        "POST"
+      ],
+      "file": "apps/admin/src/api/ai1/model/index.ts"
+    },
+    {
+      "path": "/ai1/model/delete",
+      "methods": [
+        "DELETE"
+      ],
+      "file": "apps/admin/src/api/ai1/model/index.ts"
+    },
+    {
+      "path": "/ai1/model/get",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/model/index.ts"
+    },
+    {
+      "path": "/ai1/model/import",
+      "methods": [
+        "POST"
+      ],
+      "file": "apps/admin/src/api/ai1/model/index.ts"
+    },
+    {
+      "path": "/ai1/model/page",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/model/index.ts"
+    },
+    {
+      "path": "/ai1/model/remote-list",
+      "methods": [
+        "DELETE",
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/model/index.ts"
+    },
+    {
+      "path": "/ai1/model/simple-list",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/model/index.ts"
+    },
+    {
+      "path": "/ai1/model/update",
+      "methods": [
+        "PUT"
+      ],
+      "file": "apps/admin/src/api/ai1/model/index.ts"
+    },
+    {
+      "path": "/ai1/provider/create",
+      "methods": [
+        "POST"
+      ],
+      "file": "apps/admin/src/api/ai1/model/provider/index.ts"
+    },
+    {
+      "path": "/ai1/provider/delete",
+      "methods": [
+        "DELETE"
+      ],
+      "file": "apps/admin/src/api/ai1/model/provider/index.ts"
+    },
+    {
+      "path": "/ai1/provider/get",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/model/provider/index.ts"
+    },
+    {
+      "path": "/ai1/provider/page",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/model/provider/index.ts"
+    },
+    {
+      "path": "/ai1/provider/simple-list",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/model/provider/index.ts"
+    },
+    {
+      "path": "/ai1/provider/test",
+      "methods": [
+        "DELETE",
+        "POST"
+      ],
+      "file": "apps/admin/src/api/ai1/model/provider/index.ts"
+    },
+    {
+      "path": "/ai1/provider/update",
+      "methods": [
+        "PUT"
+      ],
+      "file": "apps/admin/src/api/ai1/model/provider/index.ts"
+    },
+    {
+      "path": "/ai1/session/create-my",
+      "methods": [
+        "POST"
+      ],
+      "file": "apps/admin/src/api/ai1/session/index.ts"
+    },
+    {
+      "path": "/ai1/session/delete-my",
+      "methods": [
+        "DELETE"
+      ],
+      "file": "apps/admin/src/api/ai1/session/index.ts"
+    },
+    {
+      "path": "/ai1/session/message/list",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/session/message/index.ts"
+    },
+    {
+      "path": "/ai1/session/message/my-list",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/session/message/index.ts"
+    },
+    {
+      "path": "/ai1/session/my-list",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/session/index.ts"
+    },
+    {
+      "path": "/ai1/session/page",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/session/index.ts"
+    },
+    {
+      "path": "/ai1/session/update-my",
+      "methods": [
+        "PUT"
+      ],
+      "file": "apps/admin/src/api/ai1/session/index.ts"
+    },
+    {
+      "path": "/ai1/skill/create",
+      "methods": [
+        "POST"
+      ],
+      "file": "apps/admin/src/api/ai1/skill/index.ts"
+    },
+    {
+      "path": "/ai1/skill/delete",
+      "methods": [
+        "DELETE"
+      ],
+      "file": "apps/admin/src/api/ai1/skill/index.ts"
+    },
+    {
+      "path": "/ai1/skill/file/create",
+      "methods": [
+        "POST"
+      ],
+      "file": "apps/admin/src/api/ai1/skill/index.ts"
+    },
+    {
+      "path": "/ai1/skill/file/delete",
+      "methods": [
+        "DELETE"
+      ],
+      "file": "apps/admin/src/api/ai1/skill/index.ts"
+    },
+    {
+      "path": "/ai1/skill/file/get",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/skill/index.ts"
+    },
+    {
+      "path": "/ai1/skill/file/list",
+      "methods": [
+        "DELETE",
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/skill/index.ts"
+    },
+    {
+      "path": "/ai1/skill/file/move",
+      "methods": [
+        "PUT"
+      ],
+      "file": "apps/admin/src/api/ai1/skill/index.ts"
+    },
+    {
+      "path": "/ai1/skill/file/rename",
+      "methods": [
+        "PUT"
+      ],
+      "file": "apps/admin/src/api/ai1/skill/index.ts"
+    },
+    {
+      "path": "/ai1/skill/file/update-content",
+      "methods": [
+        "PUT"
+      ],
+      "file": "apps/admin/src/api/ai1/skill/index.ts"
+    },
+    {
+      "path": "/ai1/skill/get",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/skill/index.ts"
+    },
+    {
+      "path": "/ai1/skill/page",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/skill/index.ts"
+    },
+    {
+      "path": "/ai1/skill/simple-list",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/ai1/skill/index.ts"
+    },
+    {
+      "path": "/ai1/skill/update",
+      "methods": [
+        "PUT"
+      ],
+      "file": "apps/admin/src/api/ai1/skill/index.ts"
+    },
+    {
+      "path": "/bpm/process-expression/export-excel",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/bpm/processExpression/index.ts"
+    },
+    {
+      "path": "/bpm/process-instance/get-form-fields-permission",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/bpm/processInstance/index.ts"
+    },
+    {
+      "path": "/bpm/task/my-todo",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/bpm/task/index.ts"
+    },
+    {
+      "path": "/infra/job-log/export-excel",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/infra/jobLog/index.ts"
+    },
+    {
+      "path": "/infra/job-log/get",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/infra/jobLog/index.ts"
+    },
+    {
+      "path": "/infra/job-log/page",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/infra/jobLog/index.ts"
+    },
+    {
+      "path": "/infra/job/create",
+      "methods": [
+        "POST"
+      ],
+      "file": "apps/admin/src/api/infra/job/index.ts"
+    },
+    {
+      "path": "/infra/job/delete",
+      "methods": [
+        "DELETE"
+      ],
+      "file": "apps/admin/src/api/infra/job/index.ts"
+    },
+    {
+      "path": "/infra/job/delete-list",
+      "methods": [
+        "DELETE"
+      ],
+      "file": "apps/admin/src/api/infra/job/index.ts"
+    },
+    {
+      "path": "/infra/job/export-excel",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/infra/job/index.ts"
+    },
+    {
+      "path": "/infra/job/get",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/infra/job/index.ts"
+    },
+    {
+      "path": "/infra/job/get_next_times",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/infra/job/index.ts"
+    },
+    {
+      "path": "/infra/job/page",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/infra/job/index.ts"
+    },
+    {
+      "path": "/infra/job/sync",
+      "methods": [
+        "POST"
+      ],
+      "file": "apps/admin/src/api/infra/job/index.ts"
+    },
+    {
+      "path": "/infra/job/trigger",
+      "methods": [
+        "PUT"
+      ],
+      "file": "apps/admin/src/api/infra/job/index.ts"
+    },
+    {
+      "path": "/infra/job/update",
+      "methods": [
+        "PUT"
+      ],
+      "file": "apps/admin/src/api/infra/job/index.ts"
+    },
+    {
+      "path": "/infra/job/update-status",
+      "methods": [
+        "PUT"
+      ],
+      "file": "apps/admin/src/api/infra/job/index.ts"
+    },
+    {
+      "path": "/mes/wm/misc-issue-line/list-by-issue-id",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/mes/wm/miscissue/line/index.ts"
+    },
+    {
+      "path": "/mes/wm/misc-issue/check-quantity",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/mes/wm/miscissue/index.ts"
+    },
+    {
+      "path": "/mes/wm/product-receipt-detail/list",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/mes/wm/productreceipt/detail/index.ts"
+    },
+    {
+      "path": "/pay/channel/export-excel",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/pay/channel/index.ts"
+    },
+    {
+      "path": "/pay/channel/page",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/pay/channel/index.ts"
+    },
+    {
+      "path": "/pay/refund/create",
+      "methods": [
+        "POST"
+      ],
+      "file": "apps/admin/src/api/pay/refund/index.ts"
+    },
+    {
+      "path": "/pay/refund/delete",
+      "methods": [
+        "DELETE"
+      ],
+      "file": "apps/admin/src/api/pay/refund/index.ts"
+    },
+    {
+      "path": "/pay/refund/update",
+      "methods": [
+        "PUT"
+      ],
+      "file": "apps/admin/src/api/pay/refund/index.ts"
+    },
+    {
+      "path": "/promotion/coupon-template/export-excel",
+      "methods": [
+        "GET"
+      ],
+      "file": "apps/admin/src/api/mall/promotion/coupon/couponTemplate.ts"
+    }
+  ]
+}
