@@ -7,8 +7,7 @@
  * 链路：预检 → 抽取并拉起嵌入式真 Redis → 拉起嵌入式真 PostgreSQL → 导入官方 PG 脚本
  *       → 注入 CSPRNG 引导凭据 → 以 -cp fatjar:pgdriver 启动应用 → 用引导凭据探活登录
  *
- * 设计依据：docs/specs/platform/lite-runtime-profile/ 与
- *           docs/01_management/dar/DAR-20261021-lite-runtime-dependencies.md
+ * 设计说明：详见 deploy/lite/README.md
  *
  * ⚠️ 许可范围：本档使用 Redis 7.4.1（RSALv2 / SSPLv1），仅限本地开发与演示，
  *    严禁用于对外提供 Redis 兼容托管服务；对外分发前必须切换到 BSD-3 方案。

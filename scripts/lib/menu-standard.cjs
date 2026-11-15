@@ -203,7 +203,7 @@ function compactMenuName(rawTitle, fallback = "业务管理") {
   if (chars.length === 0) return safeFallback;
   if (chars.length <= MAX_MENU_NAME_LENGTH) return s;
 
-  // 5. 中文偏正短语中心语在尾部（如 "河北电信数据集成" -> "数据集成"、"供应商资质审核" -> "资质审核"）；
+  // 5. 中文偏正短语中心语在尾部（如 "企业全域数据集成" -> "数据集成"、"供应商资质审核" -> "资质审核"）；
   //    纯英文标识符取前 4 字符。
   if (/[\u4e00-\u9fff]/.test(s)) {
     return chars.slice(-MAX_MENU_NAME_LENGTH).join("");

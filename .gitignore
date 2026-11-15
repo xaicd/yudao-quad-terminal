@@ -141,4 +141,8 @@ coverage/
 .nyc_output/
 playwright-report/
 test-results/
-docs/architecture/artifacts/agent-route-last.json
+# 瞬态运行时路由/探针快照（严禁提交入库污染母本与派生工程）
+docs/architecture/artifacts/
+docs/artifacts/
+docs/**/*-last.json
+docs/**/*-latest.json

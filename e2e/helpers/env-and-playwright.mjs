@@ -3,7 +3,7 @@
  *
  * Yudao-Quad-Terminal 通用零假 Mock Playwright 多视口与防遮挡审计助手库
  *
- * 沉淀自 tele-pulse 全生命周期实战：
+ * 全栈多视口 E2E 标准辅助工具：
  * 1. 自动解析 `.env.ports`、`package.json` 与 `.commandcode/lite/credentials.env`（含 IT 三员分立口令）；
  * 2. 原生支持 `@ApiEncrypt` AES-256-ECB 加密登录探针与 `data-testid="login-username|login-password|login-submit"` 真实表单登录；
  * 3. 多视口零横向溢出守卫（`1920×1080`、`1440×900`、`375×812`、`320×568` `320dp`）；

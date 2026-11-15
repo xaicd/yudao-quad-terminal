@@ -256,11 +256,13 @@ export function purgeUpstreamPromoAndTutorialBloat(targetDir) {
   }
 }
 
-function pruneHistoricalArchives(targetDir) {
+export function pruneHistoricalArchives(targetDir) {
   const archives = [
     path.join(targetDir, "docs", "architecture", "archive"),
     path.join(targetDir, "docs", "specs", "archive"),
     path.join(targetDir, "docs", "architecture", "artifacts"),
+    path.join(targetDir, "docs", "artifacts"),
+    path.join(targetDir, "docs", "00_meta_standards", "blueprint-backport-audit.md"),
     path.join(targetDir, "docs", "architecture", "OPEN-SOURCE-TRACKING-MANUAL.md"),
     path.join(targetDir, "docs", "architecture", "CURRENT-PROGRESS.md"),
     path.join(targetDir, ".claude"),
@@ -274,6 +276,53 @@ function pruneHistoricalArchives(targetDir) {
         fs.rmSync(item, { recursive: true, force: true });
       }
     } catch {}
+  }
+
+  // 清除母本历史 DAR / ADR Markdown，保留目录骨架 .gitkeep
+  for (const relDir of [
+    path.join("docs", "01_management", "dar"),
+    path.join("docs", "01_management", "dar-decision-records"),
+    path.join("docs", "03_design", "adr"),
+  ]) {
+    const absDir = path.join(targetDir, relDir);
+    if (!fs.existsSync(absDir)) continue;
+    for (const entry of fs.readdirSync(absDir, { withFileTypes: true })) {
+      if (entry.isFile() && entry.name.endsWith(".md")) {
+        try {
+          fs.rmSync(path.join(absDir, entry.name), { force: true });
+        } catch {}
+      }
+    }
+    const keep = path.join(absDir, ".gitkeep");
+    if (!fs.existsSync(keep)) fs.writeFileSync(keep, "", "utf8");
+  }
+
+  const docsDir = path.join(targetDir, "docs");
+  if (fs.existsSync(docsDir)) {
+    const cleanTransientJson = (dir) => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          cleanTransientJson(full);
+        } else if (entry.isFile() && /-(last|latest)\.json$/i.test(entry.name)) {
+          try {
+            fs.rmSync(full, { force: true });
+          } catch {}
+        }
+      }
+    };
+    cleanTransientJson(docsDir);
+
+    const archDir = path.join(docsDir, "architecture");
+    try {
+      if (fs.existsSync(archDir) && fs.readdirSync(archDir).length === 0) {
+        fs.rmdirSync(archDir);
+      }
+    } catch {}
+
+    const specsKeep = path.join(docsDir, "specs", ".gitkeep");
+    fs.mkdirSync(path.dirname(specsKeep), { recursive: true });
+    if (!fs.existsSync(specsKeep)) fs.writeFileSync(specsKeep, "", "utf8");
   }
 }
 
@@ -425,6 +474,8 @@ export function replaceContent(targetDir, config) {
 
   const replacements = [
     // 1. 中文品牌词长词优先置换
+    [/《Yudao Quad-Terminal Master Base》/g, `《${projectTitle}》`],
+    [/Yudao Quad-Terminal/g, projectTitle],
     [/芋道四位一体企业级管理中台/g, `${projectTitle} · 企业级管理中台`],
     [/芋道四位一体管理系统/g, `${projectTitle} · 业务管理系统`],
     [/芋道四位一体业务工作台/g, `${projectTitle} · 业务工作台`],
@@ -490,7 +541,7 @@ export function replaceContent(targetDir, config) {
     for (const [re, rep] of replacements) {
       out = out.replace(re, rep);
     }
-    // SQL 文件兜底守卫：严禁未加引号的连字符标识符（如 tele-pulse_demo01_contact）进入 DDL
+    // SQL 文件兜底守卫：严禁未加引号的连字符标识符（如 demo-mall_demo01_contact）进入 DDL
     if (ext === ".sql" && projectName.includes("-")) {
       const escapedProj = projectName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       out = out.replace(new RegExp(`${escapedProj}_`, "g"), `${snakeSlug}_`);
@@ -1134,6 +1185,15 @@ pnpm preview:miniapp
   }
   if (fs.existsSync(path.join(targetDir, "apps", "miniapp"))) {
     fs.writeFileSync(path.join(targetDir, "apps", "miniapp", "README.md"), miniappReadme, "utf8");
+  }
+
+  // 重新同步派生工程的 OpenWiki 动态词条（保证 wiki/ 与新模块名/0 规格基线严格一致）
+  const syncWikiScript = path.join(targetDir, "scripts", "sync-openwiki.mjs");
+  if (fs.existsSync(syncWikiScript)) {
+    spawnSync(process.execPath, [syncWikiScript, "--write"], {
+      cwd: targetDir,
+      stdio: "ignore",
+    });
   }
 }
 

@@ -3,8 +3,7 @@
 > 定位：**coolie 工坊项目的底座加速器**。让开发者和 AI Agent 在一台干净机器上一条命令把
 > `yudao-server` 连数据库和缓存一起拉起来，**不需要 Docker、不需要 MySQL/Redis 服务**。
 >
-> 关联资产：`docs/specs/platform/lite-runtime-profile/`（规格）·
-> `docs/01_management/dar/DAR-20261021-lite-runtime-dependencies.md`（选型决策）
+> 关联入口：`scripts/lite-up.mjs`（编排器）· `deploy/lite/application-lite.yaml`（外置配置）
 
 ## 1. 它由什么组成
 

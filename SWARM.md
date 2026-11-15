@@ -1,6 +1,6 @@
 # SWARM.md — 企业级多智能体蜂群协同与零返工全栈交付宪法 (Universal Multi-Team Swarm Playbook)
 
-> **定位**：沉淀自 `tele-pulse`（`Stage B0`–`B5` 全链路 23 道硬门禁满分交付）的母本内置多团队/多智能体协同作战手册。
+> **定位**：面向企业级四端项目（`Stage B0`–`B5` 全链路 23 道硬门禁交付标准）的母本内置多团队/多智能体协同作战手册。
 > 所有从本母本派生的项目（`pnpm project:hatch` / `pnpm project:init`）在 Day 0 自动携带本文件，确保后续任意业务项目开箱复刻同等级别的交付速度、工程纪律与零返工质量。
 
 ---
@@ -70,12 +70,12 @@ pnpm verify:b5
 
 ## 4. 四大高频致命工程陷阱与底座内置解法 (Battle-Tested Pitfalls & Built-In Guards)
 
-### 4.1 带连字符项目名 (`tele-pulse` / `demo-mall`) 的 SQL 与 Java 类名陷阱
-- **故障现象**：若把 `yudao_demo01_contact` 简单字符串替换为 `tele-pulse_demo01_contact`，PostgreSQL 导入立刻报语法错误（未加引号的标识符不允许含 `-`）；同理 `YudaoServerApplication` 变成 `Tele-pulseServerApplication` 会导致 Maven 编译崩溃，Nginx `upstream tele-pulse_backend` 也会报错。
+### 4.1 带连字符项目名 (`demo-mall` / `star-cloud`) 的 SQL 与 Java 类名陷阱
+- **故障现象**：若把 `yudao_demo01_contact` 简单字符串替换为 `demo-mall_demo01_contact`，PostgreSQL 导入立刻报语法错误（未加引号的标识符不允许含 `-`）；同理 `YudaoServerApplication` 变成 `Demo-mallServerApplication` 会导致 Maven 编译崩溃，Nginx `upstream demo-mall_backend` 也会报错。
 - **内置根治**：`scripts/project-reactor.mjs` 的 `deriveSlugForms()` 自动区分五种形态：
-  - 路由前缀与 Spring 配置前缀保持连字符 `projectName`（如 `/tele-pulse`、`tele-pulse.info`）；
-  - SQL 表名/索引/序列与数据库用户名强制使用下划线 `snakeSlug`（如 `tele_pulse_demo01_contact`）；
-  - Java 类名使用 `pascalSlug`（`TelePulseServerApplication`），变量名使用 `camelSlug`，常量使用 `upperSnakeSlug`；
+  - 路由前缀与 Spring 配置前缀保持连字符 `projectName`（如 `/demo-mall`、`demo-mall.info`）；
+  - SQL 表名/索引/序列与数据库用户名强制使用下划线 `snakeSlug`（如 `demo_mall_demo01_contact`）；
+  - Java 类名使用 `pascalSlug`（`DemoMallServerApplication`），变量名使用 `camelSlug`，常量使用 `upperSnakeSlug`；
   - Nginx `upstream` 强制使用 `${snakeSlug}_backend`。
 
 ### 4.2 PostgreSQL 18.4 + Alibaba Druid 连接池「首登成功、二登 500」假阳性陷阱

@@ -12,7 +12,7 @@
 
 ## 二、 阶段核心产物清单 (Physical Artifacts)
 - **工程产物归宿**：`docs/05_verification/ (test-plan.md, test-summary-report.md, mutation-report.md, uat-acceptance-certificate.md)`
-- **控制面映射**：统一通过 `issue_work_products` 与 `documents` 挂载至 Paperclip 控制面工件总线。
+- **控制面映射**：统一通过 `issue_work_products` 与 `documents` 挂载至 Coolie 控制面工件总线。
 
 ---
 

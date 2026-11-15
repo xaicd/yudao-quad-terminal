@@ -7,7 +7,7 @@
   - `docs/03_design/`：MADR 架构决策 (ADR)、HLD 设计、数据库模型 ERD、接口契约
   - `docs/04_implementation/`：编码规范、变异测试指南、插件隔离蓝图、SBOM
   - `docs/05_verification/`：测试计划、测试总结大盘、变异测试报告、客户终验单
-  - `docs/06_cmmi_audit/`：统计过程控制 (SPC)、CAR 5-Whys、配置审计单、门禁追踪
+  - `docs/06_quality_assurance/`：统计过程控制 (SPC)、CAR 5-Whys、配置审计单、门禁追踪
   - `docs/07_release/`：部署割接 SOP、秒级回滚 Runbook、版本发布说明、发版清单
   - `docs/08_sre/`：SLO/SLI 矩阵、容灾演练方案、5-Whys 事故复盘、Strix 渗透报告
   - `docs/09_operations/`：多租户开通 SOP、数字员工台账、常态巡检报告、财务对账平账单

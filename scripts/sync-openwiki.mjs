@@ -153,7 +153,7 @@ ${buildFactsMd()}
    - 第二层：软件制造工程流水线（数字员工交付 0-1 软件工程真资产）；
    - 第三层：业务落地运行系统（客户生产环境业务数据自承载）。
 2. **六位一体超级集成体 (公理二)**：
-   - 控制面中枢 (Paperclip) + 活体本体 (Palantir) + CMMI 5 质量 + 开源基座自适应 + 极简人机 + 数字员工调度。
+   - 控制面中枢 (Coolie) + 活体本体 (Palantir) + CMMI 5 质量 + 开源基座自适应 + 极简人机 + 数字员工调度。
 3. **活体本体即中枢 (公理三)**：
    - 现实业务与技术实现高保真物理并轨，双核基石 (Object Types + Action Types)，深度复用 ${countPgTables()} 张物理表。
 4. **CMMI 0-1 软件工程资产与 Spec-First 产物 (公理四)**：
@@ -214,7 +214,7 @@ ${buildRecipesMd()}
 
 ## 📚 核心架构支柱 (Architecture Pillars)
 
-- [Paperclip 控制面中枢与单人负责人锁](architecture/control-plane-backbone.md)
+- [Coolie 控制面中枢与单人负责人锁](architecture/control-plane-backbone.md)
 - [Palantir 活体本体系统与业务双核](architecture/living-ontology.md)
 - [开放式扁平敏捷特性库与 CMMI 01~09 体系](architecture/flat-docs-specs-system.md)
 - [Kiro SDD 原生多智能体工作流引擎与配方体系](architecture/kiro-native-workflows.md)
@@ -230,7 +230,7 @@ ${buildRecipesMd()}
 
 - [商业软件交付工厂核心模型](domains/delivery-foundry.md)
 - [五大数字员工战斗集群体系](domains/digital-fleet.md)
-- [供应链进销存中台系统 (基于 ruoyi-all-next)](domains/scm-platform.md)
+- [企业级供应链进销存中台系统](domains/scm-platform.md)
 - [智能制造 MES 与板材开料运筹求解器](domains/mes-manufacturing.md)
 - [企业微信画像与网关集成](domains/wecom-integration.md)
 
@@ -324,7 +324,7 @@ function buildStages() {
       role: "门神 (FDSE) / Hermes",
       skills: ["cmmi-asset-authoring", "yudao-cmmi-gatekeeper"],
       gates: "14~20 道全生命周期自动化门禁全绿",
-      artifacts: "docs/06_cmmi_audit/ (spc-control-chart.md, car-5whys-rca.md, audit-trail.md, gate-trace-record.md)",
+      artifacts: "docs/06_quality_assurance/ (spc-control-chart.md, car-5whys-rca.md, audit-trail.md, gate-trace-record.md)",
       blockedBy: "门禁未跑通、存在 Blocker/High 债务严禁宣称完工",
       desc: "实施统计过程控制 (SPC) 与缺陷预防，制度交由编译器与脚本强制执行，杜绝人肉记忆。",
     },
@@ -378,7 +378,7 @@ ${s.desc}
 
 ## 二、 阶段核心产物清单 (Physical Artifacts)
 - **工程产物归宿**：\`${s.artifacts}\`
-- **控制面映射**：统一通过 \`issue_work_products\` 与 \`documents\` 挂载至 Paperclip 控制面工件总线。
+- **控制面映射**：统一通过 \`issue_work_products\` 与 \`documents\` 挂载至 Coolie 控制面工件总线。
 
 ---
 
@@ -403,8 +403,8 @@ function buildArchitecture() {
   const pillars = [
     {
       file: "control-plane-backbone.md",
-      title: "Paperclip 控制面中枢与单人负责人锁",
-      content: `# 架构支柱：Paperclip 控制面中枢与单人负责人锁
+      title: "Coolie 控制面中枢与单人负责人锁",
+      content: `# 架构支柱：Coolie 控制面中枢与单人负责人锁
 
 - **单一人负责模型**：每一条工单/任务在任何时刻仅允许唯一 assignee 签出锁定，杜绝多人并发修改冲突；
 - **真实预算硬熔断**：企业与数字员工配置硬停预算阈值，超额自动触发系统暂停；
@@ -434,7 +434,7 @@ function buildArchitecture() {
   - \`docs/03_design/\`：MADR 架构决策 (ADR)、HLD 设计、数据库模型 ERD、接口契约
   - \`docs/04_implementation/\`：编码规范、变异测试指南、插件隔离蓝图、SBOM
   - \`docs/05_verification/\`：测试计划、测试总结大盘、变异测试报告、客户终验单
-  - \`docs/06_cmmi_audit/\`：统计过程控制 (SPC)、CAR 5-Whys、配置审计单、门禁追踪
+  - \`docs/06_quality_assurance/\`：统计过程控制 (SPC)、CAR 5-Whys、配置审计单、门禁追踪
   - \`docs/07_release/\`：部署割接 SOP、秒级回滚 Runbook、版本发布说明、发版清单
   - \`docs/08_sre/\`：SLO/SLI 矩阵、容灾演练方案、5-Whys 事故复盘、Strix 渗透报告
   - \`docs/09_operations/\`：多租户开通 SOP、数字员工台账、常态巡检报告、财务对账平账单
@@ -505,7 +505,7 @@ ${buildRecipeBullets()}
       content: `# 架构支柱：Dev 施工总社与 Prod 生产交付绝对物理隔离
 
 - **Dev 环境（工坊自身建设面）**：专属于 Coolie 本地施工总社（localhost:3100 / 内嵌 PGlite）；
-- **Prod 环境（商业实体交付面）**：专属于客户交付业务中台（xrobinai.cn / PostgreSQL 独立集群）；
+- **Prod 环境（商业实体交付面）**：专属于客户交付业务中台（独立商业域名 / PostgreSQL 独立集群）；
 - **数据物理隔绝**：严禁在生产库中混杂工坊自身任务与内部会话日志。`,
     },
     {
@@ -513,7 +513,7 @@ ${buildRecipeBullets()}
       title: "Coolie 工坊 AI 活体业务本体全面图谱 (M1~M7+MU)",
       content: `# 架构支柱：Coolie 工坊 AI 活体业务本体全面图谱 (M1~M7+MU)
 
-> **导读与全景**：详见核心架构白皮书 [docs-coolie/architecture/2026-10-10-coolie-foundry-ai-ontology-master-graph.md](../../docs-coolie/architecture/2026-10-10-coolie-foundry-ai-ontology-master-graph.md)。
+> **导读与全景**：详见核心架构白皮书 [AGENTS.md](../../AGENTS.md) 与 [docs/ontology/ontology.yaml](../../docs/ontology/ontology.yaml)。
 > 本词条为 AI 数字员工（Hermes / 墨斗 / 铁匠 / 门神 / 兜底渊 / 百晓生）提供全自主驱动（AI Agent-Driven）Coolie 平台自身的机器可读活体业务本体。
 
 ---
@@ -521,7 +521,7 @@ ${buildRecipeBullets()}
 ## 1. 三层物理隔离法典
 - **Layer 1 (决策层)**：Console & 6寸屏移动驾驶舱，专属于掌柜/CEO，一句话意图派单、局部一跳卡片审批流；
 - **Layer 2 (制造层)**：数字交付工厂，专属于数字员工（Hermes/墨斗/铁匠/门神/兜底渊），全自主交付 0-1 软件工程真资产；
-- **Layer 3 (运行层)**：客户生产环境，专属于交付业务中台（如云南移动、九夏智居），业务数据自承载自平账。
+- **Layer 3 (运行层)**：客户生产环境，专属于交付业务中台（多租户商业生产集群），业务数据自承载自平账。
 
 ---
 
@@ -546,7 +546,7 @@ ${buildRecipeBullets()}
 - **探查感知**：\`node scripts/ontology-ops.cjs inspect\`
 - **意图提议**：\`node scripts/ontology-ops.cjs propose --slug <feat> --name <Name> --add-props ...\`
 - **掌柜确认**：掌柜在移动端或控制台点击【确认】
-- **应用闭环**：\`node scripts/ontology-ops.cjs apply --proposal <id>\` 自动生成 DDL + SDD 规格 + Paperclip 工单！
+- **应用闭环**：\`node scripts/ontology-ops.cjs apply --proposal <id>\` 自动生成 DDL + SDD 规格 + Coolie 工单！
 `,
     },
   ];
@@ -582,10 +582,10 @@ function buildDomains() {
     },
     {
       file: "scm-platform.md",
-      title: "供应链进销存中台系统 (基于 ruoyi-all-next)",
+      title: "企业级供应链进销存中台系统",
       content: `# 领域百科：企业级供应链进销存中台系统
 
-- **开源底座**：基于 \`xaicd/ruoyi-all-next\` 派生；
+- **架构底座**：企业级四端同源微服务/单体双模中台底座；
 - **核心模块**：
   - 采购协同与比价审批 (\`plugin-erp\`)；
   - 多级仓储库位与先进先出成本核算 (\`plugin-wms\`)；
@@ -607,7 +607,7 @@ function buildDomains() {
       title: "企业微信画像与网关集成",
       content: `# 领域百科：企业微信画像与网关集成
 
-- **核心功能**：云南移动政企业务画像、专线数据穿透与企微机器人告警推送；
+- **核心功能**：政企客户画像、专线数据穿透与企微机器人告警推送；
 - **通信保障**：专网安全鉴权、敏感字段脱敏与高可用负载均衡。`,
     },
   ];

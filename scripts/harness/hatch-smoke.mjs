@@ -231,6 +231,66 @@ try {
     bloatIssues.length ? bloatIssues.join("; ") : "0 个 *芋道*.md / 0 个 .image 目录 / 0 个 *-ui 空壳"
   );
 
+  /* --------- ⑥.c 母本历史归档/回灌审计/瞬态快照清零与 CMMI 模板保留 --------- */
+  const FORBIDDEN_MOTHER_PATHS = [
+    "docs/specs/archive",
+    "docs/architecture/artifacts",
+    "docs/artifacts",
+    "docs/00_meta_standards/blueprint-backport-audit.md",
+  ];
+  const presentMotherResidue = FORBIDDEN_MOTHER_PATHS.filter((rel) => fs.existsSync(path.join(TARGET, rel)));
+
+  const listMdInDir = (relDir) => {
+    const absDir = path.join(TARGET, relDir);
+    if (!fs.existsSync(absDir)) return [];
+    return fs.readdirSync(absDir).filter((f) => f.endsWith(".md")).map((f) => `${relDir}/${f}`);
+  };
+  const leakedHistoryRecords = [
+    ...listMdInDir("docs/01_management/dar"),
+    ...listMdInDir("docs/01_management/dar-decision-records"),
+    ...listMdInDir("docs/03_design/adr"),
+  ];
+
+  const REQUIRED_CMMI_AND_ONTOLOGY = [
+    "docs/00_meta_standards/README.md",
+    "docs/01_management/pmo-dashboard.md",
+    "docs/01_management/project-charter.md",
+    "docs/01_management/project-plan.md",
+    "docs/02_requirements/software-requirements.md",
+    "docs/03_design/architecture-design-hld.md",
+    "docs/03_design/database-design-erd.md",
+    "docs/04_implementation/README.md",
+    "docs/05_verification/test-plan.md",
+    "docs/06_quality_assurance/qa-audit-plan.md",
+    "docs/07_release/system-deployment-sop.md",
+    "docs/08_sre/01_slo_sli_metrics/SLO-SLI-ERROR-BUDGET-MATRIX.md",
+    "docs/09_operations/tenant-governance.md",
+    "docs/ontology/copilot.yaml",
+    "docs/ontology/domain.yaml",
+    "docs/ontology/ontology.yaml",
+  ];
+  const missingCmmiTemplates = REQUIRED_CMMI_AND_ONTOLOGY.filter((rel) => !fs.existsSync(path.join(TARGET, rel)));
+  const leakedCustomerTokens = REQUIRED_CMMI_AND_ONTOLOGY.filter((rel) => {
+    const p = path.join(TARGET, rel);
+    if (!fs.existsSync(p)) return false;
+    const t = fs.readFileSync(p, "utf8");
+    return /tele-pulse|blueprint-backport-audit|DAR-20261021|云南移动|九夏智居/i.test(t);
+  });
+
+  const motherPurgeIssues = [
+    ...(presentMotherResidue.length ? [`残留母本目录/审计=${presentMotherResidue.join(",")}`] : []),
+    ...(leakedHistoryRecords.length ? [`残留历史DAR/ADR=${leakedHistoryRecords.join(",")}`] : []),
+    ...(missingCmmiTemplates.length ? [`缺失CMMI/Ontology=${missingCmmiTemplates.join(",")}`] : []),
+    ...(leakedCustomerTokens.length ? [`模板含客户特定词=${leakedCustomerTokens.join(",")}`] : []),
+  ];
+  record(
+    "母本归档/审计零泄漏且 CMMI 模板齐备",
+    motherPurgeIssues.length === 0,
+    motherPurgeIssues.length
+      ? motherPurgeIssues.join("; ")
+      : `0 个 specs/archive 与母本审计残留，${REQUIRED_CMMI_AND_ONTOLOGY.length} 份 CMMI 00..09 + ontology 干净就绪`
+  );
+
   /* --------------------------- ⑦ workspace 无悬空 --------------------------- */
   const WS_DIRS = ["apps/admin", "apps/miniapp", "apps/app", "packages/api-client", "packages/shared-types"];
   const packages = new Map();
@@ -254,13 +314,13 @@ try {
   /* ------------------------- ⑧ 派生项目能自跑门禁 ------------------------- */
   const selfGate = spawnSync(
     process.execPath,
-    ["scripts/gate-check.mjs", "--only", "ci-files,script-targets,doc-commands,menu-standard"],
+    ["scripts/gate-check.mjs", "--only", "ci-files,script-targets,doc-commands,menu-standard,specs-health,openwiki"],
     { cwd: TARGET, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 300000 }
   );
   record(
     "派生项目可自跑门禁（无依赖子集）",
     selfGate.status === 0,
-    `gate --only ci-files,script-targets,doc-commands,menu-standard → exit ${selfGate.status}`
+    `gate --only ci-files,script-targets,doc-commands,menu-standard,specs-health,openwiki → exit ${selfGate.status}`
   );
 
   /* ------------- ⑨ 连字符安全 SQL/Java、净室前端与四平面网关自证 ------------- */

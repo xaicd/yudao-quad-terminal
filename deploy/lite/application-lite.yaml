@@ -11,7 +11,7 @@
 # ${spring.boot.admin.context-path} / ${management.endpoints.web.base-path} 占位符会解析失败）。
 #
 # ⚠️ 许可范围：本档使用 Redis 7.4.1（RSALv2 / SSPLv1），仅限本地开发与演示；
-#    严禁用于对外提供 Redis 兼容托管服务。详见 DAR-20261021-lite-runtime-dependencies.md。
+#    严禁用于对外提供 Redis 兼容托管服务。详见 deploy/lite/README.md §6。
 # ==============================================================================
 
 server:

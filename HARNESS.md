@@ -117,7 +117,7 @@ pnpm run check && pnpm run compat:check
 | **L6 反向控制** | `pnpm harness:controls` | **证明门禁真的会红**：给每道门禁注入违规 → 必须失败 → 复原 → 必须转绿 | 9/9 通过 |
 | **L7 派生金路径** | `pnpm harness:hatch` | 在临时目录**真跑一次派生**并断言 13 项：契约文件齐备 / 本地状态零泄漏（含凭据）/ 身份替换 / Java 包迁移 / `groupId` 与包同源 / 文件名旧品牌清零 / workspace 依赖无悬空 / 派生项目能自跑门禁 | 11s · 12986 文件 |
 
-> L6 是本文件与家族 harness（cooliebase-all `harness-health` / wenlv-next `*-negative-control`）对齐的关键：
+> L6 是本文件与跨底座统一反向控制守卫（`harness-health` / `negative-controls`）对齐的关键：
 > **配置合法 ≠ 生效，门禁存在 ≠ 会咬人**。只有被反向验证过的守卫才算数。
 
 ---

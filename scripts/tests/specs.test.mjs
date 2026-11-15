@@ -10,18 +10,24 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const requireRepo = createRequire(path.join(ROOT, "package.json"));
 const { resolveSpecDir, getTargetSpecDir, listAllSpecs } = requireRepo("./scripts/lib/spec-path-resolver.cjs");
 
-const isMotherBlueprint = fs.existsSync(path.join(ROOT, ".gitmodules"));
+test("spec-resolver：能解析新建或已存在的规格目录", () => {
+  const tmpSpecDir = path.join(ROOT, "docs", "specs", "__resolver_test_domain__", "__resolver_test_spec__");
+  fs.mkdirSync(tmpSpecDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(tmpSpecDir, "brief.json"),
+    JSON.stringify({ name: "__resolver_test_spec__", domain: "__resolver_test_domain__", type: "feature" }),
+    "utf8"
+  );
+  try {
+    const dir = resolveSpecDir("__resolver_test_spec__");
+    assert.equal(dir, tmpSpecDir, "应能精准解析到 docs/specs/<domain>/<name>");
+    assert.ok(fs.existsSync(path.join(dir, "brief.json")), "解析结果必须含 brief.json");
 
-test("spec-resolver：能解析已存在的规格目录", (t) => {
-  const all = listAllSpecs();
-  if (!isMotherBlueprint && all.length === 0) {
-    t.skip("派生空仓尚未创建业务规格");
-    return;
+    const all = listAllSpecs();
+    assert.ok(all.some((s) => s.name === "__resolver_test_spec__" && s.domain === "__resolver_test_domain__"));
+  } finally {
+    fs.rmSync(path.join(ROOT, "docs", "specs", "__resolver_test_domain__"), { recursive: true, force: true });
   }
-  const targetName = isMotherBlueprint ? "module-trim-and-mcp" : all[0].name;
-  const dir = resolveSpecDir(targetName);
-  assert.ok(dir, "应能解析到该规格");
-  assert.ok(fs.existsSync(path.join(dir, "brief.json")), "解析结果必须含 brief.json");
 });
 
 test("spec-resolver：未知规格返回 null（而不是乱猜路径）", () => {
@@ -33,18 +39,20 @@ test("spec-resolver：目标路径遵循 docs/specs/<domain>/<name>", () => {
   assert.ok(p.endsWith(path.join("docs", "specs", "platform", "demo")), p);
 });
 
-test("spec-resolver：能列出全部规格（母本 ≥3 份）", (t) => {
-  const all = listAllSpecs();
-  if (!isMotherBlueprint && all.length === 0) {
-    t.skip("派生空仓尚未创建业务规格");
-    return;
-  }
-  if (isMotherBlueprint) {
-    assert.ok(all.length >= 3, `仅找到 ${all.length} 份规格`);
-  }
-  for (const s of all) {
-    assert.ok(s.name && s.domain, "每份规格都应有 name 与 domain");
-    assert.ok(fs.existsSync(s.path), `${s.path} 不存在`);
+test("母本净室基线：不含 docs/specs/archive 历史规格、母本回灌审计或瞬态 artifacts", () => {
+  assert.equal(fs.existsSync(path.join(ROOT, "docs", "specs", "archive")), false, "母本不得携带 docs/specs/archive 历史归档");
+  assert.equal(
+    fs.existsSync(path.join(ROOT, "docs", "00_meta_standards", "blueprint-backport-audit.md")),
+    false,
+    "母本不得携带内部回灌审计报告"
+  );
+  assert.equal(fs.existsSync(path.join(ROOT, "docs", "artifacts")), false, "母本不得提交瞬态 docs/artifacts");
+  assert.equal(fs.existsSync(path.join(ROOT, "docs", "architecture", "artifacts")), false, "母本不得提交瞬态 docs/architecture/artifacts");
+
+  const darDir = path.join(ROOT, "docs", "01_management", "dar");
+  if (fs.existsSync(darDir)) {
+    const darMds = fs.readdirSync(darDir).filter((f) => f.endsWith(".md"));
+    assert.deepEqual(darMds, [], "母本 docs/01_management/dar 不得残留历史选型记录");
   }
 });
 
@@ -56,7 +64,7 @@ const health = (...args) =>
     timeout: 60000,
   });
 
-test("specs-health --json：全部规格健康，且计数自洽", () => {
+test("specs-health --json：干净 0 规格基线与存量规格均健康自洽", () => {
   const r = health("--json");
   assert.equal(r.status, 0, r.stderr);
 

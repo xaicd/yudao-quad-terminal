@@ -12,7 +12,7 @@
 | 工作流配方数 | **1** | `.agents/workflows/*.workflow.json` |
 | 后端业务模块数 | **19** | `apps/backend/yudao-module-*` |
 | 官方 PG 脚本建表数 | **49** | `apps/backend/sql/postgresql/ruoyi-vue-pro.sql` |
-| 活跃/归档规格数 | **6** | `docs/specs/**/brief.json` |
+| 活跃/归档规格数 | **0** | `docs/specs/**/brief.json` |
 
 > ⚠️ 本页其他段落若出现与上表冲突的规模数字（如"324 份契约""263 张表""36 大技能"），均为**来源基座的历史口径**，请以上表为准。
 
@@ -25,7 +25,7 @@
    - 第二层：软件制造工程流水线（数字员工交付 0-1 软件工程真资产）；
    - 第三层：业务落地运行系统（客户生产环境业务数据自承载）。
 2. **六位一体超级集成体 (公理二)**：
-   - 控制面中枢 (Paperclip) + 活体本体 (Palantir) + CMMI 5 质量 + 开源基座自适应 + 极简人机 + 数字员工调度。
+   - 控制面中枢 (Coolie) + 活体本体 (Palantir) + CMMI 5 质量 + 开源基座自适应 + 极简人机 + 数字员工调度。
 3. **活体本体即中枢 (公理三)**：
    - 现实业务与技术实现高保真物理并轨，双核基石 (Object Types + Action Types)，深度复用 49 张物理表。
 4. **CMMI 0-1 软件工程资产与 Spec-First 产物 (公理四)**：
@@ -87,7 +87,7 @@
 
 ## 📚 核心架构支柱 (Architecture Pillars)
 
-- [Paperclip 控制面中枢与单人负责人锁](architecture/control-plane-backbone.md)
+- [Coolie 控制面中枢与单人负责人锁](architecture/control-plane-backbone.md)
 - [Palantir 活体本体系统与业务双核](architecture/living-ontology.md)
 - [开放式扁平敏捷特性库与 CMMI 01~09 体系](architecture/flat-docs-specs-system.md)
 - [Kiro SDD 原生多智能体工作流引擎与配方体系](architecture/kiro-native-workflows.md)
@@ -103,7 +103,7 @@
 
 - [商业软件交付工厂核心模型](domains/delivery-foundry.md)
 - [五大数字员工战斗集群体系](domains/digital-fleet.md)
-- [供应链进销存中台系统 (基于 ruoyi-all-next)](domains/scm-platform.md)
+- [企业级供应链进销存中台系统](domains/scm-platform.md)
 - [智能制造 MES 与板材开料运筹求解器](domains/mes-manufacturing.md)
 - [企业微信画像与网关集成](domains/wecom-integration.md)
 

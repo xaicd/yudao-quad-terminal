@@ -12,7 +12,7 @@
 
 ## 二、 阶段核心产物清单 (Physical Artifacts)
 - **工程产物归宿**：`docs/04_implementation/ (coding-standards.md, mutation-testing-guide.md, plugin-blueprint.md, software-bill-of-materials.md)`
-- **控制面映射**：统一通过 `issue_work_products` 与 `documents` 挂载至 Paperclip 控制面工件总线。
+- **控制面映射**：统一通过 `issue_work_products` 与 `documents` 挂载至 Coolie 控制面工件总线。
 
 ---
 

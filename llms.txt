@@ -104,7 +104,7 @@ pnpm trim:modules --recover --yes              # 撤销（子模块回到已提�
 
 ### 2.5 选型决策记录
 
-`docs/01_management/dar/DAR-20261021-lite-runtime-dependencies.md` —— 数据库（嵌入式 PG vs H2 vs SQLite vs MySQL 容器）与 Redis（7.4.1 vs 6.2.6-BSD vs Valkey vs 容器）的加权 DAR 矩阵、许可与供应链核验、敏感度分析。
+`deploy/lite/README.md` —— 数据库（嵌入式真 PostgreSQL 18.4）与缓存（嵌入式真 Redis 7.4.1 vs 6.2.6-BSD）的零 Docker 编排规范、许可边界与排障指南。
 
 ### 2.6 过程资产与冒烟
 

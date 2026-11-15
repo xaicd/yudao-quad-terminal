@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "rollbackWindowMinutes": 5,
   "steps": [
-    { "order": 1, "action": "切流至上一备份健康镜像", "command": "docker compose -f docker-compose.prod.yml down && docker compose -f docker-compose.backup.yml up -d" },
-    { "order": 2, "action": "回滚数据库迁移版本", "command": "pnpm db:migrate:down" },
-    { "order": 3, "action": "线上健康拨测验证", "command": "curl -f http://127.0.0.1:3300/api/health" }
+    { "order": 1, "action": "停止异常应用实例并切回上一稳定制品", "command": "./deploy/service.sh stop && ./deploy/service.sh start" },
+    { "order": 2, "action": "核验服务进程与端口状态", "command": "./deploy/service.sh status" },
+    { "order": 3, "action": "线上健康拨测验证", "command": "./deploy/service.sh health" }
   ]
 }

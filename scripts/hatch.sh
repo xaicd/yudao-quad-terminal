@@ -28,7 +28,7 @@ function show_help() {
   echo ""
   echo "参数与选项:"
   echo "  <目标工程> / --target <dir>  新项目目录名或绝对/相对路径 (如: /tmp/oa-yudao-sandbox)"
-  echo "  --name <slug>                项目英文标识 (默认取目标目录名，支持连字符如: tele-pulse)"
+  echo "  --name <slug>                项目英文标识 (默认取目标目录名，支持连字符如: demo-mall)"
   echo "  --title <text>               项目中文系统全称 (如: \"星云进销存管理系统\")"
   echo "  --package <pkg>              Java 根包名 (默认: com.<snake_slug>.server)"
   echo "  --base-path <prefix>         四端统一基础路径前缀 (默认: /<slug>)"

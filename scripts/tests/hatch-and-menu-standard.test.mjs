@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { sanitizeUpstreamMenus, UPSTREAM_MENU_RENAMES } from "../../deploy/lite/runtime/lite-pg.mjs";
 import { generateEntityModule } from "../codegen-module.mjs";
 import {
+  pruneHistoricalArchives,
   purgeUpstreamPromoAndTutorialBloat,
   generateCleanProjectDocs,
 } from "../project-reactor.mjs";
@@ -23,6 +24,7 @@ const {
   menuCharLength,
 } = require("../lib/menu-standard.cjs");
 const { healDomainBlueprint } = require("../blueprint-engine.cjs");
+const { scrubMotherBlueprintDocs } = require("../project-init.cjs");
 const { resolveDatabaseEndpoint, createClient } = require("../lib/ephemeral-pg.cjs");
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -38,7 +40,7 @@ test("menu-standard: compactMenuName 严格收敛任意标题至 <= 4 字且保�
     "企业级供应商资质审核申请单管理",
     "CRM 客户线索跟进工作台",
     "跨境电商保税仓出入库台账",
-    "河北电信数据集成管控平台",
+    "企业全域数据集成管控平台",
     "CustomerOrderManagement",
   ]) {
     const out = compactMenuName(sample);
@@ -275,5 +277,65 @@ test("project-reactor: 物理清理上游教程/.image/*-ui 并生成零上游�
     }
   } finally {
     fs.rmSync(tmpTarget, { recursive: true, force: true });
+  }
+});
+
+test("project-init / project-reactor: 孵化层 B 客户工作区时显式剥离母本归档/回灌审计/DAR/ADR/瞬态快照并保留干净 CMMI 00..09 + ontology", () => {
+  for (const cleaner of [pruneHistoricalArchives, scrubMotherBlueprintDocs]) {
+    const tmpTarget = fs.mkdtempSync(path.join(os.tmpdir(), "hatch-doc-scrub-test-"));
+    try {
+      const writeRel = (rel, body = "content") => {
+        const abs = path.join(tmpTarget, rel);
+        fs.mkdirSync(path.dirname(abs), { recursive: true });
+        fs.writeFileSync(abs, body, "utf8");
+      };
+
+      // 注入模拟母本污染文档与运行时快照
+      writeRel("docs/specs/archive/2026-Q4/platform/old-mother-spec/brief.json", "{}");
+      writeRel("docs/00_meta_standards/blueprint-backport-audit.md", "# audit");
+      writeRel("docs/01_management/dar/DAR-20261021-lite-runtime-dependencies.md", "# dar");
+      writeRel("docs/01_management/dar-decision-records/DAR-001.md", "# dar2");
+      writeRel("docs/03_design/adr/ADR-001.md", "# adr");
+      writeRel("docs/architecture/artifacts/agent-route-last.json", "{}");
+      writeRel("docs/artifacts/socratic-inquiry-latest.json", "{}");
+      writeRel("docs/artifacts/env-fingerprint.json", "{}");
+
+      // 注入应当保留的 CMMI 00..09 通用模板与活体本体
+      writeRel("docs/00_meta_standards/README.md", "# 00");
+      writeRel("docs/01_management/project-charter.md", "# 01");
+      writeRel("docs/03_design/architecture-design-hld.md", "# 03");
+      writeRel("docs/09_operations/tenant-governance.md", "# 09");
+      writeRel("docs/ontology/ontology.yaml", "version: '1.0.0'\n");
+
+      cleaner(tmpTarget);
+
+      for (const purged of [
+        "docs/specs/archive",
+        "docs/00_meta_standards/blueprint-backport-audit.md",
+        "docs/01_management/dar/DAR-20261021-lite-runtime-dependencies.md",
+        "docs/01_management/dar-decision-records/DAR-001.md",
+        "docs/03_design/adr/ADR-001.md",
+        "docs/architecture/artifacts",
+        "docs/artifacts",
+      ]) {
+        assert.equal(fs.existsSync(path.join(tmpTarget, purged)), false, `${cleaner.name} 必须剥离 ${purged}`);
+      }
+
+      for (const kept of [
+        "docs/specs/.gitkeep",
+        "docs/01_management/dar/.gitkeep",
+        "docs/01_management/dar-decision-records/.gitkeep",
+        "docs/03_design/adr/.gitkeep",
+        "docs/00_meta_standards/README.md",
+        "docs/01_management/project-charter.md",
+        "docs/03_design/architecture-design-hld.md",
+        "docs/09_operations/tenant-governance.md",
+        "docs/ontology/ontology.yaml",
+      ]) {
+        assert.equal(fs.existsSync(path.join(tmpTarget, kept)), true, `${cleaner.name} 必须保留 ${kept}`);
+      }
+    } finally {
+      fs.rmSync(tmpTarget, { recursive: true, force: true });
+    }
   }
 });

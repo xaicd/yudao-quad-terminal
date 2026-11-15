@@ -2,7 +2,7 @@
 /**
  * scripts/harness/negative-controls.mjs —— 门禁「反向控制」（negative control）
  *
- * 学自家族 harness 的做法（cooliebase-all `harness-health.cjs`、wenlv-next `scripts/harness/*-negative-control.sh`）：
+ * 对齐跨底座统一反向控制守卫规范（`harness-health` / `negative-controls`）：
  *
  *   **配置文件合法 ≠ 生效；门禁存在 ≠ 会咬人。**
  *
@@ -20,22 +20,11 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-const localRequire = createRequire(import.meta.url);
-const { resolveSpecDir, listAllSpecs } = localRequire("../lib/spec-path-resolver.cjs");
-
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const GATE = path.join(ROOT, "scripts/gate-check.mjs");
-
-function pickSpecBriefRel() {
-  const dir = resolveSpecDir("module-trim-and-mcp") || listAllSpecs()[0]?.path;
-  if (!dir) return "docs/specs/platform/module-trim-and-mcp/brief.json";
-  return path.relative(ROOT, path.join(dir, "brief.json"));
-}
-const TARGET_SPEC_BRIEF = pickSpecBriefRel();
 
 const abs = (rel) => path.join(ROOT, rel);
 const write = (rel, text) => {
@@ -61,8 +50,25 @@ function snapshot(rel) {
 
 function restore(rel, snap) {
   const a = abs(rel);
-  if (snap.exists) fs.writeFileSync(a, snap.text);
-  else if (fs.existsSync(a)) fs.rmSync(a, { force: true });
+  if (snap.exists) {
+    fs.writeFileSync(a, snap.text);
+  } else if (fs.existsSync(a)) {
+    fs.rmSync(a, { force: true });
+    let dir = path.dirname(a);
+    const specsDir = abs("docs/specs");
+    while (dir.startsWith(specsDir) && dir !== specsDir) {
+      try {
+        if (fs.existsSync(dir) && fs.readdirSync(dir).length === 0) {
+          fs.rmdirSync(dir);
+          dir = path.dirname(dir);
+        } else {
+          break;
+        }
+      } catch {
+        break;
+      }
+    }
+  }
 
   const now = fs.existsSync(a);
   const same = snap.exists ? now && fs.readFileSync(a, "utf8") === snap.text : !now;
@@ -127,9 +133,9 @@ const CONTROLS = [
   },
   {
     id: "specs-health",
-    label: "规格资产缺失（借走 brief.json）",
-    files: [TARGET_SPEC_BRIEF, `${TARGET_SPEC_BRIEF}.nc-bak`],
-    mutate: () => fs.renameSync(abs(TARGET_SPEC_BRIEF), abs(`${TARGET_SPEC_BRIEF}.nc-bak`)),
+    label: "规格资产残缺且含占位符（注入不完整 brief.json）",
+    files: ["docs/specs/nc-domain/nc-broken-spec/brief.json"],
+    mutate: () => write("docs/specs/nc-domain/nc-broken-spec/brief.json", '{"title":"TODO"}\n'),
   },
   {
     id: "typecheck",

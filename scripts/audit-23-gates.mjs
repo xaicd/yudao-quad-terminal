@@ -4,7 +4,7 @@
  *
  * Coolie Layer-B 通用 23 道出厂硬门禁审计引擎 (`G1`–`G23`)
  *
- * 参数化沉淀自 `tele-pulse` 全生命周期交付实战，自动读取 `package.json`、`.env.ports`、`GOAL.md`、
+ * 全参数化设计，自动读取 `package.json`、`.env.ports`、`GOAL.md`、
  * `deploy/gateway/caddy/<slug>.caddy` 与 `docs/evidence/`，开箱支持所有派生新项目：
  *
  *   node scripts/audit-23-gates.mjs --static-only        # Day-0 静态结构与架构不变量自检（无需启库/构建）

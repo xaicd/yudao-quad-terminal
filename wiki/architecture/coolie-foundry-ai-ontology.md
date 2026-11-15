@@ -1,6 +1,6 @@
 # 架构支柱：Coolie 工坊 AI 活体业务本体全面图谱 (M1~M7+MU)
 
-> **导读与全景**：详见核心架构白皮书 [docs-coolie/architecture/2026-10-10-coolie-foundry-ai-ontology-master-graph.md](../../docs-coolie/architecture/2026-10-10-coolie-foundry-ai-ontology-master-graph.md)。
+> **导读与全景**：详见核心架构白皮书 [AGENTS.md](../../AGENTS.md) 与 [docs/ontology/ontology.yaml](../../docs/ontology/ontology.yaml)。
 > 本词条为 AI 数字员工（Hermes / 墨斗 / 铁匠 / 门神 / 兜底渊 / 百晓生）提供全自主驱动（AI Agent-Driven）Coolie 平台自身的机器可读活体业务本体。
 
 ---
@@ -8,7 +8,7 @@
 ## 1. 三层物理隔离法典
 - **Layer 1 (决策层)**：Console & 6寸屏移动驾驶舱，专属于掌柜/CEO，一句话意图派单、局部一跳卡片审批流；
 - **Layer 2 (制造层)**：数字交付工厂，专属于数字员工（Hermes/墨斗/铁匠/门神/兜底渊），全自主交付 0-1 软件工程真资产；
-- **Layer 3 (运行层)**：客户生产环境，专属于交付业务中台（如云南移动、九夏智居），业务数据自承载自平账。
+- **Layer 3 (运行层)**：客户生产环境，专属于交付业务中台（多租户商业生产集群），业务数据自承载自平账。
 
 ---
 
@@ -33,4 +33,4 @@
 - **探查感知**：`node scripts/ontology-ops.cjs inspect`
 - **意图提议**：`node scripts/ontology-ops.cjs propose --slug <feat> --name <Name> --add-props ...`
 - **掌柜确认**：掌柜在移动端或控制台点击【确认】
-- **应用闭环**：`node scripts/ontology-ops.cjs apply --proposal <id>` 自动生成 DDL + SDD 规格 + Paperclip 工单！
+- **应用闭环**：`node scripts/ontology-ops.cjs apply --proposal <id>` 自动生成 DDL + SDD 规格 + Coolie 工单！

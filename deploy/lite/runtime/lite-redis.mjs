@@ -13,7 +13,7 @@
  * | redis-7.4.1 (默认) | 7.4.1     | RSALv2 / SSPLv1             | ❌ 否          |
  * | redis-6.2.6-bsd    | 6.2.x     | BSD-3-Clause                | ✅ 是          |
  *
- * 许可取舍与证据链见 docs/01_management/dar/DAR-20261021-lite-runtime-dependencies.md：
+ * 许可边界与切换约定见 deploy/lite/README.md §6：
  * 默认选 7.4.1 用于本地开发/演示；**一旦 lite 运行时需随交付物分发，必须切到 redis-6.2.6-bsd**。
  *
  * 二进制不入库：一律抽取到 .commandcode/lite/bin/（已被 .gitignore 覆盖）。

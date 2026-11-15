@@ -64,7 +64,7 @@ PG 二进制、Redis 制品与 PG 驱动。除此之外**不需要 Docker，也�
 
 **许可边界**：lite 档的 Redis 为 7.4.1（RSALv2 / SSPLv1），仅限本地开发与演示；
 **严禁**用于对外提供 Redis 兼容托管服务，**分发前必须切换**到 Redis 6.2.6（BSD-3）或 Valkey。
-详见 `docs/01_management/dar/DAR-20261021-lite-runtime-dependencies.md`。
+详见 `deploy/lite/README.md` §6。
 
 ---
 

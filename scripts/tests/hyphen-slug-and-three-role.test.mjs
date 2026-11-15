@@ -26,14 +26,14 @@ const {
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
-test("deriveSlugForms + replaceContent: 连字符项目名 (tele-pulse) 在 SQL/Java/Spring 配置中各得其所", () => {
-  const forms = deriveSlugForms("tele-pulse");
+test("deriveSlugForms + replaceContent: 连字符项目名 (star-pulse) 在 SQL/Java/Spring 配置中各得其所", () => {
+  const forms = deriveSlugForms("star-pulse");
   assert.deepEqual(forms, {
-    projectName: "tele-pulse",
-    snakeSlug: "tele_pulse",
-    upperSnakeSlug: "TELE_PULSE",
-    pascalSlug: "TelePulse",
-    camelSlug: "telePulse",
+    projectName: "star-pulse",
+    snakeSlug: "star_pulse",
+    upperSnakeSlug: "STAR_PULSE",
+    pascalSlug: "StarPulse",
+    camelSlug: "starPulse",
   });
 
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "reactor-hyphen-test-"));
@@ -62,29 +62,29 @@ test("deriveSlugForms + replaceContent: 连字符项目名 (tele-pulse) 在 SQL/
     fs.writeFileSync(yamlFile, "yudao:\n  info:\n    base-package: cn.iocoder.yudao\n", "utf8");
 
     replaceContent(tmp, {
-      projectName: "tele-pulse",
-      projectTitle: "河北电信数据集成平台",
-      groupId: "com.tele_pulse",
-      packageName: "com.tele_pulse.server",
-      basePath: "/tele-pulse",
+      projectName: "star-pulse",
+      projectTitle: "星云数据集成平台",
+      groupId: "com.star_pulse",
+      packageName: "com.star_pulse.server",
+      basePath: "/star-pulse",
       gatewayPort: 48091,
     });
 
     const sqlOut = fs.readFileSync(sqlFile, "utf8");
-    assert.match(sqlOut, /CREATE TABLE tele_pulse_demo01_contact/);
-    assert.match(sqlOut, /idx_tele_pulse_demo/);
-    assert.doesNotMatch(sqlOut, /tele-pulse_/, "SQL 标识符严禁出现未加引号连字符");
+    assert.match(sqlOut, /CREATE TABLE star_pulse_demo01_contact/);
+    assert.match(sqlOut, /idx_star_pulse_demo/);
+    assert.doesNotMatch(sqlOut, /star-pulse_/, "SQL 标识符严禁出现未加引号连字符");
 
     const javaOut = fs.readFileSync(javaFile, "utf8");
-    assert.match(javaOut, /package com\.tele_pulse\.server\.server;/);
-    assert.match(javaOut, /@ConfigurationProperties\(prefix = "tele-pulse\.info"\)/);
-    assert.match(javaOut, /public class TelePulseServerApplication/);
-    assert.match(javaOut, /TELE_PULSE_CACHE_KEY/);
-    assert.match(javaOut, /private Object telePulseProperties;/);
+    assert.match(javaOut, /package com\.star_pulse\.server\.server;/);
+    assert.match(javaOut, /@ConfigurationProperties\(prefix = "star-pulse\.info"\)/);
+    assert.match(javaOut, /public class StarPulseServerApplication/);
+    assert.match(javaOut, /STAR_PULSE_CACHE_KEY/);
+    assert.match(javaOut, /private Object starPulseProperties;/);
 
     const yamlOut = fs.readFileSync(yamlFile, "utf8");
-    assert.match(yamlOut, /^tele-pulse:/m);
-    assert.match(yamlOut, /base-package: com\.tele_pulse\.server/);
+    assert.match(yamlOut, /^star-pulse:/m);
+    assert.match(yamlOut, /base-package: com\.star_pulse\.server/);
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
@@ -115,8 +115,8 @@ test("sanitizeAdminFrontendForDerivedProject: 物理删除假图表、重写零M
     );
 
     sanitizeAdminFrontendForDerivedProject(tmp, {
-      projectName: "tele-pulse",
-      projectTitle: "河北电信数据集成平台",
+      projectName: "star-pulse",
+      projectTitle: "星云数据集成平台",
     });
 
     for (const removed of ["Index2.vue", "echarts-data.ts", "types.ts"]) {
@@ -233,7 +233,7 @@ test("three-role-audit + lite-credentials + domain-prune: 真实 PostgreSQL 18.4
   const auditSql = renderThreeRoleAuditSql({ prefix: "di" });
   await client.query(auditSql);
 
-  const guardJava = renderThreeRoleGuardJava({ packagePrefix: "com.tele_pulse.server", prefix: "di" });
+  const guardJava = renderThreeRoleGuardJava({ packagePrefix: "com.star_pulse.server", prefix: "di" });
   assert.match(guardJava, /class ThreeRoleGuard/);
   assert.equal(DEFAULT_ROLES.length, 4);
 
