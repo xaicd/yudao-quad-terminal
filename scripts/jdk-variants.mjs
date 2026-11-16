@@ -203,13 +203,15 @@ function cmdStatus(json) {
     .map(({ variant, resolved: res }) => {
       const info = refInfo(res.ref);
       if (!info) return null;
-      const contains = head.sha && isAncestor(info.full, head.sha);
+      const stackedOnRef = Boolean(head.sha && isAncestor(info.full, head.sha));
+      const pinnedAncestorOfRef = Boolean(head.sha && !stackedOnRef && isAncestor(head.sha, info.full));
+      const contains = stackedOnRef || pinnedAncestorOfRef;
       return {
         id: variant.id,
         ref: res.ref,
         sha: info.sha,
-        isBase: Boolean(contains),
-        behind: contains ? commitsBetween(info.full, head.sha) : null,
+        isBase: contains,
+        behind: stackedOnRef ? commitsBetween(info.full, head.sha) : pinnedAncestorOfRef ? 0 : null,
       };
     })
     .filter(Boolean);
@@ -293,13 +295,15 @@ function cmdCheck(json) {
     }
   }
 
-  // 3) 当前 pin 必须可追溯到某个变体（否则说明底座来路不明）
+  // 3) 当前 pin 必须可追溯到某个变体（或为该变体远端分支的祖先/后代提交）
   const head = headInfo();
   const base = resolved
     .filter((r) => r.resolved)
     .map(({ variant, resolved: res }) => {
       const full = resolveRef(res.ref) ? git(["rev-parse", `${resolveRef(res.ref)}^{commit}`]).out : "";
-      return full && head.sha && isAncestor(full, head.sha) ? { id: variant.id, ref: res.ref } : null;
+      return full && head.sha && (isAncestor(full, head.sha) || isAncestor(head.sha, full))
+        ? { id: variant.id, ref: res.ref }
+        : null;
     })
     .filter(Boolean)[0];
   if (!base) findings.push(`当前 pin ${head.short} 无法追溯到任何 JDK 变体 ref`);

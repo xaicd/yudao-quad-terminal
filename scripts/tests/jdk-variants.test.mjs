@@ -177,14 +177,23 @@ test("--use 缺 --yes：exit 2（切换底座是破坏性操作）", () => {
   assert.match(r.stderr, /--yes/);
 });
 
-test("--use --dry-run：只预览、不动仓库，并如实提示会丢失的本地提交", () => {
+test("--use --dry-run：只预览、不动仓库，并在存在分叉提交时如实提示丢失风险", () => {
   const before = run("--status", "--json").stdout;
   const r = run("--use", "jdk8-11", "--dry-run");
 
   assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /切换 .* → (?:origin\/)?master\b/);
   assert.match(r.stdout, /--dry-run/);
-  assert.match(r.stdout, /不在目标 ref 上/, "必须提示切换会丢失本地提交");
-  assert.match(r.stdout, /cherry-pick/, "必须给出恢复手段");
+
+  const diverged = spawnSync(
+    "git",
+    ["-C", path.join(ROOT, "apps/backend"), "rev-list", "--count", "origin/master..HEAD"],
+    { encoding: "utf8" }
+  );
+  if (diverged.status === 0 && Number((diverged.stdout || "0").trim()) > 0) {
+    assert.match(r.stdout, /不在目标 ref 上/, "存在分叉提交时必须提示切换会丢失本地提交");
+    assert.match(r.stdout, /cherry-pick/, "存在分叉提交时必须给出恢复手段");
+  }
 
   assert.equal(run("--status", "--json").stdout, before, "dry-run 不得改变仓库状态");
 });

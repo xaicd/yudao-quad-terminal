@@ -48,7 +48,7 @@ export const VARIANTS = [
     fallbackTagPattern: "\\(jdk25\\)$",
     javaTargets: ["25"],
     javaVersion: "25",
-    springBoot: "4.1.0",
+    springBoot: "4.1.2",
     note: "跟踪 Spring Boot 4.x 与下一代 LTS；注意上游是 jdk**25**（不存在 jdk21 分支）",
   },
 ];
