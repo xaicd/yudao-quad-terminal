@@ -19,22 +19,6 @@ jobs:
   build-and-release:
     name: Gate Check, Skeleton Archive & GitHub Release
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 3s
-          --health-timeout 3s
-          --health-retries 10
-    env:
-      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
     steps:
       - name: 检出源码与只读上游子模块
         uses: actions/checkout@v4
@@ -42,9 +26,10 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: 同步子模块完整远端历史与标签引用（供 compat 与 jdk-variants 门禁溯源）
+      - name: 同步子模块完整多分支远端历史与标签引用（供 compat 与 jdk-variants 门禁溯源）
         run: |
           for sub in apps/backend apps/admin apps/miniapp; do
+            git -C "$sub" config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
             if [ "$(git -C "$sub" rev-parse --is-shallow-repository)" = "true" ]; then
               git -C "$sub" fetch --unshallow --tags origin "+refs/heads/*:refs/remotes/origin/*"
             else
@@ -72,7 +57,22 @@ jobs:
 
       - name: 运行工程快速门禁与下游兼容契约校验
         run: |
-          pnpm check
+          node -e '
+            const { spawnSync } = require("node:child_process");
+            const r = spawnSync(process.execPath, ["scripts/gate-check.cjs", "--tier", "fast", "--json"], { encoding: "utf8", maxBuffer: 32 * 1024 * 1024 });
+            try {
+              const j = JSON.parse(r.stdout);
+              for (const g of j.results || []) {
+                console.log(`[${g.status}] ${g.id} (${g.ms}ms) ${g.label}`);
+                if (g.severity === "blocking" && g.status === "fail") {
+                  console.log(`::error title=Gate ${g.id} failed::${String(g.detail || "").replace(/\r?\n/g, " | ")}`);
+                }
+              }
+            } catch {
+              console.error(r.stdout, r.stderr);
+            }
+            if (r.status !== 0) process.exit(r.status || 1);
+          '
           pnpm compat:check
 
       - name: 打包离线四端骨架与发布制品 (Release Assets)
