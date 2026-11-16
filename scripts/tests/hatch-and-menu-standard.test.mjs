@@ -313,7 +313,7 @@ test("project-init / project-reactor: 孵化层 B 客户工作区时显式剥离
         "docs/specs/archive",
         "docs/00_meta_standards/blueprint-backport-audit.md",
         "docs/01_management/dar/DAR-20261021-lite-runtime-dependencies.md",
-        "docs/01_management/dar-decision-records/DAR-001.md",
+        "docs/01_management/dar-decision-records",
         "docs/03_design/adr/ADR-001.md",
         "docs/architecture/artifacts",
         "docs/artifacts",
@@ -324,7 +324,6 @@ test("project-init / project-reactor: 孵化层 B 客户工作区时显式剥离
       for (const kept of [
         "docs/specs/.gitkeep",
         "docs/01_management/dar/.gitkeep",
-        "docs/01_management/dar-decision-records/.gitkeep",
         "docs/03_design/adr/.gitkeep",
         "docs/00_meta_standards/README.md",
         "docs/01_management/project-charter.md",

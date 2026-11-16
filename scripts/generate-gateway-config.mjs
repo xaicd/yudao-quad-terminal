@@ -83,7 +83,10 @@ const gatewayPort = parseInt(
   10
 );
 
-const hostRootExpr = `{$CADDY_HOST_ROOT:${ROOT}}`;
+const isMotherRepo = fs.existsSync(path.join(ROOT, ".gitmodules"));
+const defaultCaddyRoot = isMotherRepo ? "." : ROOT;
+const defaultNginxRoot = process.env.NGINX_HOST_ROOT || (isMotherRepo ? `/srv/${projectSlug}` : ROOT);
+const hostRootExpr = `{$CADDY_HOST_ROOT:${defaultCaddyRoot}}`;
 const hasStandaloneCockpit = fs.existsSync(path.join(ROOT, "apps/cockpit/dist/index.html"));
 const cockpitDistExpr = hasStandaloneCockpit
   ? `${hostRootExpr}/apps/cockpit/dist`
@@ -92,9 +95,9 @@ const miniappH5DistExpr = `${hostRootExpr}/apps/miniapp/dist/build/h5`;
 const adminDistExpr = `${hostRootExpr}/apps/admin/dist`;
 const evidenceDirExpr = `${hostRootExpr}/docs/evidence`;
 
-const miniappH5Dist = path.join(ROOT, "apps/miniapp/dist/build/h5");
-const adminDist = path.join(ROOT, "apps/admin/dist");
-const cockpitDist = hasStandaloneCockpit ? path.join(ROOT, "apps/cockpit/dist") : adminDist;
+const miniappH5Dist = `${defaultNginxRoot}/apps/miniapp/dist/build/h5`;
+const adminDist = `${defaultNginxRoot}/apps/admin/dist`;
+const cockpitDist = hasStandaloneCockpit ? `${defaultNginxRoot}/apps/cockpit/dist` : adminDist;
 
 const caddyDir = path.join(ROOT, "deploy/gateway/caddy");
 const nginxDir = path.join(ROOT, "deploy/gateway/nginx");

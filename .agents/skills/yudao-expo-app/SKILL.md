@@ -237,10 +237,10 @@ const styles = StyleSheet.create({
 - **根因**：线上 Caddy 配置了 `try_files {path} /index.html`，当客户端请求 `/ota/manifest` 时，如果服务端路径缺失或未配置反代，Caddy 会把 index.html (HTML) 作为响应兜底吐回，导致 Expo 客户端在 JSON 解析时因遇到 `<!DOCTYPE html>` 直接崩溃；
 - **正确姿势**：生产 Caddyfile 中必须对 `/ota/*` 路径强制指定 `Content-Type: application/json` 并禁止 SPA fallback。
 
-### 3. 7 处版本一致性守卫 (Version Consistency)
-在打正式 APK 前，运行统一一致性检测脚本：
+### 3. 版本与兼容契约一致性守卫 (Version & Compat Consistency)
+在打正式客户端发布包前，运行统一兼容契约与门禁检测脚本：
 ```bash
-bash scripts/VERSION-CONSISTENCY-CHECK.sh
+node scripts/compat-check.cjs && pnpm check
 ```
 必须保证以下 7 处版本号分毫不差完全对齐：
 - `apps/app/app.json` (`expo.version`)

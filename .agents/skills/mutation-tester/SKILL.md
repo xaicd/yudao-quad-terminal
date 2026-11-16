@@ -97,11 +97,11 @@ it('should atomically deduct balance and prevent overdraft', async () => {
 # 1. 执行真实数据库集成测试矩阵
 pnpm gate:full
 
-# 2. 针对指定领域执行高强度并发原子测试 (如库存超卖/CAS)
-npx vitest run test/integration/inventory-atomic.integration.test.ts
+# 2. 针对工程核心脚本与真库契约执行回归单测
+pnpm test:scripts
 
-# 3. 针对 RBAC 与租户隔离执行穿透测试
-npx vitest run test/integration/sqlite-rbac.integration.test.ts
+# 3. 针对门禁守卫执行受控违规注入反向测试
+pnpm harness:controls
 
 # 4. 全仓门禁合规检查
 pnpm check

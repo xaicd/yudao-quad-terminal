@@ -1,5 +1,6 @@
 # yudao-quad-terminal
 
+[![Version](https://img.shields.io/badge/Version-1.2.0-blue.svg)](docs/07_release/releases/v1.2.0.md)
 [![Java](https://img.shields.io/badge/Java-17%20LTS-orange.svg)](https://openjdk.org/projects/jdk/17/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.15-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Vue 3](https://img.shields.io/badge/Vue-3.4-green.svg)](https://vuejs.org/)
@@ -8,8 +9,8 @@
 [![CMMI](https://img.shields.io/badge/CMMI-01~09%20Full--Lifecycle-success.svg)](docs/01_management/project-charter.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> 🚀 **工业级 AI 原生商业软件四位一体超级基座 (Integrated Quad-Terminal Foundry Base)**  
-> 统一收拢 **Java 微服务后端 (Spring Cloud / JDK 8/17/21) + PC 运营管理后台 (Vue3 Element Plus) + 微信生态端 (Uni-App 小程序) + 原生移动客户端 (Expo SDK 52 / React Native 0.76)** 四大终端形态，内置 CMMI 01~09 全生命周期工程真资产与 OpenWiki 知识大脑。
+> 🚀 **工业级 AI 原生商业软件四位一体超级基座 (Integrated Quad-Terminal Foundry Base, `v1.2.0`)**  
+> 统一收拢 **Java 微服务后端 (Spring Cloud / JDK 8/17/21) + PC 运营管理后台 (Vue3 Element Plus) + 微信生态端 (Uni-App 小程序/H5) + 原生移动客户端 (Expo SDK 52 / React Native 0.76)** 四大终端形态，内置 CMMI 00~09 全生命周期工程真资产与 OpenWiki 知识大脑（统一归口于 `docs/`），并与姊妹基座 `cooliebase-all` (`v1.5.0`，含 Admin + 2C + `clients/miniapp` + `clients/expo` 四端及 `oa/hrm/fms/pms` 等 18 插件) 保持 100% 同名同参 `.cjs` 工具链契约。
 
 ---
 
@@ -47,9 +48,9 @@ graph TD
             SharedTypes["packages/shared-types<br>(通用 DTO / 终端枚举 / CommonResult<T>)"]
         end
 
-        subgraph Governance["docs/ & wiki/ (CMMI 全生命周期资产)"]
-            Docs["docs/01_management ~ 09_operations<br>(立项 / 需求SRS / 架构HLD / 测试报告 / 投产SOP)"]
-            Wiki["wiki/ (OpenWiki 动态知识大脑 RFC 8615)"]
+        subgraph Governance["docs/ (CMMI 全生命周期资产与知识库单一归口)"]
+            Docs["docs/00_meta_standards ~ 09_operations<br>(立项 / 需求SRS / 架构HLD / 测试报告 / 投产SOP)"]
+            Wiki["docs/wiki/ (OpenWiki 动态知识大脑 RFC 8615)"]
             Workflow[".agents/workflows/cmmi-full-lifecycle.workflow.json<br>(G1~G7 自动化工作流配方)"]
         end
     end
@@ -71,7 +72,7 @@ graph TD
 
 ### 1. 依赖安装
 ```bash
-# 安装前端多端与跨端共享包依赖 (自动识别 pnpm workspace)
+# 安装前端多端与跨端共享包依赖（自动识别根工作区拓扑）
 pnpm install
 ```
 
@@ -80,11 +81,11 @@ pnpm install
 # 1. 启动 Java 后端 (单体聚合本地模式，监听 48080)
 pnpm backend:run
 
-# 2. 启动 PC 运营管理后台 (监听 3000)
+# 2. 启动 PC 运营管理后台
 pnpm dev:admin
 
-# 3. 微信小程序（HBuilderX 工程，无 CLI dev 脚本）
-pnpm dev:miniapp   # 打印 HBuilderX 打开指引
+# 3. 启动微信生态 H5 开发端 (Uni-App Vue 3 + Vite CLI，由 deploy/patches/miniapp/ 补丁赋能)
+pnpm dev:miniapp
 
 # 4. 启动 Expo 原生 App (Metro Bundler)
 pnpm dev:app
@@ -103,15 +104,18 @@ pnpm gen:api-sdk
 
 | 能力 | 一条命令 | 说明 | 详见 |
 | :--- | :--- | :--- | :--- |
+| **PMO 首屏雷达** | `pnpm pmo` | 0.5 秒扫描仓库活跃规格、WBS 待办队列与技术债大盘 | [`docs/01_management/pmo-dashboard.md`](docs/01_management/pmo-dashboard.md) |
+| **`<500 Tokens` 蓝图交付** | `pnpm blueprint:deliver -- --file <domain>.blueprint.json --verify-e2e` | 蓝图口语化自愈 (`doctor`) + 16 份 Spec 资产 + 四端代码生成 + 嵌入式真 PG 6 阶段 E2E | [`scripts/blueprint-engine.cjs`](scripts/blueprint-engine.cjs) |
 | **lite 零 Docker 档** | `pnpm lite:up` / `pnpm lite:down` | 嵌入式**真** PostgreSQL 18.4 + 嵌入式**真** Redis，无需 Docker、无需外部数据库/缓存服务 | [`deploy/lite/README.md`](deploy/lite/README.md) |
-| **端到端验收** | `pnpm lite:verify` | 登录 200 + accessToken、**连续登录 3 次回归防护**、弱默认凭据反证、**子模块差异收敛复验**（改动必须恰好等于 deploy/patches 声明的补丁） | 同上 |
-| **子模块差异补丁** | `pnpm patch:status` / `patch:apply` / `patch:check` | 代码级差异收敛于 `deploy/patches/`，子模块指针保持**纯上游提交** → 别人 clone 得到完整可用基座 | [`deploy/patches/README.md`](deploy/patches/README.md) |
-| **统一门禁** | `pnpm gate:fast` / `pnpm gate:full` | `blocking` 才阻塞；`advisory` 如实展示；fast 15 项 / full 18 项（追加后端单测、前端构建与 lite e2e） | [`scripts/gate-check.mjs`](scripts/gate-check.mjs) |
-| **自有脚本单测** | `pnpm test:scripts` | 44 个 `node:test` 用例：裁剪闭包/冲突、规格资产、凭据与加解密、进程收割边界、门禁 CLI | [`scripts/tests/`](scripts/tests) |
+| **端到端验收** | `pnpm lite:verify` | 登录 200 + accessToken、**连续登录 3 次回归防护**、弱默认凭据反证、**子模块差异收敛复验**（改动必须恰好等于 `deploy/patches` 声明的补丁） | 同上 |
+| **子模块差异补丁** | `pnpm patch:status` / `pnpm patch:apply` / `pnpm patch:check` | 三大只读子模块差异收敛于 `deploy/patches/`，子模块指针保持**纯上游提交** → 别人 clone 得到完整可用基座 | [`deploy/patches/README.md`](deploy/patches/README.md) |
+| **统一门禁** | `pnpm gate:fast` / `pnpm gate:full` | `blocking` 才阻塞；`advisory` 如实展示；fast 17 项 / full 20 项（追加后端单测、前端构建与 lite e2e） | [`scripts/gate-check.cjs`](scripts/gate-check.cjs) |
+| **兼容契约与反向控制** | `pnpm compat:check` / `pnpm harness:controls` | 11 组下游兼容契约核验 + 10/10 项 blocking 门禁违规注入反向自证 | [`compat-manifest.json`](compat-manifest.json) |
+| **自有脚本单测** | `pnpm test:scripts` | 99 个 `node:test` 用例：契约基线、裁剪闭包、规格资产、凭据加解密、进程收割边界、JDK 变体、菜单规范与净室派生 | [`scripts/tests/`](scripts/tests) |
 | **后端单测** | `pnpm test:all` | 脚本单测 + 类型 + `mvn test`（实测全绿约 72s）+ 就绪自检，**严格失败即退出** | [`scripts/lifecycle.sh`](scripts/lifecycle.sh) |
-| **生产构建** | `pnpm build:backend` | 两步 Maven：依赖用普通库 jar、只 repackage 服务端 → 189MB（已实测） | [`scripts/build-admin.mjs`](scripts/build-admin.mjs) |
+| **生产构建与发布包** | `pnpm build` / `pnpm release:package` | 两步 Maven 189MB jar + Admin/MiniApp 前端构建 + 离线纯净骨架包 (`SHA256SUMS.txt`) | [`scripts/build-release-assets.cjs`](scripts/build-release-assets.cjs) |
 | **规格健康度** | `pnpm specs:health` | 校验每份规格的 16 份资产、brief 8 要素与占位符残留 | [`scripts/specs-health.mjs`](scripts/specs-health.mjs) |
-| **模块裁剪** | `pnpm trim:modules --profile lite --dry-run` | 19 模块声明式裁剪：可预览 / 落地 / 校验漂移 / 一键撤销 | `.agents/skills/yudao-cloud-bootstrap/SKILL.md` §5 |
+| **模块裁剪** | `pnpm trim:modules --profile lite --dry-run` | 19 模块声明式裁剪：可预览 / 落地 / 校验漂移 / 一键撤销 | [`.agents/skills/yudao-cloud-bootstrap/SKILL.md`](.agents/skills/yudao-cloud-bootstrap/SKILL.md) |
 | **Agent 端点 (MCP)** | `cmd mcp list` | 8 个工具：裁剪、代码生成、上下文切片、契约防漂移、门禁 | [`.agents/skills/yudao-mcp-server/SKILL.md`](.agents/skills/yudao-mcp-server/SKILL.md) |
 
 首次使用 lite 档：
@@ -130,10 +134,11 @@ pnpm lite:up                             # 常驻；Ctrl-C 成对回收 Redis �
 
 ### 工程硬约束
 
-- **pnpm 唯一**：禁止任何 npm 操作（run / install / exec / ci 四类），由门禁 `pkg-manager` 拦截。`pnpm` 是唯一 JS 包管理器与任务入口。
-- **`apps/backend`、`apps/admin`、`apps/miniapp` 是第三方 git submodule（只读）**：所有差异落主仓（`deploy/`、`scripts/`、`.agents/`、`docs/`）。
-- **禁止弱默认凭据**（`admin` / `admin123` 之类）：lite 档引导凭据由 CSPRNG 生成，写入 `.commandcode/lite/credentials.env`（0600、已 gitignore）。
-- **机器可读入口**：[`llms.txt`](llms.txt)；**Agent 导航**：[`AGENTS.md`](AGENTS.md) → [`wiki/index.md`](wiki/index.md)。
+- **pnpm 唯一**：禁止任何非 pnpm 的 JS 包管理命令，由门禁 `pkg-manager` 拦截。`pnpm` 是唯一 JS 包管理器与任务入口。
+- **`apps/backend`、`apps/admin`、`apps/miniapp` 是第三方 git submodule（只读）**：所有差异落主仓（`deploy/patches/`、`scripts/`、`.agents/`、`docs/`）。
+- **禁止弱默认凭据**（严禁使用可猜默认管理员账号与弱口令）：lite 档引导凭据由 CSPRNG 生成，写入 `.commandcode/lite/credentials.env`（0600、已 gitignore）。
+- **导航菜单严格 `<= 4` 字与全仓文档单一归口 `docs/`**：所有可见目录/页面菜单名严格 `<= 4` 字；所有过程文档、规格（`docs/specs/`）、OpenWiki（`docs/wiki/`）、Release 说明（`docs/07_release/releases/`）与治理审计报告（`docs/audit/`）统一收敛于 `docs/`，严禁顶层散落文档目录。
+- **机器可读入口**：[`llms.txt`](llms.txt) · [`HARNESS.md`](HARNESS.md) · [`CHANGELOG.md`](CHANGELOG.md)；**Agent 导航**：[`AGENTS.md`](AGENTS.md) → [`docs/wiki/index.md`](docs/wiki/index.md)。
 
 ---
 
@@ -162,18 +167,20 @@ bash scripts/hatch.sh my-new-project --title "客户项目名称" --package com.
 
 ---
 
-## 🛡️ CMMI 01~09 全生命周期工程规范
+## 🛡️ CMMI 00~09 全生命周期工程规范（统一归口 `docs/`）
 
-根目录下 `docs/` 严格遵循 CMMI 5 高成熟度资产规范：
-- `docs/01_management/`：项目范围、立项章程 (Charter)、WBS 字典与风险台账 (RSKM)；
-- `docs/02_requirements/`：IEEE 29148 / EARS 语法软件需求规格说明书 (SRS) 与双向需求跟踪矩阵 (RTM)；
-- `docs/03_design/`：系统概要设计说明书 (HLD)、DAR 架构选型分析与接口契约 (LLD)；
-- `docs/04_implementation/`：研发编码规范、防假 Mock 守卫与单向依赖规约；
-- `docs/05_verification/`：四态真机测试验收报告 (Test Report) 与客户终验单 (UAT)；
-- `docs/06_quality_assurance/`：SPC 统计过程控制与 5-Whys 缺陷预防报告 (CAR)；
-- `docs/07_release/`：不可变制品指纹、生产部署拓扑与秒级回滚应急 SOP；
+根目录下 `docs/` 为全仓唯一文档真源目录，严格遵循 CMMI 5 高成熟度资产规范：
+- `docs/00_meta_standards/`：元规范与阶段资产治理边界说明；
+- `docs/01_management/`：PMO 待办大盘 (`pmo-dashboard.md`)、立项章程 (Charter)、项目计划 (WBS) 与风险台账 (RSKM)；
+- `docs/02_requirements/`：IEEE 29148 / EARS 软件需求规格说明书 (SRS)、双向需求跟踪矩阵 (RTM) 与终验核销单 (UAT)；
+- `docs/03_design/`：系统概要设计说明书 (HLD)、DAR 架构选型分析与数据库物理 ERD；
+- `docs/04_implementation/`：研发编码规范、子模块补丁方案与防假 Mock 守卫；
+- `docs/05_verification/`：测试总计划、全栈测试验收报告与缺陷收敛台账；
+- `docs/06_quality_assurance/`：质量审计计划、PCA/FCA 配置审计、SPC 过程度量与 CAR 缺陷预防；
+- `docs/07_release/`：不可变制品指纹 (`release-fingerprint.json`)、部署 SOP、秒级回滚 Runbook 与正式版说明 (`releases/v1.2.0.md`)；
 - `docs/08_sre/`：SLO/SLI 度量矩阵与站点可靠性应急复盘；
-- `docs/09_operations/`：多租户开通治理与持续对账台账。
+- `docs/09_operations/`：多租户开通治理与持续运营台账；
+- `docs/wiki/`、`docs/specs/`、`docs/ontology/`、`docs/audit/`：OpenWiki 知识大脑、敏捷特性规格包、活体业务本体与准确性审计报告。
 
 ---
 

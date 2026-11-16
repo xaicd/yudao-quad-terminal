@@ -87,8 +87,8 @@ jobs:
           pnpm run release:package -- --tag="${TAG}"
 
           mkdir -p dist
-          if [ -f "releases/${TAG}.md" ]; then
-            cp "releases/${TAG}.md" dist/RELEASE_NOTES.md
+          if [ -f "docs/07_release/releases/${TAG}.md" ]; then
+            cp "docs/07_release/releases/${TAG}.md" dist/RELEASE_NOTES.md
           else
             cp docs/07_release/release-notes.md dist/RELEASE_NOTES.md
           fi
@@ -110,5 +110,5 @@ jobs:
           echo "✅ Release 制品构建完成: ${{ steps.package.outputs.tag }}"
           echo "国内 Gitee Releases 同步说明："
           echo "1. 推送 Tag 至 Gitee: git push gitee ${{ steps.package.outputs.tag }}"
-          echo "2. 上传 dist/release-assets/* 制品与 releases/${{ steps.package.outputs.tag }}.md 说明"
+          echo "2. 上传 dist/release-assets/* 制品与 docs/07_release/releases/${{ steps.package.outputs.tag }}.md 说明"
           echo "=========================================================="

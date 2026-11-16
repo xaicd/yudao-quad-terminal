@@ -18,28 +18,28 @@
 
     # 1. 领导驾驶舱 / 实时监控大屏平面 (/cockpit/)
     handle_path /yudao/cockpit/* {
-        root * {$CADDY_HOST_ROOT:/Users/mac/workspace/xaicd/yudao-quad-terminal}/apps/admin/dist
+        root * {$CADDY_HOST_ROOT:.}/apps/admin/dist
         file_server
         try_files {path} /index.html
     }
 
     # 2. B端运营管理中台 Web 静态资源 (/admin/)
     handle_path /yudao/admin/* {
-        root * {$CADDY_HOST_ROOT:/Users/mac/workspace/xaicd/yudao-quad-terminal}/apps/admin/dist
+        root * {$CADDY_HOST_ROOT:.}/apps/admin/dist
         file_server
         try_files {path} /index.html
     }
 
     # 3. C端移动商城 / 掌上运维 H5 静态资源 (/2c/)
     handle_path /yudao/2c/* {
-        root * {$CADDY_HOST_ROOT:/Users/mac/workspace/xaicd/yudao-quad-terminal}/apps/miniapp/dist/build/h5
+        root * {$CADDY_HOST_ROOT:.}/apps/miniapp/dist/build/h5
         file_server
         try_files {path} /index.html
     }
 
     # 3.5 验收证据只读归档平面 (/evidence/)
     handle_path /yudao/evidence/* {
-        root * {$CADDY_HOST_ROOT:/Users/mac/workspace/xaicd/yudao-quad-terminal}/docs/evidence
+        root * {$CADDY_HOST_ROOT:.}/docs/evidence
         file_server
     }
 

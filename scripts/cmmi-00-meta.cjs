@@ -6,7 +6,7 @@
  *   - `harness.cjs` 定工作流程总规范
  *   - `cmmi-00-meta.cjs` 属于 `speckit` 在 CMMI-00 环节的文档与元契约扩展
  * 关联文档:
- *   - 宏观过程文档: docs/00_meta_standards/*, .specify/memory/constitution.md, AGENTS.md, HARNESS.md, wiki/index.md
+ *   - 宏观过程文档: docs/00_meta_standards/*, .specify/memory/constitution.md, AGENTS.md, HARNESS.md, docs/wiki/index.md
  *   - 特性规格文档: docs/specs/<domain>/<name>/spec.json
  *
  * 统一跨底座命令:

@@ -513,9 +513,9 @@ packages:
     "lint:fix": "eslint . --ext .ts,.vue,.js,.jsx --fix",
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test",
-    "trim:modules": "bash scripts/trim-modules.sh",
-    "gen:api-sdk": "bash scripts/gen-api-sdk.sh",
-    "bootstrap": "bash scripts/bootstrap.sh",
+    "trim:modules": "node scripts/trim-modules.mjs",
+    "gen:api-sdk": "bash packages/api-client/scripts/gen-api-sdk.sh",
+    "project:hatch": "bash scripts/hatch.sh",
     "backend:run": "cd apps/backend && mvn spring-boot:run -Dspring-boot.run.profiles=local",
     "backend:build": "cd apps/backend && mvn clean package -DskipTests",
     "clean": "pnpm -r exec rimraf dist dist-preview node_modules && rimraf node_modules"
@@ -642,7 +642,7 @@ mkdir -p "${OUTPUT_DIR}"
 
 # 2. 调用 openapi-typescript 生成全量强类型 AST 契约
 echo "⚙️ 正在执行 openapi-typescript 类型转译 ..."
-npx --yes openapi-typescript "${TEMP_JSON}" --output "${OUTPUT_DIR}/index.ts"
+pnpm dlx openapi-typescript "${TEMP_JSON}" --output "${OUTPUT_DIR}/index.ts"
 
 # 3. 自动生成统一的 Axios HTTP 客户端封装 (client.ts)
 cat > "${OUTPUT_DIR}/client.ts" << 'EOF'

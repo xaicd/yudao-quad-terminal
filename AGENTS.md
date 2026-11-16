@@ -1,8 +1,8 @@
 # AGENTS.md — Yudao Quad-Terminal 工程宪法与治理守卫
 
-更新时间：2026-10-10
+更新时间：2026-11-16（`templateVersion: 1.2.0`）
 
-本文件是 **Yudao Quad-Terminal（四位一体超级基座）** 的独立开发规范与治理宪法，覆盖架构边界、四端协同、研发流程、测试门禁、运行部署与交付标准。
+本文件是 **Yudao Quad-Terminal（四位一体超级基座，`v1.2.0`）** 的独立开发规范与治理宪法，覆盖架构边界、四端协同、研发流程、测试门禁、运行部署与交付标准。
 
 ---
 
@@ -12,7 +12,7 @@
 > 任何 AI Agent / IDE 接入本模板与工程时，**第一优先级必须执行以下 13 项不可动摇的底线法则**：
 > 1. **严禁 Token 与算力浪费 (Zero Token Waste)**：严禁大模型人肉逐行生成几百行千篇一律的重复 CRUD、样板代码、冗余 DDL 或静态 HTML 骨架；业务开发与需求实现必须采用 **Schema / DSL 极简声明式驱动**（大模型输出压缩至 <500 Tokens），由底层通用引擎自动展开！
 > 2. **架构模式极致复用 (Architectural Pattern Mastery)**：必须复用泛型 `BaseMapper<T>`、`LambdaQueryWrapper<T>`、MyBatis-Plus 租户插件与强类型 TS SDK，自动继承多租户隔离、逻辑删除与 8 大基础审计底座字段，严禁手写重复 SQL/CRUD！
-> 3. **存量低代码工具优先 (Prioritize Existing Low-Code Tooling)**：在编写任何代码前，必须优先检索并复用模板内已有域能力、脚手架工具（`scripts/codegen-module.mjs`）、Knife4j API Client 生成器与内置 17 大 Skills！
+> 3. **存量低代码工具优先 (Prioritize Existing Low-Code Tooling)**：在编写任何代码前，必须优先检索并复用模板内已有域能力、脚手架工具（`scripts/codegen-module.cjs` / `scripts/blueprint-engine.cjs`）、Knife4j API Client 生成器与内置 18 大 Skills！
 > 4. **缺少工具就造工具 (Build Tools When Missing)**：遇到可抽象的高频研发需求，必须优先沉淀为通用工具与生成脚本，让工具自动化执行，**绝不能重复手写无效无意义代码**！
 > 5. **开源成熟方案优先与竞品性价比选型 (Open-Source First & Best ROI Selection)**：若自研工具周期过长、复杂度高或 Token 消耗大，**严禁盲目从零造轮子**；必须优先检索开源成熟工业级方案，进行多维竞品横评并遴选出**最高性价比（ROI）与改造成本最小**的方案进行集成！
 > 6. **SpaceX 级全链路测试验证与真实数据库驱动 (SpaceX-Grade Testing & Zero Fake Mock)**：代码变更必须跑通质量门禁（L1单测、L2集成、L3契约、L4 E2E）；100% 由真实数据库支撑，严禁前端伪造 Mock！
@@ -20,14 +20,16 @@
 > 8. **全工种四类契约族收敛 (All-Role Contract Families)**：数据同步/ETL、BI 查询、运营编排、运维发布等非编码需求同样必须收敛为可审计契约——API 契约 / 数据契约 / 流程契约 / 预案契约四选一，并过专属质量门禁；严禁一次性搬运脚本与口径打架的野 SQL！
 > 9. **全局高阶反向思维与 AI-Driven Harness 全程监督 (High-Order Inverse Thinking & DeepSeek Harness Invariants, 详见 .agents/rules/HIGH-ORDER-INVERSE-THINKING.md)**：严禁以初级外包码农视角就事论事贴补丁；敲代码必须业务对象溯源且由通用引擎展开；写单测必须状态机真实入库覆盖与反假 Mock；修改接口必须契约先验、零破坏性变更与挂载不可变操作审计！
 > 10. **0-1 软件工程交付资产与 No Artifact, No Done 铁律 (Spec-First Artifacts, 详见 .agents/rules/SPEC-FIRST-ENGINEERING-ARTIFACTS.md)**：严禁将上线运行期业务数据（订单数据、图纸、运营指标）当成交付资产；严禁口头声明完工；每个工单必须基于 8 要素 Brief 派发，且必须产出 7 类物理工程资产之一（SRS/RTM、OpenAPI 契约、0 报错源码、真实 DB 状态机单测报告、生产回滚 SOP、SRE 稳定性基线、持续运营对账单）！
-> 11. **单一真源与全生命周期过程资产防污染铁律 (Single Source of Truth & Anti-Pollution)**：技能唯一真源为 `.agents/skills/<name>/SKILL.md`，严禁在 `docs/skills` 等建立任何重复副本；业务规格按域隔离于 `docs/specs/<domain>/<name>/` 并支持自动归档；过程资产收敛于 `docs/01_management` ~ `09_operations`（含 08_sre 全栈保障与 09_operations 持续运营），执行三存三不存法则，杜绝 Git 仓库被二进制撑爆与认知污染！
-> 12. **OpenWiki (LLM-Wiki) 动态百科首屏导航 (OpenWiki First, 详见 wiki/index.md)**：任何外部 AI 助手进场时，优先阅读 `wiki/index.md`，基于机器可读契约与架构词条开展工作，严禁全盘盲扫代码浪费 Token 与引起漂移！
+> 11. **单一真源与全生命周期过程资产防污染铁律 (Single Source of Truth & Consolidated `docs/` Root)**：技能唯一真源为 `.agents/skills/<name>/SKILL.md`；**全仓所有文档、规格、知识库、Release 说明与审计报告严格统一归口于 `docs/`**（含 `docs/00_meta_standards` ~ `docs/09_operations`、`docs/specs/<domain>/<name>/`、`docs/wiki/`、`docs/07_release/releases/`、`docs/audit/`），严禁在仓库根目录建立 `doc/`、`wiki/`、`openwiki/`、`specs/`、`releases/` 等并行文档目录或软链！
+> 12. **OpenWiki (LLM-Wiki) 动态百科首屏导航 (OpenWiki First, 详见 `docs/wiki/index.md`)**：任何外部 AI 助手进场时，优先阅读 `docs/wiki/index.md`，基于机器可读契约与架构词条开展工作，严禁全盘盲扫代码浪费 Token 与引起漂移！
 > 13. **全能力 AI Agent 驱动公理 (All Capabilities Must Be AI Agent Driven)**：系统内的一切能力（需求立项、代码实现、API 契约、四端页面交互、接口运营、自动化测试、容器发版、故障自愈）必须具备 **100% 机器可读与 AI Agent 闭环驱动能力**；严禁设计仅供人类手点、无法被 AI Agent 编排或无头探针访问的孤岛能力；前端必须挂载机器可读 Page Schema，测试必须支持变异测试与自主红队渗透演练！
 
 ---
 
-## 🧭 AI Agent 进场 30 秒续作与项目 PMO 待办决策树（与 `cooliebase-all` / `coolie` 100% 同名同参）
+## 🧭 AI Agent 进场 30 秒续作与项目 PMO 待办决策树（与 `cooliebase-all` `v1.5.0` / `coolie` `v0.7.0` 100% 同名同参）
 
+> **跨底座四端同构认知**：姊妹基座 `cooliebase-all`（`v1.5.0`）同样具备 **四大终端**（Admin + 2C Portal + `clients/miniapp` + `clients/expo`）与 **18 个第一方插件**（含 `oa/hrm/fms/pms` 等 20 业务域），与本基座 `yudao-quad-terminal`（`v1.2.0`，Java Spring Boot 3 + Vue3 Admin + UniApp + Expo 19 模块）共享完全一致的 `.cjs` 入口与 `pnpm` 命令契约。
+>
 > **进场第一视角：你即本项目 PMO (Project Management Office)**
 > 任何 AI Agent 打开本项目时，**第一步先看项目 PMO 待办大盘**（耗时 `< 0.5s`，零 Token 盲扫浪费）：
 > - **一键查看实时待办队列 (`P0/P1/P2`)**：`pnpm run pmo`（或 `node scripts/cmmi-01-management.cjs pmo [--write|--json]` / `pnpm run speckit -- cmmi 01 pmo` / `pnpm harness pmo`）
@@ -90,12 +92,12 @@ node scripts/cmmi-09-operations.cjs archive --name <spec>
 
 ### 0.1 六条硬约束
 
-1. **pnpm 唯一**：只用 pnpm；禁止任何 npm 操作（run / install / exec / ci 四类），由门禁 `pkg-manager` 拦截。
-2. **`apps/backend` / `apps/admin` / `apps/miniapp` 是第三方 git submodule（只读）**：严禁修改其中任何文件；所有差异一律落主仓（`deploy/`、`scripts/`、`.agents/`、`docs/`）。
+1. **pnpm 唯一**：只用 pnpm；禁止任何非 pnpm 的 JS 包管理器命令，由门禁 `pkg-manager` 拦截。
+2. **`apps/backend` / `apps/admin` / `apps/miniapp` 是第三方 git submodule（只读）**：严禁修改其中任何文件；所有差异一律落主仓（`deploy/patches/`、`scripts/`、`.agents/`、`docs/`）。
    对子模块的**代码级差异**收敛为 `deploy/patches/<submodule>/*.patch`，由 `pnpm patch:apply` 注入（`lite:up` 与 `lifecycle build` 会自动调用）；**子模块指针只钉远端真实存在的上游提交**，否则别人 clone 不到指向本地提交的 gitlink。新不变式由门禁 `submodule-patches` 强制：子模块工作区改动必须**恰好等于**声明的补丁。
-3. **禁止弱默认凭据**（`admin` / `admin123` 之类）：引导凭据由 CSPRNG 生成，写入 gitignored 的凭据文件（0600）。
+3. **禁止弱默认凭据**（严禁使用可猜默认管理员账号与弱口令）：引导凭据由 CSPRNG 生成，写入 gitignored 的凭据文件（0600）。
 4. **声明必须可执行**：文档里的命令必须真实存在；`pnpm check` 通过才算完工（No Artifact, No Done）。
-5. **导航菜单严格 `<= 4` 字硬标准**：所有可见目录与页面级导航菜单（`system_menu.type IN (1, 2)`）的 `name` 必须严格满足 `char_length(name) <= 4`（完整业务标题保留于 `remark` / OpenAPI 描述）；`deploy/lite/runtime/lite-pg.mjs` 在导入种子 SQL 后自动归一化上游超长菜单（如 `id=17` `缓存监控`、`id=88` `接口日志`、`id=195` `库源配置`）并隐藏外链推广菜单，`scripts/blueprint-engine.cjs`、`scripts/codegen-module.mjs` 与门禁 `menu-standard` 全链路强制执行。
+5. **导航菜单严格 `<= 4` 字硬标准 & 全仓文档单一归口 `docs/`**：所有可见目录与页面级导航菜单（`system_menu.type IN (1, 2)`）的 `name` 必须严格满足 `char_length(name) <= 4`（完整业务标题保留于 `remark` / OpenAPI 描述）；`deploy/lite/runtime/lite-pg.mjs` 在导入种子 SQL 后自动归一化上游超长菜单（如 `id=17` `缓存监控`、`id=88` `接口日志`、`id=195` `库源配置`）并隐藏外链推广菜单；全仓文档/规格/OpenWiki/Release/审计报告统一落盘 `docs/`（门禁 `menu-standard` 强制阻断任何顶层并行文档目录）。
 6. **派生工程子包文档与推广残留零容忍**：通过 `pnpm project:hatch` / `pnpm project:init`（`scripts/project-reactor.mjs`）孵化新项目时，自动生成品牌中立的 `README.md`、`CLAUDE.md`、`HARNESS.md` 及 `apps/{backend,admin,miniapp}/README.md`，并物理清除 `apps/backend` 下全部上游教程 Markdown、`apps/*/.image` 二维码截图目录与未入 Maven 的 `*-ui` 空壳目录，由 `pnpm harness:hatch` 逐项断言守卫。
 
 ### 0.2 能力速查
@@ -106,16 +108,17 @@ node scripts/cmmi-09-operations.cjs archive --name <spec>
 | `<500 Tokens` 蓝图交付 | `pnpm blueprint:deliver -- --file <domain>.blueprint.json --verify-e2e` | 蓝图口语化自愈 (`doctor`) + 16 份 Spec 资产 + 全栈生成 + **Embedded PostgreSQL** 6 阶段真库 E2E | `scripts/blueprint-engine.cjs` |
 | 蓝图校验/渲染/编译 | `pnpm blueprint:check` / `blueprint:render` / `blueprint:doctor` / `blueprint:compile` | 校验模板、按行业预设渲染四端配置、单独诊断或编译领域蓝图 | `scripts/blueprint-engine.cjs` |
 | 嵌入式真 PG 解析器 | `node -e 'require("./scripts/lib/ephemeral-pg.cjs").resolveDatabaseEndpoint()'` | 零 Docker 拉起 **Embedded PostgreSQL 18.4 (`embedded-postgres`)**（与 `cooliebase-all` 同名同契约） | `scripts/lib/ephemeral-pg.cjs` |
-| 统一 9 阶段 Harness | `pnpm harness <install\|check\|build\|start\|health\|status\|stop\|e2e\|deliver>` | 跨底座统一 9 大生命周期编排 | `scripts/harness.cjs` |
-| 统一门禁 | `pnpm check` / `pnpm gate:fast` / `pnpm gate:full` | 任何改动后自证；fast 16 项 / full 19 项（full 另含后端单测与 lite e2e） | `scripts/gate-check.cjs` |
+| 统一 9 阶段 Harness | `pnpm harness <install\|check\|build\|start\|health\|status\|stop\|e2e\|deliver\|pmo>` | 跨底座统一生命周期与 PMO 编排 | `scripts/harness.cjs` |
+| 统一门禁 | `pnpm check` / `pnpm gate:fast` / `pnpm gate:full` | 任何改动后自证；fast 17 项 / full 20 项（full 另含后端单测、前端构建与 lite e2e） | `scripts/gate-check.cjs` |
 | 类型检查 | `pnpm typecheck` | 自有包（app / shared-types / api-client）TS 0 报错 | 各包 `tsconfig.json` |
-| 生产构建 | `pnpm build:backend` / `pnpm build:admin` / `pnpm build` | 后端两步 Maven（已验证 189MB jar）+ 前端 vite 构建（已验证 24.6MB dist） | `scripts/build-admin.mjs` |
-| 下游兼容契约 | `pnpm compat:check` | 下游绑定的入口/端口/路径/子模块指针必须与实现逐条一致 | `scripts/compat-check.cjs` |
-| 派生金路径验证 | `pnpm harness:hatch` | 临时目录真跑派生并断言 13 项（零泄漏/身份替换/包迁移/依赖无悬空/可自跑门禁） | `scripts/harness/hatch-smoke.mjs` |
-| 门禁反向控制 | `pnpm harness:controls` | 给每道 blocking 门禁注入违规，证明它真的会红（配置合法 ≠ 生效） | `scripts/harness/negative-controls.mjs` |
-| 子模块差异补丁 | `pnpm patch:status` / `patch:apply` / `patch:check` / `patch:revert` | 差异收敛于 `deploy/patches/`，指针保持纯上游（可 clone） | `deploy/patches/README.md` |
-| JDK 变体矩阵 | `pnpm jdk:list` / `jdk:status` / `jdk:use <id>` | 四档变体的真实 ref 与切换；门禁防"文档写不存在的分支" | `scripts/lib/jdk-variants.mjs` |
-| 自有脚本单测 | `pnpm test:scripts` | 81 个 `node:test` 用例（裁剪/规格/凭据/加解密/门禁 CLI/JDK 变体/子模块补丁/harness） | `scripts/tests/` |
+| 生产构建 | `pnpm build:backend` / `pnpm build:admin` / `pnpm build:miniapp` / `pnpm build` | 后端两步 Maven（189MB jar）+ Admin/MiniApp 前端构建 | `scripts/build-admin.mjs` |
+| 发布制品打包 | `pnpm release:package` | 打包离线纯净四端骨架包、`compat-manifest.json`、`blueprint.template.json` 与 `SHA256SUMS.txt` | `scripts/build-release-assets.cjs` |
+| 下游兼容契约 | `pnpm compat:check` | 11 组核验：下游绑定的入口/端口/路径/子模块指针必须与实现逐条一致 | `scripts/compat-check.cjs` |
+| 派生金路径验证 | `pnpm harness:hatch` | 临时目录真跑派生并断言 20 项（契约齐备/零泄漏/身份替换/包迁移/依赖无悬空/可自跑门禁） | `scripts/harness/hatch-smoke.mjs` |
+| 门禁反向控制 | `pnpm harness:controls` | 10/10 项：给每道 blocking 门禁注入违规，证明它真的会红（配置合法 ≠ 生效） | `scripts/harness/negative-controls.mjs` |
+| 子模块差异补丁 | `pnpm patch:status` / `patch:apply` / `patch:check` / `pnpm patch:revert` | 差异收敛于 `deploy/patches/`，指针保持纯上游（可 clone） | `deploy/patches/README.md` |
+| JDK 变体矩阵 | `pnpm jdk:list` / `pnpm jdk:status` / `pnpm jdk:use <id>` | 四档变体的真实 ref 与切换；门禁防"文档写不存在的分支" | `scripts/lib/jdk-variants.mjs` |
+| 自有脚本单测 | `pnpm test:scripts` | 99 个 `node:test` 用例（契约基线/裁剪/规格/凭据/加解密/门禁 CLI/JDK 变体/子模块补丁/菜单与派生净室） | `scripts/tests/` |
 | 全栈验证 | `pnpm test:all` | 脚本单测 + 类型 + 后端单测（实测 72s）+ 就绪自检，**严格失败即退出** | `scripts/lifecycle.sh` test 阶段 |
 | lite 零 Docker 档 | `pnpm lite:up` / `pnpm lite:verify` / `pnpm lite:down` / `pnpm lite:clean` | 起后端、跑验收、收割残留、重置数据 | `deploy/lite/README.md` |
 | 模块裁剪 | `pnpm trim:modules --profile lite --dry-run` → `--apply --yes` → `pnpm trim:check` | 只保留所需业务模块 | `scripts/lib/module-catalog.mjs` |
@@ -147,24 +150,24 @@ node scripts/cmmi-09-operations.cjs archive --name <spec>
 
 ### 0.3 先读什么（避免 Token 浪费）
 
-1. `wiki/index.md` —— 全息导航（Rule 12 要求首屏读）
+1. `docs/wiki/index.md` —— 全息导航（Rule 12 要求首屏读）
 2. `llms.txt` —— 高密度能力契约（含「常见失败 → 修复」表）
 3. `.agents/skills/README.md` —— 18 个技能索引（按 CMMI 阶段）
 4. 具体能力的 `SKILL.md` / `README.md`（见上表「真源」列）
 5. **不要**整目录 grep 上千 Java 文件：用 `pnpm ctx:query <keyword>` 取精准切片
 
-### 0.4 已知既有红灯（如实告知，勿当成自己引入的）
+### 0.4 门禁基线与上游只读子模块说明（如实告知，勿当成自己引入的）
 
-- `contract`：**检测器已修正**（旧版未归一化查询串、正则跨函数误配，曾报出 433 条假孤儿与 17 条假动词不符），且 JSON 输出的数组不再静默截断到 50 条。
-  现测：后端 3186 路由 / 前端 2973 路由（升 `apps/admin` pin 后 +315），**动词不符 0**、**孤儿 92 条**（前端调用了后端基座未暴露的接口）：
-  - `/ai1` **66 条（升 pin 新增）**：新前端带上了 AI1 模块页面并调用 `/ai1/*`，而本后端基座不含该模块 —— 属「前端领先后端」，处置方式为裁掉该模块页面或补齐后端模块。
-  - `/infra` 14 + `/pay` 5 + `/bpm` 3 + `/mes` 3 + `/promotion` 1：**旧基线残留**。
-    `/infra/job*` 的归因（已向上游核实）：`YunaiV/yudao-cloud@master-jdk17` 的 infra controller 目录只有 `codegen/config/db/demo/file/logger/redis` —— **上游已移除 Quartz 任务 CRUD 控制器**，而前端仍保留「定时任务」页面 → 该页在本基座上必然 404。**不是本仓版本落后**，两个 submodule 都是只读上游，需等上游对齐。
+- `contract`：**检测器与只读上游基线已对齐**（真源 `scripts/check-contracts-drift.mjs` + `scripts/lib/upstream-contract-baseline.json`）。
+  现测：后端 3186 路由 / 前端 2973 路由，**动词不符 0**、**工程新增孤儿 0**（默认基线模式下 `contract` 门禁为 **PASS**；传 `--strict-upstream` / `--no-baseline` 可审计原始 92 条只读上游未暴露端点）：
+  - `/ai1` **66 条**：新前端带上了 AI1 模块页面并调用 `/ai1/*`，而本后端基座不含该模块 —— 属「前端领先后端」，派生项目可按需裁掉页面或补齐后端模块。
+  - `/infra` 14 + `/pay` 5 + `/bpm` 3 + `/mes` 3 + `/promotion` 1：**上游历史基线**。
+    `/infra/job*` 的归因（已向上游核实）：`YunaiV/yudao-cloud@master-jdk17` 的 infra controller 目录只有 `codegen/config/db/demo/file/logger/redis` —— **上游已移除 Quartz 任务 CRUD 控制器**，而前端仍保留「定时任务」页面。两个 submodule 都是只读上游，由 `upstream-contract-baseline.json` 显式建账。
   - 反方向的 `missingInFrontend` 305 条（后端暴露但前端未封装）**属常态，不计为漂移**。
-- `socratic`：反问快照有时效，过期后 `pnpm socratic:inquire` 刷新即可（已自愈为 PASS）。
-- ~~**`apps/admin` 的前端构建被上游 pin 卡住**~~ → **已修**：把 `apps/admin` rebase 到上游 `master`（`050bac1ec`，74 个提交）并重放本仓的 ApiEncrypt 本地提交 → 新 pin `36ede93e9`。
-  - 原症状：`[UNLOADABLE_DEPENDENCY] Could not load src/views/oa/utils/constants`（3 个 `views/oa/attendance/**` 引用它）；上游 `ce90b26a4 fix(oa): 补充遗漏的考勤常量文件` 已修，本仓原 pin `fbb229fe` 落后 74 个提交。
-  - 现状：`pnpm build:admin` **实测通过**（`✓ built in 23.56s`，产物 `apps/admin/dist` 24.6MB），并纳入 `gate:full` 的 blocking 项 `admin-build`。
+- `socratic`：瞬态反问快照 `docs/artifacts/socratic-inquiry-latest.json` 已列入 `.gitignore`（净室母本不入库），因此在全新克隆的净室工作区呈 `advisory` 提示（`通过 16/17 | blocking 失败 0 | advisory 失败 1`）；本地需刷新时执行 `pnpm socratic:inquire` 即可。
+- ~~**`apps/admin` 的前端构建被上游 pin 卡住**~~ → **已修**：把 `apps/admin` 钉到纯上游 `master` 提交（`050bac1ec`），并将登录加密配置收敛至主仓声明式补丁 `deploy/patches/admin/0001-login-encrypt-on.patch`。
+  - 原症状：`[UNLOADABLE_DEPENDENCY] Could not load src/views/oa/utils/constants`（上游 `ce90b26a4` 已修，旧 pin 落后 74 个提交）。
+  - 现状：`pnpm build:admin` **实测通过**（产物输出至构建目录 24.6MB），并纳入 `gate:full` 的 blocking 项 `admin-build`。
 - **JDK 变体必须"可执行"**：`pnpm jdk:list` / `jdk:status` / `jdk:use <id>` 由 `scripts/lib/jdk-variants.mjs` 驱动，门禁 `jdk-variants` 会校验**文档里写到的上游 ref 是否真实存在**，并**读取该 ref 的 pom 实测 java/boot 版本反向核对声明**（防"名字与内容不符"）。
   曾抓到 README 宣称不存在的 ~~master-jdk8~~ / ~~master-jdk21~~：上游实际只有 `master-jdk17`（默认）、`master`（**JDK 8 线**，pom 实测 java=1.8）、`master-jdk25`（pom 实测 java=25）三个分支；JDK 21 与 17 共用 `master-jdk17`（改 pom 的 `java.version` 即可）。
   **约定**：文档里的反引号 ref 即"断言其存在"，会被门禁解析校验；要提"不存在的 ref"请用删除线或纯文本，勿加反引号。

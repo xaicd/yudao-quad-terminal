@@ -67,6 +67,8 @@ function scrubMotherBlueprintDocs(targetDir) {
     path.join(targetDir, "docs", "architecture", "archive"),
     path.join(targetDir, "docs", "architecture", "artifacts"),
     path.join(targetDir, "docs", "artifacts"),
+    path.join(targetDir, "docs", "audit"),
+    path.join(targetDir, "docs", "07_release", "releases"),
     path.join(targetDir, "docs", "00_meta_standards", "blueprint-backport-audit.md"),
     path.join(targetDir, "docs", "architecture", "OPEN-SOURCE-TRACKING-MANUAL.md"),
     path.join(targetDir, "docs", "architecture", "CURRENT-PROGRESS.md"),
@@ -78,10 +80,12 @@ function scrubMotherBlueprintDocs(targetDir) {
     } catch {}
   }
 
-  // 清空母本历史 DAR / ADR Markdown，仅保留目录骨架 .gitkeep
+  // 移除旧版重复目录并清空母本历史 DAR / ADR Markdown，仅保留唯一标准目录骨架 .gitkeep
+  try {
+    fs.rmSync(path.join(targetDir, "docs", "01_management", "dar-decision-records"), { recursive: true, force: true });
+  } catch {}
   const cleanMdDirs = [
     path.join(targetDir, "docs", "01_management", "dar"),
-    path.join(targetDir, "docs", "01_management", "dar-decision-records"),
     path.join(targetDir, "docs", "03_design", "adr"),
   ];
   for (const dir of cleanMdDirs) {

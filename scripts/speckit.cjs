@@ -764,18 +764,17 @@ function handleInit() {
   const memoryDir = path.join(specifyDir, "memory")
   const templatesDir = path.join(specifyDir, "templates")
   const constPath = path.join(memoryDir, "constitution.md")
-  const specsSymlink = path.join(ROOT, "specs")
+  const specsDir = path.join(ROOT, "docs", "specs")
 
   if (!fs.existsSync(specifyDir)) fs.mkdirSync(specifyDir, { recursive: true })
   if (!fs.existsSync(memoryDir)) fs.mkdirSync(memoryDir, { recursive: true })
   if (!fs.existsSync(templatesDir)) fs.mkdirSync(templatesDir, { recursive: true })
+  if (!fs.existsSync(specsDir)) fs.mkdirSync(specsDir, { recursive: true })
 
   console.log(`✅ .specify/ 目录拓扑完好: ${specifyDir}`)
   console.log(`✅ 项目工程宪法就绪: ${constPath}`)
   console.log(`✅ 标准模板库就绪: ${templatesDir}`)
-  if (fs.existsSync(specsSymlink)) {
-    console.log(`✅ specs/ 顶级链接就绪 -> docs/specs`)
-  }
+  console.log(`✅ docs/specs/ 规格归口目录就绪: ${specsDir}`)
   console.log("\n🎉 Spec-Kit 企业级扩展环境初始化与合规检查 100% PASS！")
 }
 

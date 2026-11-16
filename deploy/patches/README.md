@@ -2,7 +2,7 @@
 
 ## 为什么是这个方案
 
-`apps/backend`（YunaiV/yudao-cloud）与 `apps/admin`（yudaocode/yudao-ui-admin-vue3）都是**第三方只读子模块**。
+`apps/backend`（YunaiV/yudao-cloud）、`apps/admin`（yudaocode/yudao-ui-admin-vue3）与 `apps/miniapp`（yudaocode/yudao-mall-uniapp）都是**第三方只读子模块**。
 
 如果直接把改动提交**在子模块里**、并把主仓 gitlink 钉到那个本地提交，会有一个致命问题：
 **该提交在子模块远端不存在**，别人 `git clone --recursive` / `git submodule update --init` 会直接失败
@@ -20,6 +20,7 @@
 |---|---|---|---|
 | `backend/0001-api-encrypt-default-on.patch` | `apps/backend` | `AuthController` 加 `@ApiEncrypt`；`api-encrypt.enable` / `xss.enable` / 验证码频率限制默认开启 | 注解是**代码**，而 `@ApiEncrypt` 决定登录请求体是否解密；纯配置无法替代 |
 | `admin/0001-login-encrypt-on.patch` | `apps/admin` | 登录接口 `isEncrypt: true` | 与后端配对，否则前端不会加密登录请求体 |
+| `miniapp/0001-enable-headless-cli.patch` | `apps/miniapp` | 为 HBuilderX 形态工程补齐 Vite/Uni-App CLI 无头构建配置与脚本（`dev:h5` / `build:h5`） | 原生子模块缺少 CLI 构建入口，自动化 CI 与网关静态托管必须无头编译 |
 
 ## 用法
 

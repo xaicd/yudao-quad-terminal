@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1.0.0",
   "version": "1.2.0",
-  "generatedAt": "2026-11-16T06:07:04.098Z",
+  "generatedAt": "2026-11-16T08:00:37.626Z",
   "hashes": {
     "package.json": "4adcfb04831e78b9a72aae92766770abe65c796a88bb872008545677ea7a0b1e",
-    "compat-manifest.json": "1eb304225f8901a4b48f5faf2965f9e907ab35b7f0c51ee4545755e088c7ee38",
+    "compat-manifest.json": "2d511e0e82463dc0752272de2abaa3424b2c3bc3222b2315f6569203c9d37b95",
     "blueprint.template.json": "3d99097d880c8626cd073a791887de5b13972562828b1419ee4eb03fec4e75d8",
-    "HARNESS.md": "f0886c02c8302ebc869f2e72ad9a3052d292dc96652f0a2526be483037a526af",
-    "AGENTS.md": "c8b130ef6e58a516945c31b6e8db4ee256b157cdb9fb8ef91b07312df518b7a5"
+    "HARNESS.md": "e96725be40f8d8c01e8d20add3ac453206bf8843647ffdbad70fb55c02e52201",
+    "AGENTS.md": "bdd7a3457080f8065e52b19d11ef1b9d4b4557ae04a24e73ca337e3489705af2"
   }
 }

@@ -170,15 +170,12 @@ function checkPackageManager() {
 }
 
 // ---------------------------------------------------------------------------
-// inline 检查：文档里引用的 pnpm 命令是否真实存在（advisory）
+// inline 检查：文档里引用的 pnpm 命令是否真实存在（blocking）
 // ---------------------------------------------------------------------------
 
 /**
  * 把 pnpm 标准化做到"不撒谎"：文档/skill 里出现的 `pnpm <script>` 必须能在
  * 根 package.json 的 scripts 里找到。pnpm 内建子命令与带 flag 的用法会被忽略。
- *
- * 之所以是 advisory 而非 blocking：存量文档里仍有一批来自姊妹基座的命令
- * （cmmi:asset / smoke:login / security:scan 等）在本仓尚未实现，治理需要单独排期。
  */
 function checkDocCommands() {
   const BUILTIN = new Set([
@@ -319,6 +316,18 @@ function checkCiAndShell() {
 
 function checkMenuStandardAndHygiene() {
   const problems = [];
+
+  // 0. 顶层文档目录单一归口守卫：所有文档/规格/知识库/Release说明/审计报告必须严格收敛于 docs/
+  for (const strayTopDir of ["doc", "wiki", "openwiki", "specs", "releases"]) {
+    try {
+      const st = fs.lstatSync(path.join(ROOT, strayTopDir));
+      if (st) {
+        problems.push(`禁止在仓库根目录放置并行文档目录/软链 "${strayTopDir}"（必须统一收敛至 docs/ 下）`);
+      }
+    } catch {
+      // 不存在即合规
+    }
+  }
 
   // 1. 核验上游种子归一化映射与推广外链清洗钩子齐备
   for (const [id, expected] of [

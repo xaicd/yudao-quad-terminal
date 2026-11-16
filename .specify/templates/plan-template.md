@@ -39,7 +39,7 @@ sequenceDiagram
 ## 3. 技术选型与多端建设交付范围 (Technical Selection & Multi-Terminal Scope)
 
 ### 3.1 蓝图底座与核心选型论证 (DAR)
-- **交付底座**: 优先采用 `cooliebase-all` (Next.js 16 + React 19 轻全栈) 或 `yudao-quad-terminal` (Java 微服务 + Vue3 + UniApp + Expo)；纯独立项目经评审后采用 bare。
+- **交付底座**: 优先采用 `cooliebase-all` (`v1.5.0`, Next.js 16 + React 19 + Admin + 2C + `clients/miniapp` + `clients/expo` 四端 & 18 插件) 或 `yudao-quad-terminal` (`v1.2.0`, Java 微服务 + Vue3 + UniApp + Expo 四端 & 19 模块)；纯独立项目经评审后采用 bare。
 - **数据存储**: 真实数据库 (PostgreSQL / MySQL / SQLite)，100% 拒绝内存伪造 Mock。
 - **多租户能力状态**: **底座可选特性，按需开启**。单租户或企业私有化部署项目缺省关闭，杜绝硬塞无用租户样板代码。
 

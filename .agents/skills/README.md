@@ -1,16 +1,16 @@
 # Agent Skills 技能索引
 
 > **单一真源**：技能的**唯一**真源是 `.agents/skills/<name>/SKILL.md`（见 `AGENTS.md` Rule 0 第 11 条）。
-> 本文件只是**索引**，不承载任何技能正文；严禁在 `docs/skills/` 等处建立重复副本。
+> 本文件只是**索引**，不承载任何技能正文；严禁在其他目录建立重复副本。
 
-当前登记 **18** 个技能。面向 LLM 的首屏导航见 `wiki/index.md`。
+当前登记 **18** 个技能。面向 LLM 的首屏导航见 `docs/wiki/index.md`。
 
 ---
 
 ## 按 CMMI 阶段分布
 
 > 此表与 `scripts/sync-openwiki.mjs` 的 stage 定义**严格一致**；
-> `node scripts/gate-check.mjs --tier fast` 会校验「引用的技能必须都存在」且「真实技能必须都被覆盖」。
+> `node scripts/gate-check.cjs --tier fast` 会校验「引用的技能必须都存在」且「真实技能必须都被覆盖」。
 
 | 阶段 | 阶段名 | 关联技能 |
 |---|---|---|
@@ -71,12 +71,12 @@
    ---
    ```
 
-3. 在 `scripts/sync-openwiki.mjs` 的对应 stage `skills: [...]` **与** `wiki/index.md` 表格行中登记；
+3. 在 `scripts/sync-openwiki.mjs` 的对应 stage `skills: [...]` **与** `docs/wiki/index.md` 表格行中登记；
 4. 重新生成并校验：
 
    ```bash
    node scripts/sync-openwiki.mjs
-   node scripts/gate-check.mjs --tier fast
+   node scripts/gate-check.cjs --tier fast
    ```
 
 > 只登记真实存在的技能。`gate-check` 会拦住悬空引用，也会提示「真实技能未被任何阶段覆盖」。

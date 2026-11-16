@@ -32,14 +32,14 @@ pnpm check         # = gate:fast，任何改动后自证的最小集
 **分级语义（汇报时必须如实）**：
 
 - `blocking` 失败 ⇒ 退出码 1，**不得**声明完工；
-- `advisory`（`contract` 契约漂移、`doc-commands` 空头命令、`socratic` 快照过期）如实展示但不阻塞合入；
+- `advisory`（如净室未生成瞬态 `socratic` 快照）如实展示但不阻塞合入；
 - `skipped`（缺前置条件）**不等于**通过。
 
 其他参数：`--tier fast|full`、`--json`（MCP 消费）、`--list`。
 
 ### 第二层：工作流引擎（配方驱动与阶段推进）
 
-项目根目录下内置了轻量化工作流引擎 [`scripts/workflow-engine.cjs`](scripts/workflow-engine.cjs)，可一键执行静态与物理断言：
+项目根目录下内置了轻量化工作流引擎 [`scripts/workflow-engine.cjs`](../../../scripts/workflow-engine.cjs)，可一键执行静态与物理断言：
 
 ```bash
 # 1. 门禁全景体检

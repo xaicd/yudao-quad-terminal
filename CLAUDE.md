@@ -1,19 +1,20 @@
-# Claude Code Guidelines for yudao-quad-terminal
+# Claude Code Guidelines for yudao-quad-terminal (`v1.2.0`)
 
-This repository is `yudao-quad-terminal`, an enterprise-grade quad-terminal fullstack blueprint base (Java Spring Boot 3 + Vue 3 Admin + Uni-App Miniapp + Expo React Native App), with zero-Docker Embedded PostgreSQL 18.4 (`embedded-postgres`) and Embedded Redis.
+This repository is `yudao-quad-terminal` (`v1.2.0`), an enterprise-grade quad-terminal fullstack blueprint base (Java Spring Boot 3 + Vue 3 Admin + Uni-App Miniapp + Expo React Native App), with zero-Docker Embedded PostgreSQL 18.4 (`embedded-postgres`) and Embedded Redis. It shares 100% identical `.cjs` CLI contracts with sister base `cooliebase-all` (`v1.5.0`, which also provides 4 terminals: Admin + 2C Portal + `clients/miniapp` + `clients/expo`, and 18 first-party plugins including `oa/hrm/fms/pms`).
 
 ## Single Source of Truth for Rules & Two-Pillar Architecture
-All engineering rules and architectural standards are unified in [`AGENTS.md`](AGENTS.md), [`HARNESS.md`](HARNESS.md), and `.agents/rules/`:
+All engineering rules and architectural standards are unified in [`AGENTS.md`](AGENTS.md), [`HARNESS.md`](HARNESS.md), [`docs/wiki/index.md`](docs/wiki/index.md), and `.agents/rules/` (all documentation, specs, OpenWiki, release notes, and audit reports are strictly consolidated under `docs/`):
 - **Pillar 1 — `harness` (`HARNESS.md` + `scripts/harness.cjs`) = Master Workflow & Lifecycle Specification**:
-  `pnpm harness <install|check|build|start|health|status|stop|e2e|deliver>`
+  `pnpm harness <install|check|build|start|health|status|stop|e2e|deliver|pmo>`
 - **Pillar 2 — `speckit` (`pnpm run speckit`) + CMMI 00~09 Extensions (`scripts/cmmi-00-meta.cjs` ~ `scripts/cmmi-09-operations.cjs`) = Stage Document & Process Asset Engine**:
   `pnpm run speckit -- cmmi <00..09> [docs|check|asset|...]` (or `node scripts/cmmi-0X-*.cjs`)
 - **Mandatory Submodule Rule**: `apps/backend`, `apps/admin`, `apps/miniapp` are read-only upstream git submodules; all customizations go to `deploy/patches/` or derived sandboxes (`/tmp/<slug>-sandbox`).
+- **Sole `docs/` Documentation Directory**: `docs/00_meta_standards` ~ `09_operations`, `docs/specs/`, `docs/wiki/`, `docs/07_release/releases/`, and `docs/audit/` live exclusively under `docs/` (zero top-level `doc/`, `wiki/`, `openwiki/`, `specs/`, or `releases/`).
 - **Strict 4-Character Navigation Menu Standard**: All visible directory/page menus (`system_menu.type IN (1, 2)`) MUST satisfy `char_length(name) <= 4` (`scripts/lib/menu-standard.cjs`, `deploy/lite/runtime/lite-pg.mjs`, `scripts/blueprint-engine.cjs`, `scripts/codegen-module.mjs`, and gate `menu-standard`).
 - **Clean Derived Project Hatching**: `scripts/project-reactor.mjs` (`pnpm project:init` / `pnpm project:hatch`) regenerates clean branded `README.md`, `CLAUDE.md`, `HARNESS.md`, and `apps/{backend,admin,miniapp}/README.md` while purging upstream tutorial `.md` files, `.image/` directories, and `*-ui` stubs (verified by `pnpm harness:hatch`).
 - **Unified Spec & Prototype Standard**: `docs/specs/<domain>/<name>/` governed by `scripts/speckit.cjs` (`FEATURE-SPEC-AND-PROTOTYPE-STANDARD`).
 
-## Project PMO & 4-Scenario AI Agent Playbook (Identical Across `coolie`, `yudao-quad-terminal` & `cooliebase-all`)
+## Project PMO & 4-Scenario AI Agent Playbook (Identical Across `coolie` `v0.7.0`, `yudao-quad-terminal` `v1.2.0` & `cooliebase-all` `v1.5.0`)
 0. **Scenario 0 — Project PMO Instant Backlog & Next-Action Radar (CMMI-01)**:
    - Run `pnpm run pmo` (or `node scripts/cmmi-01-management.cjs pmo [--write|--json]` / `pnpm harness pmo`)
    - Inspect [`docs/01_management/pmo-dashboard.md`](docs/01_management/pmo-dashboard.md) and [`docs/01_management/project-plan.md`](docs/01_management/project-plan.md) for active WIP specs, unverified tasks `[T1..Tn]`, ready-to-archive specs, and the prioritized `P0 / P1 / P2` Next Action Queue.

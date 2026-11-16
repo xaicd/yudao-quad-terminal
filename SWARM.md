@@ -83,7 +83,7 @@ pnpm verify:b5
 - **内置根治**：
   1. `deploy/lite/application-lite.yaml` 固化 `pool-prepared-statements: false` 与 `validation-query: SELECT 1`；
   2. `scripts/lite-up.mjs` 自动为 JDK 17 注入 `--add-opens=java.base/java.nio=ALL-UNNAMED` 与 `sun.nio.ch=ALL-UNNAMED`（保障 Netty / RocketMQ / 堆外内存零反射报错）；
-  3. `pnpm lite:verify` 与 `G17` 强制执行 **AES-256-ECB `@ApiEncrypt` 连续 3 次登录** + `admin/admin123` 弱口令拒绝反证。
+  3. `pnpm lite:verify` 与 `G17` 强制执行 **AES-256-ECB `@ApiEncrypt` 连续 3 次登录** + 默认弱口令拒绝反证。
 
 ### 4.3 前端脚手架 Mock 图表残留与登录 E2E 脆弱选择器陷阱
 - **故障现象**：上游管理端默认携带 `views/Home/{Index2.vue,echarts-data.ts,types.ts}` 静态假图表及 `LoginForm.vue`「萌新必读」外包链接；且 Element Plus 输入框无固定 `data-testid`，导致 Playwright 多语言环境下偶发定位漂移。
@@ -121,6 +121,8 @@ Doris 的 `_stream_load` 接口由 FE（如 `:8030`）接收请求后返回 **`H
 ---
 
 ## 6. 远程算力节点 (`cwall`) 零冲突独立部署 SOP
+
+> **多机物理拓扑边界**：当前活跃节点仅限 `mac`（指挥与移动真机面）、`cwall`（重型算力与独立验证节点）与 `tc-coolie-claw`（生产控制面）；历史节点 ~~`aja-pc`~~ 已永久下线移除，严禁任何 SSH 探测、同步或派单引用。
 
 1. **先勘探、后落盘（Read-Only Recon First）**：
    - 登录远程节点后先执行 `ss -tulpn` 核验 `.env.ports` 声明的 6 个端口全部空闲；

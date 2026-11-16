@@ -247,7 +247,6 @@ try {
   };
   const leakedHistoryRecords = [
     ...listMdInDir("docs/01_management/dar"),
-    ...listMdInDir("docs/01_management/dar-decision-records"),
     ...listMdInDir("docs/03_design/adr"),
   ];
 

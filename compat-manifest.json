@@ -1,7 +1,7 @@
 {
   "version": 1,
   "kind": "compat-manifest",
-  "description": "本基座对下游的机器可读兼容契约：派生项目、克隆协作者与外部 AI Agent 都绑定这里声明的入口与运行时约定。由 `pnpm compat:check`（scripts/compat-check.mjs）逐条对照本仓实际值校验，任何一条对不上即门禁失败。",
+  "description": "本基座对下游的机器可读兼容契约：派生项目、克隆协作者与外部 AI Agent 都绑定这里声明的入口与运行时约定。由 `pnpm compat:check`（scripts/compat-check.cjs / scripts/compat-check.mjs）逐条对照本仓实际值校验，任何一条对不上即门禁失败。",
   "framework": {
     "name": "yudao-quad-terminal",
     "role": "quad-terminal-base",
@@ -12,7 +12,7 @@
         "kind": "derived-project",
         "how": "pnpm project:hatch <工程名> [--title ...] [--package ...]",
         "note": "零 Git 历史派生：复制骨架 + 改名 + Java 包路径迁移 + 开源关键字脱敏，产出独立 git 仓库",
-        "verified": "由 scripts/harness/hatch-smoke.mjs 在临时目录真跑派生并断言 13 项（契约文件/零泄漏/身份替换/包迁移/依赖无悬空/可自跑门禁）"
+        "verified": "由 scripts/harness/hatch-smoke.mjs 在临时目录真跑派生并断言 20 项（契约文件/零泄漏/身份替换/包迁移/依赖无悬空/可自跑门禁）"
       },
       {
         "kind": "clone-collaborator",
@@ -21,7 +21,7 @@
       },
       {
         "kind": "multi-project-host",
-        "how": "pnpm run-all",
+        "how": "pnpm all",
         "note": "按项目名动态生成 API 前缀与端口偏移，多项目同机并存不冲突"
       },
       {
@@ -237,7 +237,7 @@
     "constitution": "AGENTS.md",
     "harness": "HARNESS.md",
     "llms": "llms.txt",
-    "wiki": "wiki/index.md",
+    "wiki": "docs/wiki/index.md",
     "patches": "deploy/patches/README.md",
     "lite": "deploy/lite/README.md"
   },

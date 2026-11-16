@@ -1,186 +1,133 @@
-# Yudao Quad-Terminal 活体业务本体注册表 (Living Ontology Specification)
-# 对标 CMMI 高成熟度工程资产与 Layer B Gate G8-1 规范
+# Yudao Quad-Terminal 活体业务本体注册表 (Living Ontology Specification, v1.2.0)
+# 对标 CMMI 高成熟度工程资产与 Layer-B G1-G23 规范
 
 platform: "yudao-quad-terminal"
 version: "1.2.0"
-architecture: "Java 17 + Spring Boot 3 + MyBatis-Plus + Vue3 Admin + UniApp + Expo"
+architecture: "Java 17 + Spring Boot 3.5.15 + MyBatis-Plus + Embedded PostgreSQL 18.4 + Redis + Vue 3 Admin + Uni-App + Expo SDK 52"
 lastUpdated: "2026-11-16"
 
-# M1: 核心领域实体 (Object Types)
+# M1: 核心底座实体 (Object Types)
 M1_Objects:
   - key: "system_user"
-    name: "系统用户与数字员工"
-    description: "企业用户实体，具备部门关联、角色权限集合与租户多级隔离属性"
+    name: "企业系统用户"
+    description: "管理端与运营端用户实体，绑定部门、RBAC 角色权限与多租户隔离标识"
     table: "system_users"
     properties:
-      - name: "id"
-        type: "Long"
-        primary: true
-        description: "用户唯一ID"
-      - name: "username"
-        type: "String"
-        required: true
-        description: "用户登录账号"
-      - name: "nickname"
-        type: "String"
-        required: true
-        description: "用户显示昵称"
-      - name: "dept_id"
-        type: "Long"
-        required: true
-        description: "归属部门 ID"
-      - name: "status"
-        type: "Integer"
-        required: true
-        description: "账号状态 (0:正常 1:停用)"
-      - name: "tenant_id"
-        type: "Long"
-        required: true
-        description: "多租户行级隔离 ID"
+      - { name: "id", type: "Long", primary: true, description: "用户唯一主键" }
+      - { name: "username", type: "String", required: true, description: "登录账号（CSPRNG 高熵或合规字母数字）" }
+      - { name: "nickname", type: "String", required: true, description: "显示昵称" }
+      - { name: "dept_id", type: "Long", required: true, description: "归属部门 ID" }
+      - { name: "status", type: "Integer", required: true, description: "状态 (0:正常 1:停用)" }
+      - { name: "tenant_id", type: "Long", required: true, description: "多租户行级隔离 ID" }
 
   - key: "system_role"
     name: "RBAC 权限角色"
-    description: "角色控制实体，承载菜单操作权限与数据范围隔离规则"
+    description: "承载菜单权限与 5 级数据权限范围（DataScope）的角色实体"
     table: "system_role"
     properties:
-      - name: "id"
-        type: "Long"
-        primary: true
-        description: "角色唯一ID"
-      - name: "name"
-        type: "String"
-        required: true
-        description: "角色名称"
-      - name: "code"
-        type: "String"
-        required: true
-        description: "角色权限编码"
-      - name: "data_scope"
-        type: "Integer"
-        required: true
-        description: "数据范围 (1:全部 2:自定义 3:本部门 4:本部门及以下 5:仅本人)"
-      - name: "tenant_id"
-        type: "Long"
-        required: true
-        description: "多租户行级隔离 ID"
+      - { name: "id", type: "Long", primary: true, description: "角色唯一主键" }
+      - { name: "name", type: "String", required: true, description: "角色名称" }
+      - { name: "code", type: "String", required: true, description: "角色编码（如 sys_admin/biz_admin/audit_admin）" }
+      - { name: "data_scope", type: "Integer", required: true, description: "数据范围 (1:全部 2:自定义 3:本部门 4:本部门及以下 5:仅本人)" }
+      - { name: "tenant_id", type: "Long", required: true, description: "多租户行级隔离 ID" }
+
+  - key: "system_menu"
+    name: "四字受控导航菜单与权限点"
+    description: "目录(1)、页面(2)与按钮权限点(3)树状节点，可见目录/页面名称严格 <= 4 字"
+    table: "system_menu"
+    properties:
+      - { name: "id", type: "Long", primary: true, description: "菜单主键" }
+      - { name: "name", type: "String", required: true, description: "菜单短名（type IN (1,2) 时严格 <= 4 字）" }
+      - { name: "permission", type: "String", required: false, description: "权限标识 (<domain>:<entity>:<action>)" }
+      - { name: "type", type: "Integer", required: true, description: "节点类型 (1:目录 2:菜单 3:按钮)" }
+      - { name: "visible", type: "Boolean", required: true, description: "是否可见" }
 
   - key: "system_tenant"
     name: "企业租户隔离域"
-    description: "多租户系统最高隔离维度，行级数据物理与逻辑隔离"
+    description: "SaaS 与集团多组织最高隔离维度，关联租户功能套餐与账号配额"
     table: "system_tenant"
     properties:
-      - name: "id"
-        type: "Long"
-        primary: true
-        description: "租户唯一ID"
-      - name: "name"
-        type: "String"
-        required: true
-        description: "租户企业全称"
-      - name: "package_id"
-        type: "Long"
-        required: true
-        description: "开通功能套餐 ID"
-      - name: "status"
-        type: "Integer"
-        required: true
-        description: "租户开通状态 (0:正常 1:停用)"
-
-  - key: "system_dept"
-    name: "企业组织部门"
-    description: "组织架构树状部门实体，用于数据权限垂直穿透"
-    table: "system_dept"
-    properties:
-      - name: "id"
-        type: "Long"
-        primary: true
-        description: "部门ID"
-      - name: "name"
-        type: "String"
-        required: true
-        description: "部门名称"
-      - name: "parent_id"
-        type: "Long"
-        required: true
-        description: "父部门ID"
-      - name: "tenant_id"
-        type: "Long"
-        required: true
-        description: "租户隔离 ID"
+      - { name: "id", type: "Long", primary: true, description: "租户主键" }
+      - { name: "name", type: "String", required: true, description: "租户企业全称" }
+      - { name: "package_id", type: "Long", required: true, description: "租户套餐 ID" }
+      - { name: "status", type: "Integer", required: true, description: "开通状态 (0:正常 1:锁定)" }
 
 # M2: 核心业务行为动词 (Action Types)
 M2_Behaviors:
-  - action: "system:user:create"
-    name: "新增系统用户"
+  - action: "system:auth:encrypted-login"
+    name: "AES-256-ECB 加密认证登录"
     targetEntity: "system_user"
+    endpoint: "POST /admin-api/system/auth/login"
     preconditions:
-      - "操作者拥有 system:user:create 权限"
-      - "用户名在该租户内保持全局唯一"
+      - "请求携带 X-Api-Encrypt 头且密文符合 AES-256-ECB 规范"
+      - "租户与账号均处于启用状态 (status = 0)"
     postconditions:
-      - "持久化系统用户记录并自动写入创建人审计底座字段"
+      - "签发 OAuth2 accessToken 与 refreshToken 并记录登录审计日志"
 
-  - action: "system:user:update-status"
-    name: "启停用户账号"
+  - action: "system:user:create"
+    name: "新增租户用户"
     targetEntity: "system_user"
+    endpoint: "POST /admin-api/system/user/create"
     preconditions:
-      - "不允许停用当前登录会话中的自身账号"
+      - "操作者具备 system:user:create 权限且未超出租户账号配额"
+      - "用户名在当前 tenant_id 内全局唯一"
     postconditions:
-      - "状态机流转为 0(正常) 或 1(停用)，强踢已吊销 Token"
+      - "落盘 bcrypt 加密口令并自动填充 creator/create_time/tenant_id"
 
   - action: "system:role:assign-menu"
-    name: "角色赋权"
+    name: "角色菜单赋权"
     targetEntity: "system_role"
+    endpoint: "POST /admin-api/system/permission/assign-role-menu"
     preconditions:
-      - "角色非系统内置保护超级管理员"
+      - "目标角色属于当前租户且不违反三员分立互斥约束"
     postconditions:
-      - "刷新并重建角色与菜单映射，触发缓存失效"
+      - "原子更新 system_role_menu 映射并刷新 Redis 权限缓存"
 
 # M3: 架构业务不变量 (Defensive Invariants)
 M3_Invariants:
   - id: "INV-TENANT-ISOLATION"
     name: "多租户行级强制隔离不变量"
-    rule: "所有业务表与系统表均必须包含 tenant_id，由 MyBatis-Plus 租户插件全局自动注入过滤，严禁越权跨租户读写"
+    rule: "业务表继承 TenantBaseDO，由 MyBatis-Plus TenantDatabaseInterceptor 自动注入 tenant_id 过滤，严禁跨租户读写"
   - id: "INV-AUDIT-COLUMNS"
-    name: "8 大底座审计字段守恒不变量"
-    rule: "业务表必须继承 BaseDO (id, creator, create_time, updater, update_time, deleted, tenant_id)"
+    name: "审计底座字段完备不变量"
+    rule: "所有持久化 DO 继承 BaseDO (creator, create_time, updater, update_time, deleted) 与租户隔离字段"
+  - id: "INV-MENU-4CHAR"
+    name: "可见导航菜单四字上限不变量"
+    rule: "所有可见目录与页面菜单 (type IN (1, 2)) 的 name 必须满足 char_length(name) <= 4，完整说明落 remark"
+  - id: "INV-CSPRNG-CREDENTIALS"
+    name: "零弱默认凭据不变量"
+    rule: "严禁默认弱管理员口令；引导凭据由 CSPRNG 动态签发至 0600 权限的 .commandcode/lite/credentials.env"
+  - id: "INV-THREE-ROLE-AUDIT"
+    name: "IT 三员分立与防篡改哈希链不变量"
+    rule: "政企场景下 sys_admin / biz_admin / audit_admin 权限互斥，审计表挂载 SHA-256 哈希链触发器并硬件级阻断 UPDATE/DELETE"
   - id: "INV-READONLY-SANDBOX"
-    name: "AI 只读安全沙箱不变量"
-    rule: "前端 Copilot 与只读查询仅允许 SELECT/WITH 语句，严禁触发 DDL/DML 与系统敏感表"
+    name: "AI 只读安全查询不变量"
+    rule: "Copilot 查数沙箱仅放行注入了 tenant_id 的 SELECT/WITH 查询，严禁任何 DDL/DML"
 
 # M5: 参与者与角色矩阵 (Actors / Principals)
 M5_Actors:
-  - code: "super_admin"
-    name: "超级管理总控"
-  - code: "tenant_admin"
-    name: "企业租户管理员"
-  - code: "operator"
-    name: "前台业务操作员"
-  - code: "digital_employee"
-    name: "AI 数字员工 (Hermes/墨斗/铁匠/门神)"
+  - { code: "sys_admin", name: "系统管理员（组织/租户/基础参数配置）" }
+  - { code: "biz_admin", name: "业务运营员（日常单据审批与业务执行）" }
+  - { code: "audit_admin", name: "安全审计员（只读审阅不可变操作与安全日志）" }
+  - { code: "member_user", name: "C 端会员顾客（小程序/H5/Expo App 端访问 /app-api/**）" }
+  - { code: "mcp_agent", name: "MCP / OpenAPI 自动化工程客户端（受鉴权与门禁约束）" }
 
 # M6: 状态机流转图 (State Machine Workflows)
 M6_Stateflows:
   - entity: "system_user"
     field: "status"
     states:
-      - value: 0
-        label: "正常"
-        allowTransitions: [1]
-      - value: 1
-        label: "停用"
-        allowTransitions: [0]
+      - { value: 0, label: "正常", allowTransitions: [1] }
+      - { value: 1, label: "停用", allowTransitions: [0] }
   - entity: "system_tenant"
     field: "status"
     states:
-      - value: 0
-        label: "正常"
-        allowTransitions: [1]
-      - value: 1
-        label: "已锁定"
-        allowTransitions: [0]
+      - { value: 0, label: "正常", allowTransitions: [1] }
+      - { value: 1, label: "已锁定", allowTransitions: [0] }
 
-# MU: 前端交互动作规范 (UI Actions & Copilot)
+# MU: 前端交互规范 (UI & Gateway Standards)
 MU_UI:
-  zeroDeadButtonsStrict: true
+  maxMenuNameChars: 4
+  zeroFakeMockStrict: true
   copilotDrawerEnabled: true
   whiteLabelPurityEnforced: true

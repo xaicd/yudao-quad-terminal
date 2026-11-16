@@ -21,19 +21,19 @@ echo "📦 [2/3] 启动本地 MySQL 8.0 与 Redis 7.2 容器..."
 echo "⏳ [3/3] 等待 MySQL 与 Redis 容器就绪..."
 for i in {1..30}; do
   if docker exec yudao-mysql-dev mysqladmin ping -h localhost -u root -proot >/dev/null 2>&1; then
-    echo "  ✅ MySQL 8.0 数据库已就绪 (端口 3306, 数据库 ruoyi-vue-pro, 初始账号 admin/admin123)"
+    echo "  ✅ MySQL 8.0 数据库已就绪 (宿主机端口 ${MYSQL_PORT:-33066}, 数据库 ruoyi-vue-pro；验收/演示推荐优先使用零 Docker 强凭据档 pnpm lite:up)"
     break
   fi
   sleep 1
 done
 
 if docker exec yudao-redis-dev redis-cli ping >/dev/null 2>&1; then
-  echo "  ✅ Redis 7.2 缓存已就绪 (端口 6379, 免密)"
+  echo "  ✅ Redis 7.2 缓存已就绪 (宿主机端口 ${REDIS_PORT:-63799})"
 fi
 
 echo ""
 echo "🎉 Yudao 本地开发环境已 100% 就绪！现在您可以执行:"
-echo "  • 启动后端: pnpm dev:backend"
+echo "  • 启动后端: pnpm backend:run"
 echo "  • 启动管理端: pnpm dev:admin"
 echo "  • 启动小程序: pnpm dev:miniapp"
 echo "  • 启动原生App: pnpm dev:app"

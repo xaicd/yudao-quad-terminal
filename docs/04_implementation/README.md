@@ -37,7 +37,7 @@ pnpm build:backend                    # 两步 Maven 构建（已验证）
 
 ## 子模块差异如何落主仓（方案 B）
 
-`apps/{backend,admin}` 是第三方只读子模块。**代码级差异不得提交在子模块里**：那会把主仓 gitlink 钉到远端不存在的提交，别人 `git clone --recursive` 直接失败。
+`apps/{backend,admin,miniapp}` 是第三方只读子模块。**代码级差异不得提交在子模块里**：那会把主仓 gitlink 钉到远端不存在的提交，别人 `git clone --recursive` 直接失败。
 
 ```bash
 pnpm patch:status   # 看差异现状
@@ -47,16 +47,16 @@ pnpm patch:check    # 门禁：子模块改动必须恰好等于 deploy/patches 
 
 真源：`deploy/patches/<submodule>/*.patch` + `deploy/patches/README.md`；逻辑：`scripts/submodule-patches.mjs`。
 
-## 现存缺口（如实登记）
+## 现存基线与能力核验（如实登记）
 
 - **后端单测已实测可跑并纳入 `gate:full`**：`mvn -B test -pl yudao-server -am` → BUILD SUCCESS / 约 72s，
   仅 `yudao-server` 自身无测试（它是装配层），用例集中在 `yudao-module-system-server` 与 `yudao-module-infra-server`。
   未纳入 `gate:fast` 的原因只是耗时，不是不可用。
-- 自有脚本 **62 个单测**（`pnpm test:scripts`）是 `gate:fast` 的 blocking 项。
-- **前端构建已打通并纳入 `gate:full`**：`pnpm build:admin` 实测 `✓ built in 23.56s`（`apps/admin/dist` 24.6MB）。
-  子模块 `apps/admin` 已 rebase 到上游 `master` + 重放本仓 ApiEncrypt 提交（pin `36ede93e9`），
-  上游缺失的 `src/views/oa/utils/*` 已到位；构建走 `scripts/build-admin.mjs` 以绕过 hoisted linker 的路径陷阱。
+- 自有脚本 **99 个单测**（`pnpm test:scripts`）是 `gate:fast` 的 blocking 项。
+- **前端构建已打通并纳入 `gate:full`**：`pnpm build:admin` 实测 `✓ built in 23.56s`（构建产物约 24.6MB）。
+  子模块 `apps/admin` 钉至纯上游 `master`（`050bac1ec`）+ 主仓声明式补丁 `deploy/patches/admin/0001-login-encrypt-on.patch`，
+  上游考勤常量文件 `src/views/oa/utils/constants.ts` 已到位；构建走 `scripts/build-admin.mjs` 以绕过 hoisted linker 的路径陷阱。
 - JDK 变体可执行性由 `jdk-variants` 门禁保证：变体 ref 必须可解析，且**其 pom 实测 java/boot 必须与声明一致**；
   `pnpm jdk:list` 查最新 ref，`pnpm jdk:use <id>` 切换（真源 `scripts/lib/jdk-variants.mjs`）。
 - `apps/admin` 的 `ts:check` 需要其子模块自装依赖（且 `NODE_ENV` 不能是 production），未纳入本仓门禁。
-- 契约漂移 27 条来自上游（`/infra/job*` 等），详见 `AGENTS.md §0.4`。
+- 只读上游固有的 92 条未暴露孤儿端点已纳入 `scripts/lib/upstream-contract-baseline.json` 基线（新增孤儿 0 / 动词不符 0），详见 `AGENTS.md §0.4`。

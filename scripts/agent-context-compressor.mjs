@@ -11,8 +11,8 @@
  * 功能：
  * 1. 全盘扫描解析：自动提取后端的 Controller/VO/DO、前端 API/Views、SQL 表结构，
  *    压制为高信息密度且机器/人类双友好的快照：
- *    - `wiki/context-snapshot.json` (结构化 JSON 元数据快照，< 10KB)
- *    - `wiki/architecture/api-digest.md` (API 与实体全景维基卡片)
+ *    - `docs/wiki/context-snapshot.json` (结构化 JSON 元数据快照，< 10KB)
+ *    - `docs/wiki/architecture/api-digest.md` (API 与实体全景维基卡片)
  * 2. 交互式切片检索：
  *    `node scripts/agent-context-compressor.mjs --query <keyword>`
  *    精准返回该业务域的高内聚微型切片（~150 Tokens），数字员工直接秒读无需扫源码！
@@ -217,8 +217,8 @@ function buildMarkdownDigest(snapshot) {
   md += `| 控制器 | 基础路径 | 业务名称 | 接口数 | 对应文件 |\n`;
   md += `|---|---|---|---|---|\n`;
   for (const c of snapshot.controllers) {
-    // 链接必须是仓库相对路径：绝对路径（file:////host-workspace/...）在他机一律失效
-    md += `| \`${c.name}\` | \`${c.basePath}\` | ${c.tag || "-"} | ${c.endpoints.length} | [${c.file}](${c.file}) |\n`;
+    // 链接必须是仓库相对路径（从 docs/wiki/architecture/ 回到仓库根目录需 ../../../）
+    md += `| \`${c.name}\` | \`${c.basePath}\` | ${c.tag || "-"} | ${c.endpoints.length} | [${c.file}](../../../${c.file}) |\n`;
   }
 
   md += `\n## 3. 详细接口清单\n\n`;
@@ -334,9 +334,9 @@ function main() {
     return;
   }
 
-  // 写入 JSON 压缩快照
-  const snapshotJsonPath = path.join(ROOT, "wiki/context-snapshot.json");
-  const digestMdPath = path.join(ROOT, "wiki/architecture/api-digest.md");
+  // 写入 JSON 压缩快照（统一归口 docs/wiki/）
+  const snapshotJsonPath = path.join(ROOT, "docs/wiki/context-snapshot.json");
+  const digestMdPath = path.join(ROOT, "docs/wiki/architecture/api-digest.md");
 
   fs.mkdirSync(path.dirname(snapshotJsonPath), { recursive: true });
   fs.mkdirSync(path.dirname(digestMdPath), { recursive: true });
@@ -350,8 +350,8 @@ function main() {
   console.log(`   - 控制器数: ${controllers.length} 个`);
   console.log(`   - REST 路由: ${totalEndpoints} 个`);
   console.log(`   - 数据库表: ${tables.length} 张`);
-  console.log(`   - 写入结构化快照: wiki/context-snapshot.json`);
-  console.log(`   - 写入紧凑卡片: wiki/architecture/api-digest.md`);
+  console.log(`   - 写入结构化快照: docs/wiki/context-snapshot.json`);
+  console.log(`   - 写入紧凑卡片: docs/wiki/architecture/api-digest.md`);
   console.log(`   - ⚡ Agent 可直接运行 'node scripts/agent-context-compressor.mjs --query <keyword>' 获取精准切片`);
   console.log(`================================================================`);
 }

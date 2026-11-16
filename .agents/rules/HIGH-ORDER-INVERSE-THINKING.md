@@ -100,13 +100,13 @@
 2. **可插拔但不可逾越的护栏 (Pluggable Invariant Guardrails)**：
    - 允许灵活扩展业务域与插件，但在入口 `pre-execute` 与出口 `post-verify` 必须经过统一静态守卫硬拦截；
 3. **拒绝空壳，自动化守卫持续监控**：
-   - 工程中固化 `node scripts/guard-high-order-invariants.cjs` 守卫脚本，对上述规则执行静态 AST 扫描与契约检查，任何违规直接在 CI / 本地门禁中阻断！
+   - 工程中固化 `node scripts/gate-check.cjs` 与 `node scripts/harness/negative-controls.mjs` 守卫脚本，对架构边界与契约规则执行静态检查与违规注入反向验证，任何违规直接在 CI / 本地门禁中阻断！
 
 ---
 
 ## 六、 通用高阶反向提示词资产库索引 (Universal Prompts Index)
 
-当收到特定业务诉求时，AI 助手必须在会话中主动挂载并执行对应的通用高阶反向提示词模版（详见 `docs/architecture/universal-high-order-inverse-prompts.md`）：
+当收到特定业务诉求时，AI 助手必须在会话中主动挂载并执行对应的通用高阶反向提示词模版（详见本规则及 `AGENTS.md`）：
 - **模版 1：【反向穿透·重型业务实体溯源与模型减法】** — 适用于建表、加字段、加模块、设计数据流；
 - **模版 2：【反向穿透·企业级严格多租户与组织权限防线】** — 适用于写接口、查数据、加权限、租户隔离；
 - **模版 3：【反向穿透·现场人机工效与极简两字交互】** — 适用于做页面、移动原生端、大盘、表单防遮挡；

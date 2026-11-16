@@ -1,34 +1,163 @@
-# Yudao Quad-Terminal 领域拓扑与本体映射 (Domain Topology)
+# Yudao Quad-Terminal 20 大业务领域拓扑与本体映射 (Domain Topology, v1.2.0)
 platform: "yudao-quad-terminal"
+version: "1.2.0"
 domains:
   - name: "system"
-    title: "系统管理域"
+    title: "系统管理中枢"
+    moduleDir: "apps/backend/yudao-module-system"
     basePackage: "cn.iocoder.yudao.module.system"
     adminPath: "apps/admin/src/views/system"
-    entities:
-      - system_user
-      - system_role
-      - system_menu
-      - system_dept
-      - system_tenant
+    deps: []
+    entities: [system_users, system_role, system_menu, system_dept, system_tenant, system_dict_type, system_operate_log]
+
   - name: "infra"
-    title: "基础设施工艺域"
+    title: "基础设施服务"
+    moduleDir: "apps/backend/yudao-module-infra"
     basePackage: "cn.iocoder.yudao.module.infra"
     adminPath: "apps/admin/src/views/infra"
-    entities:
-      - infra_config
-      - infra_file
-      - infra_job
-      - infra_api_access_log
-  - name: "bpm"
-    title: "工作流编排域"
-    basePackage: "cn.iocoder.yudao.module.bpm"
-    adminPath: "apps/admin/src/views/bpm"
+    deps: [system]
+    entities: [infra_config, infra_file, infra_data_source_config, infra_api_access_log, infra_api_error_log]
+
+  - name: "member"
+    title: "会员中心"
+    moduleDir: "apps/backend/yudao-module-member"
+    basePackage: "cn.iocoder.yudao.module.member"
+    adminPath: "apps/admin/src/views/member"
+    deps: [system]
+    entities: [member_user, member_level, member_tag, member_point_record, member_address]
+
   - name: "pay"
-    title: "支付交易结算域"
+    title: "统一支付中心"
+    moduleDir: "apps/backend/yudao-module-pay"
     basePackage: "cn.iocoder.yudao.module.pay"
     adminPath: "apps/admin/src/views/pay"
+    deps: [system]
+    entities: [pay_app, pay_channel, pay_order, pay_refund, pay_transfer, pay_wallet, pay_notify_task]
+
   - name: "mall"
-    title: "新零售电商域"
-    basePackage: "cn.iocoder.yudao.module.mall"
+    title: "电商零售套件"
+    moduleDir: "apps/backend/yudao-module-mall"
+    basePackage: "cn.iocoder.yudao.module"
     adminPath: "apps/admin/src/views/mall"
+    deps: [system, member, pay]
+    entities: [product_spu, product_sku, trade_order, trade_after_sale, promotion_coupon, promotion_seckill_activity]
+
+  - name: "crm"
+    title: "客户关系管理"
+    moduleDir: "apps/backend/yudao-module-crm"
+    basePackage: "cn.iocoder.yudao.module.crm"
+    adminPath: "apps/admin/src/views/crm"
+    deps: [system]
+    entities: [crm_clue, crm_customer, crm_contact, crm_business, crm_contract, crm_receivable]
+
+  - name: "erp"
+    title: "企业进销存"
+    moduleDir: "apps/backend/yudao-module-erp"
+    basePackage: "cn.iocoder.yudao.module.erp"
+    adminPath: "apps/admin/src/views/erp"
+    deps: [system]
+    entities: [erp_product, erp_purchase_order, erp_sale_order, erp_stock, erp_finance_payment]
+
+  - name: "bpm"
+    title: "工作流引擎"
+    moduleDir: "apps/backend/yudao-module-bpm"
+    basePackage: "cn.iocoder.yudao.module.bpm"
+    adminPath: "apps/admin/src/views/bpm"
+    deps: [system]
+    entities: [bpm_process_definition_info, bpm_form, bpm_user_group, bpm_process_instance_copy]
+
+  - name: "ai"
+    title: "AI 大模型中枢"
+    moduleDir: "apps/backend/yudao-module-ai"
+    basePackage: "cn.iocoder.yudao.module.ai"
+    adminPath: "apps/admin/src/views/ai"
+    deps: [system]
+    entities: [ai_api_key, ai_model, ai_chat_conversation, ai_chat_message, ai_knowledge]
+
+  - name: "mp"
+    title: "微信公众号平台"
+    moduleDir: "apps/backend/yudao-module-mp"
+    basePackage: "cn.iocoder.yudao.module.mp"
+    adminPath: "apps/admin/src/views/mp"
+    deps: [system]
+    entities: [mp_account, mp_user, mp_menu, mp_message, mp_auto_reply]
+
+  - name: "report"
+    title: "报表大屏"
+    moduleDir: "apps/backend/yudao-module-report"
+    basePackage: "cn.iocoder.yudao.module.report"
+    adminPath: "apps/admin/src/views/report"
+    deps: [system]
+    entities: [report_goview_project, jimu_report]
+
+  - name: "iot"
+    title: "物联网设备平台"
+    moduleDir: "apps/backend/yudao-module-iot"
+    basePackage: "cn.iocoder.yudao.module.iot"
+    adminPath: "apps/admin/src/views/iot"
+    deps: [system]
+    entities: [iot_product, iot_device, iot_thing_model, iot_ota_firmware, iot_scene_rule]
+
+  - name: "mes"
+    title: "制造执行系统"
+    moduleDir: "apps/backend/yudao-module-mes"
+    basePackage: "cn.iocoder.yudao.module.mes"
+    adminPath: "apps/admin/src/views/mes"
+    deps: [system]
+    entities: [mes_md_item, mes_pro_workorder, mes_pro_route, mes_qc_iqc, mes_dv_machinery]
+
+  - name: "wms"
+    title: "仓储物流管理"
+    moduleDir: "apps/backend/yudao-module-wms"
+    basePackage: "cn.iocoder.yudao.module.wms"
+    adminPath: "apps/admin/src/views/wms"
+    deps: [system]
+    entities: [wms_warehouse, wms_area, wms_location, wms_receipt_order, wms_shipment_order, wms_inventory]
+
+  - name: "oa"
+    title: "日常办公协同"
+    moduleDir: "apps/backend/yudao-module-oa"
+    basePackage: "cn.iocoder.yudao.module.oa"
+    adminPath: "apps/admin/src/views/oa"
+    deps: [system, bpm]
+    entities: [oa_attendance_group, oa_attendance_record, oa_meeting_room, oa_meeting_booking, oa_seal_apply]
+
+  - name: "hrm"
+    title: "人力资源中枢"
+    moduleDir: "apps/backend/yudao-module-hrm"
+    basePackage: "cn.iocoder.yudao.module.hrm"
+    adminPath: "apps/admin/src/views/hrm"
+    deps: [system, bpm]
+    entities: [hrm_employee, hrm_job_post, hrm_recruit_candidate, hrm_contract, hrm_salary_archive]
+
+  - name: "fms"
+    title: "财务核算管理"
+    moduleDir: "apps/backend/yudao-module-fms"
+    basePackage: "cn.iocoder.yudao.module.fms"
+    adminPath: "apps/admin/src/views/fms"
+    deps: [system, bpm]
+    entities: [fms_account, fms_subject, fms_voucher, fms_expense_reimburse, fms_invoice]
+
+  - name: "pms"
+    title: "项目协同管理"
+    moduleDir: "apps/backend/yudao-module-pms"
+    basePackage: "cn.iocoder.yudao.module.pms"
+    adminPath: "apps/admin/src/views/pms"
+    deps: [system]
+    entities: [pms_project, pms_milestone, pms_task, pms_work_log, pms_iteration]
+
+  - name: "im"
+    title: "即时通讯中枢"
+    moduleDir: "apps/backend/yudao-module-im"
+    basePackage: "cn.iocoder.yudao.module.im"
+    adminPath: "apps/admin/src/views/im"
+    deps: [system]
+    entities: [im_conversation, im_message, im_group, im_group_member, im_contact]
+
+  - name: "online"
+    title: "声明式蓝图与在线代码生成"
+    moduleDir: "apps/backend/yudao-module-infra"
+    basePackage: "cn.iocoder.yudao.module.infra.controller.admin.codegen"
+    adminPath: "apps/admin/src/views/infra/codegen"
+    deps: [system, infra]
+    entities: [infra_codegen_table, infra_codegen_column]

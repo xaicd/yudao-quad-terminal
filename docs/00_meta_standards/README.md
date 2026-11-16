@@ -15,15 +15,15 @@
 | 规格包模板（10 份） | `.specify/templates/` | `speckit build` 用它展开 16 份资产 |
 | 多智能体工作流配方 | `.agents/workflows/*.workflow.json` | 由 `workflow-engine.cjs` 驱动 |
 | 蜂群协同与零返工宪法 | `SWARM.md` | 多团队单写者矩阵、Doris 307 双跳范式与 23 门禁手册 |
-| LLM 导航入口 | `wiki/index.md`、`llms.txt` | 进场必读，避免 Token 浪费 |
+| LLM 导航入口 | `docs/wiki/index.md`、`llms.txt` | 进场必读，全仓文档统一归口 `docs/`，避免 Token 浪费 |
 
 ## 本阶段可执行的入口
 
 ```bash
-pnpm gate:fast         # 12+ 道门禁（含本阶段相关的一致性检查）
+pnpm gate:fast         # 17 道快速门禁（含本阶段相关的一致性检查）
 pnpm specs:health      # 规格资产齐备性
-pnpm openwiki:check    # wiki 与生成器是否漂移
-pnpm cmmi:asset check  # 已脚手架化的过程资产是否有 TODO 残留
+pnpm openwiki:check    # docs/wiki 与生成器是否漂移
+pnpm cmmi:asset:check  # 已脚手架化的过程资产是否有 TODO 残留
 ```
 
 ## 何时在本目录新建资产

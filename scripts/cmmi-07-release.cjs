@@ -6,7 +6,7 @@
  *   - `harness.cjs` 定工作流程总规范
  *   - `cmmi-07-release.cjs` 属于 `speckit` 在 CMMI-07 发布割接环节的文档与不可变指纹扩展
  * 关联文档:
- *   - 宏观过程文档: docs/07_release/{system-deployment-sop.md, rollback-emergency-plan.md}
+ *   - 宏观过程文档: docs/07_release/{system-deployment-sop.md, rollback-runbook.json, release-fingerprint.json, releases/}
  *   - 特性规格文档: docs/specs/<domain>/<name>/{deployment.md, runbook.json}
  *
  * 统一跨底座命令:
@@ -53,8 +53,15 @@ function fallbackFingerprint(verifyOnly = false) {
     : "docs/07_release_and_deployment";
   const fpPath = path.join(ROOT, releaseDir, "release-fingerprint.json");
   fs.mkdirSync(path.dirname(fpPath), { recursive: true });
-  if (verifyOnly && fs.existsSync(fpPath)) {
-    const saved = JSON.parse(fs.readFileSync(fpPath, "utf8"));
+  let saved = null;
+  if (fs.existsSync(fpPath)) {
+    try {
+      saved = JSON.parse(fs.readFileSync(fpPath, "utf8"));
+    } catch {
+      saved = null;
+    }
+  }
+  if (verifyOnly && saved) {
     for (const [k, v] of Object.entries(hashes)) {
       if (saved.hashes && saved.hashes[k] && saved.hashes[k] !== v) {
         console.error(`✗ [CMMI-07] 指纹不匹配: ${k}`);
@@ -64,13 +71,20 @@ function fallbackFingerprint(verifyOnly = false) {
     console.log("✓ [CMMI-07] 制品指纹校验通过");
     return 0;
   }
+  const nextVersion = pkg.version || "1.2.0";
+  const sameHashes =
+    saved &&
+    saved.version === nextVersion &&
+    saved.hashes &&
+    JSON.stringify(saved.hashes) === JSON.stringify(hashes);
+  const generatedAt = sameHashes && saved.generatedAt ? saved.generatedAt : new Date().toISOString();
   fs.writeFileSync(
     fpPath,
     JSON.stringify(
       {
         schemaVersion: "1.0.0",
-        version: pkg.version || "1.2.0",
-        generatedAt: new Date().toISOString(),
+        version: nextVersion,
+        generatedAt,
         hashes,
       },
       null,
@@ -95,12 +109,12 @@ if (sub === "check") {
 
 if (sub === "gateway" || sub === "render-gateway") {
   console.log("═══ [Spec-Kit × CMMI-07] 渲染四端网关与部署配置 ═══");
-  process.exit(runNode("scripts/render-gateway-conf.mjs", rest));
+  process.exit(runNode("scripts/generate-gateway-config.mjs", rest));
 }
 
 if (sub === "build") {
   console.log("═══ [Spec-Kit × CMMI-07] 生产制品构建与不可变指纹签发 ═══");
-  const code = runNode("scripts/render-gateway-conf.mjs");
+  const code = runNode("scripts/generate-gateway-config.mjs");
   if (code !== 0) process.exit(code);
   process.exit(fallbackFingerprint(false));
 }

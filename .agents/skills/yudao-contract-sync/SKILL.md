@@ -61,13 +61,13 @@ echo "📡 [1/3] 正在从后端拉取 OpenAPI 3.0 契约文档: $API_URL ..."
 
 if curl -s -f -o "$TMP_OPENAPI" --connect-timeout 3 "$API_URL"; then
   echo "⚡ [2/3] 成功拉取 OpenAPI 契约，启动 openapi-typescript 编译..."
-  npx --yes openapi-typescript "$TMP_OPENAPI" --output "$OUTPUT_FILE"
+  pnpm dlx openapi-typescript "$TMP_OPENAPI" --output "$OUTPUT_FILE"
   echo "✅ [3/3] 强类型 TypeScript SDK 转译成功: $OUTPUT_FILE"
 else
   echo "⚠️ [警告] 后端服务未在 $API_URL 启动，尝试检查本地离线快照..."
   if [ -f "docs/artifacts/openapi.json" ]; then
     echo "📦 从本地离线快照 docs/artifacts/openapi.json 转译..."
-    npx --yes openapi-typescript docs/artifacts/openapi.json --output "$OUTPUT_FILE"
+    pnpm dlx openapi-typescript docs/artifacts/openapi.json --output "$OUTPUT_FILE"
   else
     echo "ℹ️ 未检测到离线快照，生成保底基础通用契约骨架..."
     cat <<'EOF' > "$OUTPUT_FILE"

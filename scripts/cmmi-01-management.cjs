@@ -6,7 +6,7 @@
  *   - `harness.cjs` 定工作流程总规范
  *   - `cmmi-01-management.cjs` 属于 `speckit` 在 CMMI-01 立项策划环节的文档与孵化扩展
  * 关联文档:
- *   - 宏观过程文档: docs/01_management/{project-charter.md, project-plan.md, risk-register.md, dar-decision-records/*}
+ *   - 宏观过程文档: docs/01_management/{pmo-dashboard.md, project-charter.md, project-plan.md, risk-register.md, dar/*}
  *   - 特性规格文档: docs/specs/<domain>/<name>/{selection.md, research.md}
  *
  * 统一跨底座命令:

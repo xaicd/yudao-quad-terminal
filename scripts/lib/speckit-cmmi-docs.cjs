@@ -34,13 +34,13 @@ const CMMI_SPEC_STAGES = {
     script: "scripts/cmmi-00-meta.cjs",
     name: "00_meta_standards",
     title: "CMMI-00 元规范、项目宪法与知识库契约 (Meta Standards & Constitution)",
-    macroDirs: ["docs/00_meta_standards", ".specify/memory", "wiki"],
+    macroDirs: ["docs/00_meta_standards", ".specify/memory", "docs/wiki"],
     macroDocs: [
       ".specify/memory/constitution.md",
       "AGENTS.md",
       "HARNESS.md",
       "compat-manifest.json",
-      "wiki/index.md",
+      "docs/wiki/index.md",
     ],
     specDocs: ["spec.json"],
     assetTypes: ["constitution", "meta-standard", "openwiki"],
@@ -50,7 +50,7 @@ const CMMI_SPEC_STAGES = {
     script: "scripts/cmmi-01-management.cjs",
     name: "01_management",
     title: "CMMI-01 PMO 待办总控、立项章程、DAR 决策分析与风险台账 (PMO, Charter, DAR & Risk)",
-    macroDirs: ["docs/01_management", "docs/01_management/dar-decision-records"],
+    macroDirs: ["docs/01_management", "docs/01_management/dar"],
     macroDocs: [
       "docs/01_management/pmo-dashboard.md",
       "docs/01_management/project-charter.md",
@@ -89,7 +89,7 @@ const CMMI_SPEC_STAGES = {
     name: "04_implementation",
     title: "CMMI-04 研发计划 Plan、WBS 任务矩阵 Tasks 与低代码实现规范 (Implementation & WBS)",
     macroDirs: ["docs/04_implementation"],
-    macroDocs: ["docs/04_implementation/coding-standards-and-guidelines.md"],
+    macroDocs: ["docs/04_implementation/README.md"],
     specDocs: ["plan.md", "tasks.md"],
     assetTypes: ["code-review", "coding-standard"],
   },
@@ -102,8 +102,8 @@ const CMMI_SPEC_STAGES = {
     macroDocs: [
       "docs/05_verification/test-plan.md",
       "docs/05_verification/test-summary-report.md",
-      "docs/05_verification/mutation-report.md",
-      "docs/05_verification/uat-acceptance-certificate.md",
+      "docs/05_verification/defect-tracking-ledger.md",
+      "docs/02_requirements/uat-acceptance-certificate.md",
     ],
     specDocs: ["testing.md", "evidence.json", "bugs.md"],
     assetTypes: ["test-summary", "mutation-report", "uat"],
@@ -113,8 +113,13 @@ const CMMI_SPEC_STAGES = {
     script: "scripts/cmmi-06-quality.cjs",
     name: "06_quality_assurance",
     title: "CMMI-06 质量核对单 Checklist、PPQA/FCA/PCA 审计报告与 CAR 根因分析 (Quality & Audit Docs)",
-    macroDirs: ["docs/06_quality_assurance", "docs/06_quality_assurance/audit", "docs/06_cmmi_audit"],
-    macroDocs: [],
+    macroDirs: ["docs/06_quality_assurance", "docs/06_quality_assurance/audit", "docs/audit"],
+    macroDocs: [
+      "docs/06_quality_assurance/qa-audit-plan.md",
+      "docs/06_quality_assurance/configuration-audit.md",
+      "docs/06_quality_assurance/car-prevention.md",
+      "docs/06_quality_assurance/spc-metrics.md",
+    ],
     specDocs: ["checklist.md"],
     assetTypes: ["audit", "spc", "car"],
   },
@@ -123,10 +128,11 @@ const CMMI_SPEC_STAGES = {
     script: "scripts/cmmi-07-release.cjs",
     name: "07_release",
     title: "CMMI-07 部署 SOP、回滚预案 Runbook 与不可变发布指纹文档 (Release & Deployment Docs)",
-    macroDirs: ["docs/07_release", "docs/07_release_and_deployment"],
+    macroDirs: ["docs/07_release", "docs/07_release/releases"],
     macroDocs: [
       "docs/07_release/system-deployment-sop.md",
-      "docs/07_release/rollback-emergency-plan.md",
+      "docs/07_release/rollback-runbook.json",
+      "docs/07_release/release-fingerprint.json",
     ],
     specDocs: ["deployment.md", "runbook.json"],
     assetTypes: ["deployment-sop", "rollback-runbook", "release-notes"],
@@ -884,7 +890,7 @@ function inspectFoundryEcosystem(foundryRoot) {
 /**
  * 渲染 Markdown 格式的 PMO 待办大盘（用于终端展示及落盘 docs/01_management/pmo-dashboard.md）
  */
-function renderPmoMarkdown(pmo, ecosystem = null) {
+function renderPmoMarkdown(pmo, ecosystem = null, renderOpts = {}) {
   const lines = [];
   const isFoundry = pmo.roleType === "FOUNDRY_MASTER_PMO";
 
@@ -895,7 +901,15 @@ function renderPmoMarkdown(pmo, ecosystem = null) {
   );
   lines.push("");
   lines.push(`> **实时刷新命令**: \`pnpm run pmo\`（或 \`node scripts/cmmi-01-management.cjs pmo [--write|--json]\`）`);
-  lines.push(`> **项目坐标**: \`${pmo.repoName}@${pmo.version}\` | **分支**: \`${pmo.branch}\` | **HEAD**: \`${pmo.headCommit}\` | **工作区净度**: ${pmo.dirtyCount === 0 ? "✅ Clean (0 dirty)" : `⚠️ ${pmo.dirtyCount} 处未提交变更`}`);
+  if (renderOpts.persistToGit) {
+    lines.push(
+      `> **项目坐标**: \`${pmo.repoName}@${pmo.version}\` | **分支**: \`${pmo.branch}\` | **状态基线**: CMMI-01 持久化待办总控（实时提交与脏文件状态请运行 \`pnpm run pmo\`）`
+    );
+  } else {
+    lines.push(
+      `> **项目坐标**: \`${pmo.repoName}@${pmo.version}\` | **分支**: \`${pmo.branch}\` | **HEAD**: \`${pmo.headCommit}\` | **工作区净度**: ${pmo.dirtyCount === 0 ? "✅ Clean (0 dirty)" : `⚠️ ${pmo.dirtyCount} 处未提交变更`}`
+    );
+  }
   lines.push("");
 
   // ── 1. 规格与任务漏斗 ──
@@ -1047,9 +1061,10 @@ function runPmoRadar(opts = {}) {
   console.log(markdown);
 
   if (opts.write) {
+    const persistedMarkdown = renderPmoMarkdown(pmo, ecosystem, { persistToGit: true });
     const outPath = path.join(ROOT, "docs/01_management/pmo-dashboard.md");
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
-    fs.writeFileSync(outPath, markdown, "utf8");
+    fs.writeFileSync(outPath, persistedMarkdown, "utf8");
     console.log(`\n✅ [PMO] 已更新持久化 PMO 待办大盘: ${path.relative(ROOT, outPath)}`);
   }
   return 0;

@@ -50,12 +50,13 @@ mvn -B package -DskipTests -pl yudao-server
 ```bash
 pnpm build:backend   # 两步 Maven 构建（已实测）：普通库 jar + 只 repackage yudao-server → 189MB
 pnpm build:admin     # 前端构建；解析真实 vite 入口（hoisted 布局），缺依赖才显式 SKIP
-pnpm build           # 两者串联
+pnpm build:miniapp   # 移动端 H5 无头构建（由 deploy/patches/miniapp/ 补丁赋能）
+pnpm build           # 三者串联（backend + admin + miniapp）
 ```
 
-> ✅ `pnpm build:admin` **已实测通过**（`✓ built in 23.56s`，产物 `apps/admin/dist` 24.6MB）：
-> 子模块 `apps/admin` 已 rebase 到上游 `master`（`36ede93e9`）并重放本仓的 ApiEncrypt 本地提交，
-> 上游缺失的 `src/views/oa/utils/*` 已到位。前端构建现为 `gate:full` 的 blocking 项 `admin-build`。
+> ✅ `pnpm build:admin` **已实测通过**（`✓ built in 23.56s`，构建产物约 24.6MB）：
+> 子模块 `apps/admin` 钉在纯上游 `master` 提交（`050bac1ec`），并通过主仓声明式补丁 `deploy/patches/admin/0001-login-encrypt-on.patch` 注入登录加密，
+> 上游考勤常量文件 `src/views/oa/utils/constants.ts` 已到位。前端构建现为 `gate:full` 的 blocking 项 `admin-build`。
 
 ## 4. 启动
 
@@ -74,7 +75,7 @@ pnpm gate:full        # 门禁 full 档会自动跑 lite:verify（缺前置条�
 
 ## 5. 凭据策略（硬约束）
 
-- **禁止弱默认凭据**：不使用 `admin` / `admin123` 这类可猜值。
+- **禁止弱默认凭据**：严禁使用默认弱管理员账号或可猜弱口令。
 - 账号由 CSPRNG 生成，且符合后端校验 `^[a-zA-Z0-9]{4,30}$`（**不能带下划线**）。
 - 口令由 CSPRNG 生成，长度 16 —— 因为 `AuthLoginReqVO` 的 `@Length(min=4, max=16)` 是登录请求的硬上限。
 - 导入种子数据后立即：把 `system_users.id=1` 改成生成的高熵账号与 bcrypt(10) 口令，其余种子弱演示账号置为禁用。

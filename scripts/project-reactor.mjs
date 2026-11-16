@@ -262,6 +262,8 @@ export function pruneHistoricalArchives(targetDir) {
     path.join(targetDir, "docs", "specs", "archive"),
     path.join(targetDir, "docs", "architecture", "artifacts"),
     path.join(targetDir, "docs", "artifacts"),
+    path.join(targetDir, "docs", "audit"),
+    path.join(targetDir, "docs", "07_release", "releases"),
     path.join(targetDir, "docs", "00_meta_standards", "blueprint-backport-audit.md"),
     path.join(targetDir, "docs", "architecture", "OPEN-SOURCE-TRACKING-MANUAL.md"),
     path.join(targetDir, "docs", "architecture", "CURRENT-PROGRESS.md"),
@@ -278,10 +280,12 @@ export function pruneHistoricalArchives(targetDir) {
     } catch {}
   }
 
-  // 清除母本历史 DAR / ADR Markdown，保留目录骨架 .gitkeep
+  // 移除旧版重复目录并清除母本历史 DAR / ADR Markdown，保留标准目录骨架 .gitkeep
+  try {
+    fs.rmSync(path.join(targetDir, "docs", "01_management", "dar-decision-records"), { recursive: true, force: true });
+  } catch {}
   for (const relDir of [
     path.join("docs", "01_management", "dar"),
-    path.join("docs", "01_management", "dar-decision-records"),
     path.join("docs", "03_design", "adr"),
   ]) {
     const absDir = path.join(targetDir, relDir);
@@ -1187,7 +1191,7 @@ pnpm preview:miniapp
     fs.writeFileSync(path.join(targetDir, "apps", "miniapp", "README.md"), miniappReadme, "utf8");
   }
 
-  // 重新同步派生工程的 OpenWiki 动态词条（保证 wiki/ 与新模块名/0 规格基线严格一致）
+  // 重新同步派生工程的 OpenWiki 动态词条（保证 docs/wiki/ 与新模块名/0 规格基线严格一致）
   const syncWikiScript = path.join(targetDir, "scripts", "sync-openwiki.mjs");
   if (fs.existsSync(syncWikiScript)) {
     spawnSync(process.execPath, [syncWikiScript, "--write"], {

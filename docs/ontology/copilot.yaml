@@ -1,5 +1,5 @@
 # Yudao Quad-Terminal AI Copilot 侧边栏与安全沙箱规范 (Copilot Specification)
-version: "1.0.0"
+version: "1.2.0"
 component:
   name: "OntologyCopilotDrawer"
   type: "Vue3 / React Native / UniApp"

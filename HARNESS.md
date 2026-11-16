@@ -20,21 +20,22 @@
 
 ## 2. 核心入口与跨底座统一 `.cjs` 契约矩阵
 
-> **跨底座同名同参铁律**：无论底层是 `cooliebase-all`（Next.js/TS 插件架构）还是 `yudao-quad-terminal`（Java SpringBoot + Vue3 + UniApp + Expo 四端架构），向外部（Coolie 工坊 `coolie-cli` 与 AI Agent 数字员工）暴露的 **`.cjs` 脚本路径、CLI 参数、`pnpm run` 命令及 Embedded PostgreSQL 真库测试契约 100% 一致**：
+> **跨底座同名同参铁律**：无论底层是 `cooliebase-all`（`v1.5.0`，Next.js 16 / React 19 + Admin + 2C Portal + `clients/miniapp` + `clients/expo` 四端同源 & 含 `oa/hrm/fms/pms` 等 18 第一方插件）还是 `yudao-quad-terminal`（`v1.2.0`，Java Spring Boot 3 + Vue3 Admin + UniApp + Expo 四端同源 & 19 业务模块），向外部（Coolie 工坊与 AI Agent 数字员工）暴露的 **`.cjs` 脚本路径、CLI 参数、`pnpm run` 命令、全仓 `docs/` 文档归口及 Embedded PostgreSQL 真库测试契约 100% 一致**：
 
 | 优先级 | 统一入口文件 / 脚本 | 统一 `pnpm run` 命令 | 用途与跨底座标准行为 |
 |---|---|---|---|
 | ★ | **`HARNESS.md`**（本文件） | — | 一图总览：交付物 + 消费契约 + 统一生命周期环节 + 验证矩阵 |
 | ★★ | [`AGENTS.md`](AGENTS.md) | — | 宪法 / 铁律 / 蓝图使用规范 / 能力速查表（唯一真源） |
 | ★★ | [`compat-manifest.json`](compat-manifest.json) | `pnpm run compat:check` | **下游消费契约**（机器可读，`scripts/compat-check.cjs` 强校验） |
-| ★★ | [`scripts/harness.cjs`](scripts/harness.cjs) | `pnpm run harness <action>` | 统一 9 阶段全生命周期 Harness 总调度引擎 |
+| ★★ | [`scripts/harness.cjs`](scripts/harness.cjs) | `pnpm run harness <action>` | 统一 9 阶段全生命周期 Harness 总调度引擎（含 `pmo`） |
 | ★★ | [`scripts/project-init.cjs`](scripts/project-init.cjs) | `pnpm run project:init -- ...` | 统一零污染沙箱派生与白标重构引擎（兼容 `pnpm project:hatch`） |
 | ★★ | [`scripts/blueprint-engine.cjs`](scripts/blueprint-engine.cjs) | `pnpm run blueprint:deliver` | 统一 `<500 Tokens` 蓝图自愈 (`doctor`)、编译 (`compile-domain`) 与真库交付 (`deliver --verify-e2e`) |
 | ★★ | [`scripts/lib/ephemeral-pg.cjs`](scripts/lib/ephemeral-pg.cjs) | — | 统一零 Docker **嵌入式真 PostgreSQL 18.4 (`embedded-postgres`)** 端点解析器 |
-| ★★ | [`scripts/speckit.cjs`](scripts/speckit.cjs) | `pnpm run speckit:<cmd>` | 统一 Spec-Kit SDD 工程规格管理引擎 (`new \| build \| check \| tasks \| archive`) |
+| ★★ | [`scripts/speckit.cjs`](scripts/speckit.cjs) | `pnpm run speckit:new` / `pnpm run speckit:check` | 统一 Spec-Kit SDD 工程规格管理引擎 (`new \| build \| check \| tasks \| archive`) |
 | ★★ | [`scripts/codegen-module.cjs`](scripts/codegen-module.cjs) | `pnpm run gen:module` | 统一业务域全栈代码与 PostgreSQL DDL 生成器 |
-| ★★ | [`scripts/gate-check.cjs`](scripts/gate-check.cjs) | `pnpm run check` / `pnpm run gate:fast` | 统一工程质量与架构边界门禁 |
-| ★★ | [`scripts/service.sh`](scripts/service.sh) | `pnpm run service:<cmd>` | 物理服务运维控制器（支持单一入口 `48120` 与 Spring Boot 守护） |
+| ★★ | [`scripts/gate-check.cjs`](scripts/gate-check.cjs) | `pnpm run check` / `pnpm run gate:fast` | 统一工程质量与架构边界门禁（fast 17 项 / full 20 项） |
+| ★★ | [`scripts/build-release-assets.cjs`](scripts/build-release-assets.cjs) | `pnpm run release:package` | 统一离线纯净四端骨架包、契约清单与 `SHA256SUMS.txt` 发布打包器 |
+| ★★ | [`scripts/service.sh`](scripts/service.sh) | `pnpm run service:start` / `pnpm run service:health` | 物理服务运维控制器（支持单一入口 `48120` 与 Spring Boot 守护） |
 
 ### 2.1 双支柱架构：`harness` 定工作流程总规范 × `speckit` 扩展 CMMI 00~09 全生命周期文档体系
 
@@ -44,18 +45,18 @@
 > 2. **支柱二：`speckit`（[`scripts/speckit.cjs`](scripts/speckit.cjs)）+ CMMI 00~09 扩展（`scripts/cmmi-00-meta.cjs` ~ `scripts/cmmi-09-operations.cjs`）= 全环节工程文档与过程资产引擎**
 >    因为**每个 CMMI 00~09 环节本质上都与工程文档强绑定**（同时承载 **Layer A 宏观过程文档 `docs/00_meta_standards/`~`docs/09_operations/`** 与 **Layer B 特性规格包阶段文档 `docs/specs/<domain>/<name>/`**），所以每个 CMMI 环节均属于 `speckit` 的一等公民扩展，统一通过 `node scripts/speckit.cjs cmmi <00..09> [docs|check|asset|...]`（或 `node scripts/cmmi-0X-*.cjs`）调用：
 
-| CMMI 阶段 | `speckit` 阶段扩展入口 / `.cjs` 脚本 | 宏观工程过程文档 (Layer A) | 特性规格包阶段文档 (Layer B: `docs/specs/<域>/<名>/`) | 阶段专属动作与文档门禁 |
+| CMMI 阶段 | `speckit` 阶段扩展入口 / `.cjs` 脚本 | 宏观工程过程文档 (Layer A: 统一归口 `docs/`) | 特性规格包阶段文档 (Layer B: `docs/specs/<域>/<名>/`) | 阶段专属动作与文档门禁 |
 |---|---|---|---|---|
-| **00 规范与元契约** | `node scripts/speckit.cjs cmmi 00`<br>([`scripts/cmmi-00-meta.cjs`](scripts/cmmi-00-meta.cjs)) | `docs/00_meta_standards/`、`.specify/memory/constitution.md`、`wiki/` | `spec.json` | `docs \| check \| constitution \| schema \| sync` |
+| **00 规范与元契约** | `node scripts/speckit.cjs cmmi 00`<br>([`scripts/cmmi-00-meta.cjs`](scripts/cmmi-00-meta.cjs)) | `docs/00_meta_standards/README.md`、`.specify/memory/constitution.md`、`docs/wiki/` | `spec.json` | `docs \| check \| constitution \| schema \| sync` |
 | **01 立项与 PMO 大盘** | `node scripts/speckit.cjs cmmi 01`<br>([`scripts/cmmi-01-management.cjs`](scripts/cmmi-01-management.cjs)) | `docs/01_management/` (`pmo-dashboard.md`, `project-plan.md`, `project-charter.md`, `risk-register.md`) | `selection.md`, `research.md` | `pmo \| docs \| check \| asset \| init \| render` |
-| **02 需求与规格工程** | `node scripts/speckit.cjs cmmi 02`<br>([`scripts/cmmi-02-requirements.cjs`](scripts/cmmi-02-requirements.cjs)) | `docs/02_requirements/` (`rtm-traceability-matrix.md`, `non-functional-reqs.md`) | `brief.json`, `requirements.md`, `spec.md` | `docs \| check \| asset \| route \| new \| build` |
-| **03 架构设计与自愈** | `node scripts/speckit.cjs cmmi 03`<br>([`scripts/cmmi-03-design.cjs`](scripts/cmmi-03-design.cjs)) | `docs/03_design/` (`database-design-erd.md`, `adr/`, `diagrams/`) | `design.md`, `prototype.md` | `docs \| check \| asset \| doctor \| compile-domain` |
-| **04 研发计划与实现** | `node scripts/speckit.cjs cmmi 04`<br>([`scripts/cmmi-04-implementation.cjs`](scripts/cmmi-04-implementation.cjs)) | `docs/04_implementation/` (`coding-standards-and-guidelines.md`, `code-review-*`) | `plan.md`, `tasks.md` | `docs \| check \| asset \| tasks \| deliver \| codegen` |
-| **05 测试与真 PG E2E** | `node scripts/speckit.cjs cmmi 05`<br>([`scripts/cmmi-05-verification.cjs`](scripts/cmmi-05-verification.cjs)) | `docs/05_verification/` (`test-plan.md`, `test-summary-report.md`, `uat-acceptance-certificate.md`) | `testing.md`, `evidence.json`, `bugs.md` | `docs \| check \| asset \| e2e \| unit \| mutation` |
-| **06 质量门禁与审计** | `node scripts/speckit.cjs cmmi 06`<br>([`scripts/cmmi-06-quality.cjs`](scripts/cmmi-06-quality.cjs)) | `docs/06_quality_assurance/` (`audit/fca-pca-audit-*.md`, `car-root-cause-*.md`) | `checklist.md` | `docs \| check \| asset \| tasks \| controls` |
-| **07 发布 SOP 与指纹** | `node scripts/speckit.cjs cmmi 07`<br>([`scripts/cmmi-07-release.cjs`](scripts/cmmi-07-release.cjs)) | `docs/07_release/` (`system-deployment-sop.md`, `rollback-emergency-plan.md`) | `deployment.md`, `runbook.json` | `docs \| check \| asset \| gateway \| build \| fingerprint \| runbook` |
+| **02 需求与规格工程** | `node scripts/speckit.cjs cmmi 02`<br>([`scripts/cmmi-02-requirements.cjs`](scripts/cmmi-02-requirements.cjs)) | `docs/02_requirements/` (`software-requirements.md`, `rtm-traceability-matrix.md`, `non-functional-reqs.md`, `uat-acceptance-certificate.md`) | `brief.json`, `requirements.md`, `spec.md` | `docs \| check \| asset \| route \| new \| build` |
+| **03 架构设计与自愈** | `node scripts/speckit.cjs cmmi 03`<br>([`scripts/cmmi-03-design.cjs`](scripts/cmmi-03-design.cjs)) | `docs/03_design/` (`architecture-design-hld.md`, `database-design-erd.md`, `adr/`, `diagrams/`) | `design.md`, `prototype.md` | `docs \| check \| asset \| doctor \| compile-domain` |
+| **04 研发计划与实现** | `node scripts/speckit.cjs cmmi 04`<br>([`scripts/cmmi-04-implementation.cjs`](scripts/cmmi-04-implementation.cjs)) | `docs/04_implementation/` (`README.md`) | `plan.md`, `tasks.md` | `docs \| check \| asset \| tasks \| deliver \| codegen` |
+| **05 测试与真 PG E2E** | `node scripts/speckit.cjs cmmi 05`<br>([`scripts/cmmi-05-verification.cjs`](scripts/cmmi-05-verification.cjs)) | `docs/05_verification/` (`test-plan.md`, `test-summary-report.md`, `defect-tracking-ledger.md`) | `testing.md`, `evidence.json`, `bugs.md` | `docs \| check \| asset \| e2e \| unit \| mutation` |
+| **06 质量门禁与审计** | `node scripts/speckit.cjs cmmi 06`<br>([`scripts/cmmi-06-quality.cjs`](scripts/cmmi-06-quality.cjs)) | `docs/06_quality_assurance/` (`qa-audit-plan.md`, `configuration-audit.md`, `car-prevention.md`, `spc-metrics.md`)、`docs/audit/` | `checklist.md` | `docs \| check \| asset \| tasks \| controls` |
+| **07 发布 SOP 与指纹** | `node scripts/speckit.cjs cmmi 07`<br>([`scripts/cmmi-07-release.cjs`](scripts/cmmi-07-release.cjs)) | `docs/07_release/` (`system-deployment-sop.md`, `rollback-runbook.json`, `release-fingerprint.json`, `releases/v1.2.0.md`) | `deployment.md`, `runbook.json` | `docs \| check \| asset \| gateway \| build \| fingerprint \| runbook` |
 | **08 SRE 与事故复盘** | `node scripts/speckit.cjs cmmi 08`<br>([`scripts/cmmi-08-sre.cjs`](scripts/cmmi-08-sre.cjs)) | `docs/08_sre/` (`01_slo_sli_metrics/`, `06_incidents_postmortem/`) | `operations.md` | `docs \| check \| asset \| status \| health \| security \| load` |
-| **09 持续运营与归档** | `node scripts/speckit.cjs cmmi 09`<br>([`scripts/cmmi-09-operations.cjs`](scripts/cmmi-09-operations.cjs)) | `docs/09_operations/` (`tenant-governance.md`, `01_financial_reconciliation/`)、`docs/specs/archive/` | `operations.md` | `docs \| check \| asset \| archive \| ops` |
+| **09 持续运营与归档** | `node scripts/speckit.cjs cmmi 09`<br>([`scripts/cmmi-09-operations.cjs`](scripts/cmmi-09-operations.cjs)) | `docs/09_operations/` (`tenant-governance.md`, `01_biz_ops/`) | `operations.md` | `docs \| check \| asset \| archive \| ops` |
 
 ---
 
@@ -108,14 +109,14 @@ pnpm run check && pnpm run compat:check
 
 | 层 | 命令 | 证明什么 | 实测 |
 |---|---|---|---|
-| L0 契约 | `pnpm compat:check` | 下游绑定的入口/端口/路径/子模块指针与实现**逐条一致** | 8 组检查 |
-| L1 静态守卫 | `pnpm gate:fast`（`pnpm harness check`） | 16 项 blocking/advisory 门禁 | 秒级 |
-| L2 单元测试 | `pnpm test:scripts`（`pnpm harness test`） | 78 个 `node:test` 用例（裁剪/规格/凭据/加解密/收割边界/JDK 变体/子模块补丁/harness 不变式） | ~4s |
+| L0 契约 | `pnpm compat:check` | 下游绑定的入口/端口/路径/子模块指针与实现**逐条一致** | 11 组检查 |
+| L1 静态守卫 | `pnpm gate:fast`（`pnpm harness check`） | 17 项 blocking/advisory 门禁（含 4 字菜单与 `docs/` 单一归口守卫） | 秒级 |
+| L2 单元测试 | `pnpm test:scripts`（`pnpm harness test`） | 99 个 `node:test` 用例（契约基线/裁剪/规格/凭据/加解密/收割边界/JDK 变体/子模块补丁/净室派生） | ~5s |
 | L3 端到端 | `pnpm lite:verify`（`pnpm harness e2e`） | 嵌入式真 PG + 真 Redis + 真登录（含 ApiEncrypt 加密登录连续 3 次） | ~20s |
-| L4 构建 | `pnpm build`（`pnpm harness build`） | 189MB 可运行 jar / 24.6MB 前端 dist | 各 ~1min / ~25s |
-| L5 全量 | `pnpm gate:full`（`pnpm harness deliver`） | 19 项（含后端单测 + 前端构建 + lite e2e） | ~2min |
-| **L6 反向控制** | `pnpm harness:controls` | **证明门禁真的会红**：给每道门禁注入违规 → 必须失败 → 复原 → 必须转绿 | 9/9 通过 |
-| **L7 派生金路径** | `pnpm harness:hatch` | 在临时目录**真跑一次派生**并断言 13 项：契约文件齐备 / 本地状态零泄漏（含凭据）/ 身份替换 / Java 包迁移 / `groupId` 与包同源 / 文件名旧品牌清零 / workspace 依赖无悬空 / 派生项目能自跑门禁 | 11s · 12986 文件 |
+| L4 构建与发布 | `pnpm build` / `pnpm release:package` | 189MB 可运行 jar / 24.6MB 前端 dist / 离线纯净四端骨架包 (`SHA256SUMS.txt`) | ~1min |
+| L5 全量 | `pnpm gate:full`（`pnpm harness deliver`） | 20 项（含后端单测 + 前端构建 + lite e2e） | ~2min |
+| **L6 反向控制** | `pnpm harness:controls` | **证明门禁真的会红**：给每道 blocking 门禁注入违规 → 必须失败 → 复原 → 必须转绿 | 10/10 通过 |
+| **L7 派生金路径** | `pnpm harness:hatch` | 在临时目录**真跑一次派生**并断言 20 项：契约文件齐备 / 本地状态零泄漏（含凭据）/ 身份替换 / Java 包迁移 / `groupId` 同源 / 文件名旧品牌清零 / 依赖无悬空 / 四平面 Caddy 网关 / 自跑门禁 | ~12s |
 
 > L6 是本文件与跨底座统一反向控制守卫（`harness-health` / `negative-controls`）对齐的关键：
 > **配置合法 ≠ 生效，门禁存在 ≠ 会咬人**。只有被反向验证过的守卫才算数。
@@ -125,10 +126,10 @@ pnpm run check && pnpm run compat:check
 ## 6. 底座级不变式（违反即红灯）
 
 1. **子模块只读**：差异只以 `deploy/patches/*.patch` 形式落主仓；子模块指针必须钉**远端存在**的提交（`gate:fast` 的 `submodule-patches` 与 `compat:check` 双重把关）。
-2. **pnpm 唯一**：所有脚本入口与依赖安装一律走 pnpm；上游包管理器那四类操作（run / install / exec / ci）在自有文件里禁止出现（`pkg-manager` 门禁）。
+2. **pnpm 唯一**：所有脚本入口与依赖安装一律走 pnpm；禁止出现其他 JS 包管理器命令（`pkg-manager` 门禁）。
 3. **声明必须可执行**：文档里出现的命令与 git ref 必须真实存在（`doc-commands` / `script-targets` / `jdk-variants` 门禁）。
-4. **无弱默认凭据**：引导凭据由 CSPRNG 生成并写入 0600 文件（`lite` 门禁反证 `admin/admin123` 必须被拒）。
-5. **测试不得空洞**：探针与验收必须断言非空/真实入库，禁止假 Mock。
+4. **无弱默认凭据**：引导凭据由 CSPRNG 生成并写入 0600 文件（`lite` 门禁反证默认弱管理员口令必须被拒）。
+5. **测试不得空洞 & 文档单一归口 `docs/`**：探针与验收必须断言真实入库，禁止假 Mock；全仓文档/规格/知识库/Release/审计报告严格归口 `docs/`，禁止顶层散落文档目录。
 
 ---
 

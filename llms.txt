@@ -1,20 +1,22 @@
-# yudao-quad-terminal — LLM 入口契约 (llms.txt)
+# yudao-quad-terminal — LLM 入口契约 (llms.txt, v1.2.0)
 
-> 工业级四端一体基座（Java Spring Boot 3 / Vue3 Admin / Uni-App 小程序 / Expo RN）。
+> 工业级四端一体基座（Java Spring Boot 3 / Vue3 Admin / Uni-App 小程序 / Expo RN，`templateVersion: 1.2.0`）。
 > 本文件是给 AI Agent 的高密度入口：读完它就能在不扫源码的前提下开始干活。
-> 人读版本见 `README.md`；导航式知识库见 `wiki/index.md`。
+> 人读版本见 `README.md` 与 `HARNESS.md`；导航式知识库见 `docs/wiki/index.md`（全仓文档统一归口 `docs/`）。
 
 ## 0. 铁律（违反即返工）
 
-1. **pnpm 唯一**：所有 JS 操作只用 pnpm，禁止任何 npm 操作（run / install / exec / ci 四类）。门禁 `pkg-manager` 会拦截。
-2. **`apps/backend` / `apps/admin` / `apps/miniapp` 是 git submodule**（上游第三方仓库）：**不得修改其中任何文件**。所有差异落主仓（`deploy/`、`scripts/`、`.agents/`、`docs/`）。
-3. **禁止弱默认凭据**：不得使用 `admin` / `admin123` 之类。引导凭据由 CSPRNG 生成。
-4. **声明必须可执行**：文档里写的命令必须真实存在；`doc-commands`（advisory）会列出空头命令。
-5. **No Artifact, No Done**：口头"做完了"不算；要有可核验产物（退出码 0 的门禁或真实产物）。
+1. **pnpm 唯一**：所有 JS 操作只用 pnpm，禁止任何其他 JS 包管理器命令。门禁 `pkg-manager` 会拦截。
+2. **`apps/backend` / `apps/admin` / `apps/miniapp` 是 git submodule**（上游第三方仓库）：**不得修改其中任何文件**。所有差异落主仓（`deploy/patches/`、`scripts/`、`.agents/`、`docs/`）。
+3. **禁止弱默认凭据**：严禁使用默认弱管理员账号或弱口令。引导凭据由 CSPRNG 生成。
+4. **声明必须可执行**：文档里写的命令必须真实存在；`doc-commands`（blocking）会拦截不存在的脚本命令。
+5. **全仓文档归口 `docs/` & 导航菜单 `<= 4` 字**：所有过程文档、规格（`docs/specs/`）、OpenWiki（`docs/wiki/`）、Release 说明（`docs/07_release/releases/`）与治理审计（`docs/audit/`）统一收敛于 `docs/`，严禁顶层并行文档目录；可见目录/页面菜单名严格 `<= 4` 字。
+6. **No Artifact, No Done**：口头"做完了"不算；要有可核验产物（退出码 0 的门禁或真实产物）。
 
-## 1. 30 秒上手与双支柱架构（与 `cooliebase-all` 100% 同名同参）
+## 1. 30 秒上手与双支柱架构（与 `cooliebase-all` `v1.5.0` 100% 同名同参）
 
-- **支柱一 `harness` (`HARNESS.md` + `scripts/harness.cjs`)**：定义 `pnpm harness <install|check|build|start|health|status|stop|e2e|deliver>` 9 大运行生命周期环节。
+- **跨底座四端同构认知**：`cooliebase-all`（`v1.5.0`）同样具备 **四大终端**（Admin + 2C Portal + `clients/miniapp` + `clients/expo`）与 **18 个第一方插件**（含 `oa/hrm/fms/pms` 等 20 业务域），与本仓 `yudao-quad-terminal`（`v1.2.0`，19 模块四端架构）暴露 100% 同名同参的 `.cjs` 脚本契约。
+- **支柱一 `harness` (`HARNESS.md` + `scripts/harness.cjs`)**：定义 `pnpm harness <install|check|build|start|health|status|stop|e2e|deliver|pmo>` 标准运行生命周期环节。
 - **支柱二 `speckit` (`scripts/speckit.cjs`) + CMMI 00~09 扩展 (`scripts/cmmi-00-meta.cjs` ~ `scripts/cmmi-09-operations.cjs`)**：通过 `pnpm run speckit -- cmmi <00..09> [docs|check|asset|...]` 统一治理每个 CMMI 环节的宏观过程文档 (`docs/00_meta_standards/`~`docs/09_operations/`) 与特性规格阶段文档 (`docs/specs/<domain>/<name>/`)。
 - **零污染沙箱孵化 + `<500 Tokens` 蓝图一键真库交付**：
   ```bash
@@ -46,7 +48,7 @@ pnpm lite:down                                # 收割残留（node 非优雅退
 pnpm lite:clean                               # 清理 PG 数据与抽出的二进制
 ```
 
-- 数据库：嵌入式**真** PostgreSQL 18.4，直接执行官方 `apps/backend/sql/postgresql/*.sql`（60 表 / 48 序列），零 DDL 移植。
+- 数据库：嵌入式**真** PostgreSQL 18.4，直接执行官方 `apps/backend/sql/postgresql/*.sql`（`ruoyi-vue-pro.sql` 49 表 + `quartz.sql` 11 表 = 60 表 / 48 序列），零 DDL 移植。
 - 缓存：嵌入式**真** Redis（真二进制，非模拟器）。变体：`redis-7.4.1`（默认，RSALv2/SSPLv1，**仅本地开发/演示**）/ `--redis-variant redis-6.2.6-bsd`（BSD-3，**可分发**）。
 - 凭据：CSPRNG 生成，写入 `.commandcode/lite/credentials.env`（0600、已 gitignore），只回显一次。
 - **构建 fat jar 必须两步**（否则「fat jar 套 fat jar」导致模块 bean 全扫不到）：
@@ -57,31 +59,34 @@ pnpm lite:clean                               # 清理 PG 数据与抽出的二�
   ```
 - 登录接口带 `@ApiEncrypt`，调用方须按 AES/ECB 加密并带 `X-Api-Encrypt` 头；现成实现见 `deploy/lite/runtime/lite-api-encrypt.mjs`。
 
-### 2.2 统一门禁 —— `scripts/gate-check.mjs`
+### 2.2 统一门禁与发布打包 —— `scripts/gate-check.cjs` / `scripts/build-release-assets.cjs`
 
 ```bash
-pnpm gate:fast     # 秒级 16 项：pkg-manager / openwiki / skills / typecheck / specs-health / workflow / scripts-tests / trim-cli / doc-commands / script-targets / ci-files / contract(advisory) / socratic(advisory)
-pnpm gate:full     # 19 项：追加 backend-tests（约 70s）、admin-build（vite，约 25s）与 lite 端到端验收
+pnpm pmo           # PMO 首屏待办雷达（0.5s 输出活跃规格、WBS 与技术债队列）
+pnpm gate:fast     # 秒级 17 项：pkg-manager / openwiki / skills / typecheck / specs-health / workflow / scripts-tests / trim-cli / contract / doc-commands / script-targets / compat / submodule-patches / jdk-variants / ci-files / menu-standard / socratic(advisory)
+pnpm gate:full     # 20 项：追加 backend-tests（约 70s）、admin-build（vite，约 25s）与 lite 端到端验收
 pnpm check         # = gate:fast
 pnpm specs:health  # 单独校验规格资产齐备性 + brief 8 要素 + 占位符残留
-pnpm test:scripts  # 78 个 node:test 用例（裁剪/规格/凭据/加解密/收割边界/门禁 CLI/JDK 变体/子模块补丁）
+pnpm test:scripts  # 99 个 node:test 用例（契约基线/裁剪/规格/凭据/加解密/收割边界/门禁 CLI/JDK 变体/子模块补丁/菜单与净室派生）
 pnpm test:all      # 脚本单测 + typecheck + 后端 mvn test + 就绪自检（严格失败即退出）
 pnpm build:backend # 两步 Maven 构建（已实测 BUILD SUCCESS，189MB jar）
 pnpm build:admin   # vite 构建；解析真实 vite 入口以绕过 hoisted linker 的路径陷阱
+pnpm build:miniapp # Uni-App H5 无头 CLI 构建
+pnpm release:package   # 打包离线纯净四端骨架包、契约清单与 SHA256SUMS.txt
 pnpm jdk:list      # JDK 变体矩阵（真实 ref + pom 实测值）
 pnpm patch:status  # 子模块差异补丁状态（差异收敛于 deploy/patches）
-pnpm compat:check  # 下游兼容契约校验（声明 == 实现）
-pnpm harness:controls  # 门禁反向控制（证明守卫真的会咬人）
-pnpm harness:hatch     # 派生金路径验证（真跑一次 project:hatch 并断言产物）
+pnpm compat:check  # 下游兼容契约校验（11 组检查：声明 == 实现）
+pnpm harness:controls  # 门禁反向控制（10/10 项：证明守卫真的会咬人）
+pnpm harness:hatch     # 派生金路径验证（真跑一次 project:hatch 并断言 20 项产物）
 pnpm patch:apply   # 幂等注入（lite:up / lifecycle build 自动调用）
 ```
 
-分级语义：只有 `blocking` 失败才非零退出；`advisory`（契约漂移、苏格拉底快照）如实展示不阻塞；`skipped ≠ pass`。
+分级语义：只有 `blocking` 失败才非零退出；`advisory`（如净室未生成瞬态苏格拉底快照）如实展示不阻塞；`skipped ≠ pass`。
 MCP 的 `gate_check` 工具委派给同一脚本（单一真源）。
 
-**已知上游红灯**（勿误判为己方回归，详见 `AGENTS.md §0.4`）：
-- `contract`：孤儿 92 条 = `/ai1` 66（升 admin pin 后新前端领先后端）+ `/infra` 14（上游移除 Quartz 控制器）+ pay/bpm/mes/promotion 12；动词不符 0（advisory）。
-- ~~`pnpm build:admin` 受上游 pin 阻塞~~ → 已修（子模块 rebase 到上游 master，实测 24.6MB dist，已纳入 gate:full）。
+**门禁基线说明**（详见 `AGENTS.md §0.4`）：
+- `contract`：只读上游固有的 92 条未暴露孤儿端点已登记于 `scripts/lib/upstream-contract-baseline.json`（`/ai1` 66 + `/infra` 14 + pay/bpm/mes/promotion 12），默认基线模式下新增漂移为 0（PASS）；新增任何未登记孤儿或动词不符立即报错。
+- ~~`pnpm build:admin` 受上游 pin 阻塞~~ → 已修（子模块钉至纯上游 `050bac1ec` + `deploy/patches/admin/0001-login-encrypt-on.patch`，实测 24.6MB 产物，已纳入 `gate:full`）。
 - JDK 变体：`pnpm jdk:list` 查真实 ref；门禁防「文档写不存在的分支」（上游只有 `master-jdk17`/`master`(JDK8线)/`master-jdk25`）。
 
 ### 2.3 模块裁剪 + MCP —— `scripts/trim-modules.mjs` / `scripts/mcp/yudao-mcp-server.cjs`
@@ -99,7 +104,7 @@ pnpm trim:modules --recover --yes              # 撤销（子模块回到已提�
 
 ### 2.4 pnpm 标准化
 
-`pnpm` 是唯一 JS 包管理器与任务入口。脚本内部直接 `node scripts/x.mjs` 是允许的（等价于 `pnpm x`，MCP 与门禁自身即如此）。
+`pnpm` 是唯一 JS 包管理器与任务入口。脚本内部直接 `node scripts/gate-check.cjs` 是允许的（等价于 `pnpm check`，MCP 与门禁自身即如此）。
 边界：Maven 仍归 Maven，但入口收敛为 `pnpm lifecycle:build`；`apps/` 下上游子模块有自己的工具链。
 
 ### 2.5 选型决策记录
@@ -115,23 +120,23 @@ pnpm smoke:login                                                  # 对运行中
 pnpm verify:real-db                                               # = lite:verify，真 PG + 真 Redis 全链路
 ```
 
-## 3. 文档导航
+## 3. 文档导航（全仓文档统一归口 `docs/`）
 
 | 读者 | 入口 | 用途 |
 |---|---|---|
-| 人 | `README.md` | 项目定位、架构、快速开始、能力速查 |
-| AI Agent | `AGENTS.md` → `wiki/index.md` | 治理铁律 + 全息知识库导航（先读 wiki 再动代码） |
+| 人 | `README.md` / `HARNESS.md` | 项目定位、架构、生命周期、能力速查与验证矩阵 |
+| AI Agent | `AGENTS.md` → `docs/wiki/index.md` | 治理铁律 + 全息知识库导航（先读 wiki 再动代码） |
 | AI Agent（技能） | `.agents/skills/README.md` | 18 个技能的索引与新增步骤 |
-| 机器 | `llms.txt`（本文件） | 高密度能力契约与命令 |
-| 规格 | `docs/specs/<domain>/<name>/` | 15~16 份规格资产（brief + SRS/设计/任务/回滚） |
-| 过程资产 | `docs/01_management` ~ `09_operations` | CMMI 全生命周期 |
+| 机器 | `llms.txt`（本文件） / `compat-manifest.json` | 高密度能力契约、命令与下游兼容声明 |
+| 规格 | `docs/specs/<domain>/<name>/` | 16 份规格资产（brief + SRS/设计/任务/回滚） |
+| 过程与发布审计 | `docs/00_meta_standards` ~ `09_operations`、`docs/07_release/releases/`、`docs/audit/` | CMMI 全生命周期、Release 说明与治理审计 |
 
 ## 4. 目录与边界
 
 - `apps/backend`、`apps/admin`、`apps/miniapp` —— **git submodule（第三方上游）**，只读。
-- `apps/app`、`packages/*`、`scripts/`、`deploy/`、`.agents/`、`.specify/`、`docs/`、`wiki/` —— 主仓自有，可改。
+- `apps/app`、`packages/*`、`scripts/`、`deploy/`、`.agents/`、`.specify/`、`docs/`（含 `docs/wiki/`、`docs/specs/`、`docs/ontology/`、`docs/audit/`）—— 主仓自有，可改。
 - `.commandcode/lite/` —— lite 档本地状态（PG 数据、抽出的二进制、引导凭据），已 gitignore。
-- `deploy/lite/runtime/` —— 独立 pnpm workspace 根（`pnpm-workspace.yaml` + `node-linker=isolated`）。
+- `deploy/lite/runtime/` —— 独立工作区运行根（`pnpm-workspace.yaml` + `node-linker=isolated`）。
 
 ## 5. 常见失败 → 修复
 
