@@ -915,7 +915,7 @@ export async function appRequest<T = any>(endpoint: string, options: RequestInit
 本指南所规定的 Monorepo Workspace 架构，并非脱离业务实际的闭门造车，而是深度汲取了 Coolie 平台本体仓库（基于 Paperclip 核心控制面）在数千次交付与实战演进中的成熟经验：
 
 1. **Monorepo 拓扑借鉴与严禁 Standalone 孤岛**：
-   - *Monorepo 跨端同源经验*：采用 `packages/*`（`api-client`, `shared-types`）+ `apps/*`（`backend`, `admin`, `miniapp`, `app`）的统一工作区体系，仅对 `apps/app` 因原生移动 SDK 编译链特异性保留了独立 Metro 配置。
+   - *Coolie 本体经验*：Coolie 采用 `packages/*`（`db`, `shared`, `adapters`, `plugins`）+ `server` + `ui` + `cli` 的经典 Monorepo 体系，仅对 `clients/expo` 因原生移动 SDK 编译链特异性保留了独立配置。
    - *演进与落地*：在 `yudao-cloud` 交付项目中，**强制将所有应用端（`apps/admin`, `apps/h5`, `apps/miniapp`）100% 纳入 Workspace 统一纳管**，严禁在项目根目录之外建立游离的 standalone 前端。这确保了根目录下运行 `pnpm build` 与 `pnpm typecheck` 时，能一次性捕获全栈所有的编译与类型错误，消灭漏测死角。
 2. **契约 SDK 集中化与自动化流转机制**：
    - *Coolie 本体经验*：Coolie 通过 `packages/shared` 作为全平台的单一真理源（Single Source of Truth），统一分发 DTO、API 路由常量与实体校验器。

@@ -1,6 +1,6 @@
 # Claude Code Guidelines for yudao-quad-terminal (`v1.2.0`)
 
-This repository is `yudao-quad-terminal` (`v1.2.0`), an enterprise-grade quad-terminal fullstack blueprint base (Java Spring Boot 3 + Vue 3 Admin + Uni-App Miniapp + Expo React Native App), with zero-Docker Embedded PostgreSQL 18.4 (`embedded-postgres`) and Embedded Redis. It shares 100% identical `.cjs` CLI contracts with sister base `cooliebase-all` (`v1.5.0`, which also provides 4 terminals: `clients/web`, `clients/admin`, `clients/app`, and `clients/miniapp`, and 20 first-party plugins including `oa/hrm/fms/pms`).
+This repository is `yudao-quad-terminal` (`v1.2.0`), an enterprise-grade quad-terminal fullstack blueprint base (Java Spring Boot 3 + Vue 3 Admin + Uni-App Miniapp + Expo React Native App), with zero-Docker Embedded PostgreSQL 18.4 (`embedded-postgres`) and Embedded Redis. It shares 100% identical `.cjs` CLI contracts with sister base `cooliebase-all` (`v1.5.0`, which also provides 4 terminals: Admin + 2C Portal + `clients/miniapp` + `clients/expo`, and 18 first-party plugins including `oa/hrm/fms/pms`).
 
 ## Single Source of Truth for Rules & Two-Pillar Architecture
 All engineering rules and architectural standards are unified in [`AGENTS.md`](AGENTS.md), [`HARNESS.md`](HARNESS.md), [`docs/wiki/index.md`](docs/wiki/index.md), and `.agents/rules/` (all documentation, specs, OpenWiki, release notes, and audit reports are strictly consolidated under `docs/`):

@@ -28,7 +28,7 @@
 
 ## 🧭 AI Agent 进场 30 秒续作与项目 PMO 待办决策树（与 `cooliebase-all` `v1.5.0` / `coolie` `v0.7.0` 100% 同名同参）
 
-> **跨底座四端同构认知**：姊妹基座 `cooliebase-all`（`v1.5.0`）同样具备 **四大终端**（`clients/web` + `clients/admin` + `clients/app` + `clients/miniapp`）与 **20 个官方插件**（`packages/plugins/plugin-*`，含 `oa/hrm/fms/pms` 等全量 20 业务域），与本基座 `yudao-quad-terminal`（`v1.2.0`，Java Spring Boot 3 + Vue3 Admin + UniApp + Expo，19 物理模块 + `online` 20 业务域）共享完全一致的 `.cjs` 入口与 `pnpm` 命令契约。
+> **跨底座四端同构认知**：姊妹基座 `cooliebase-all`（`v1.5.0`）同样具备 **四大终端**（Admin + 2C Portal + `clients/miniapp` + `clients/expo`）与 **18 个第一方插件**（含 `oa/hrm/fms/pms` 等 20 业务域），与本基座 `yudao-quad-terminal`（`v1.2.0`，Java Spring Boot 3 + Vue3 Admin + UniApp + Expo 19 模块）共享完全一致的 `.cjs` 入口与 `pnpm` 命令契约。
 >
 > **进场第一视角：你即本项目 PMO (Project Management Office)**
 > 任何 AI Agent 打开本项目时，**第一步先看项目 PMO 待办大盘**（耗时 `< 0.5s`，零 Token 盲扫浪费）：

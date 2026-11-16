@@ -7,7 +7,7 @@
 
 ## 一、`v1.2.0` 核心工程成果交付摘要
 
-1. **双支柱架构与跨底座同名契约闭环**：完成 `scripts/harness.cjs` 生命周期总调度器与 `scripts/cmmi-00-meta.cjs` ~ `scripts/cmmi-09-operations.cjs` 十阶段过程资产扩展，与姊妹基座 `cooliebase-all` (`v1.5.0`，同具 `clients/{web,admin,app,miniapp}` 四端与 20 个官方插件) 实现 100% 同名同参调用。
+1. **双支柱架构与跨底座同名契约闭环**：完成 `scripts/harness.cjs` 生命周期总调度器与 `scripts/cmmi-00-meta.cjs` ~ `scripts/cmmi-09-operations.cjs` 十阶段过程资产扩展，与姊妹基座 `cooliebase-all` (`v1.5.0`，同具四端与 18 插件) 实现 100% 同名同参调用。
 2. **只读子模块声明式补丁收敛（方案 B）**：`apps/backend` (`612a3da76`)、`apps/admin` (`050bac1ec`)、`apps/miniapp` (`4924ad51`) 全部钉定远端真实上游提交，3 份定制补丁统一落盘 `deploy/patches/`，彻底根治子模块本地提交导致外部克隆失败的历史痛点。
 3. **零 Docker 真库运行档与净室孵化器**：集成 Embedded PostgreSQL 18.4 + Embedded Redis + CSPRNG `0600` 强凭据（`pnpm lite:verify`），并在 `ProjectReactor` 中固化连字符安全标识符（`snakeSlug` / `pascalSlug`）、4 字导航菜单归一化与零宿主机硬编码网关渲染。
 4. **全仓文档统一归口 `docs/` 与自动化发布流水线**：消除顶层并行文档目录，将 OpenWiki（41 篇受控词条）、规格包、Release 说明与治理审计统一收敛至 `docs/`，并通过 `pnpm release:package` 与 `.github/workflows/release.yml` 实现离线纯净骨架包签名发布。

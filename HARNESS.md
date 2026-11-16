@@ -20,7 +20,7 @@
 
 ## 2. 核心入口与跨底座统一 `.cjs` 契约矩阵
 
-> **跨底座同名同参铁律**：无论底层是 `cooliebase-all`（`v1.5.0`，Next.js 16 / React 19 + `clients/web` + `clients/admin` + `clients/app` + `clients/miniapp` 四端同源 & 含 `oa/hrm/fms/pms` 等 20 个官方插件）还是 `yudao-quad-terminal`（`v1.2.0`，Java Spring Boot 3 + Vue3 Admin + UniApp + Expo 四端同源 & 19 物理模块 + `online` 20 业务域），向外部（Coolie 工坊与 AI Agent 数字员工）暴露的 **`.cjs` 脚本路径、CLI 参数、`pnpm run` 命令、全仓 `docs/` 文档归口及 Embedded PostgreSQL 真库测试契约 100% 一致**：
+> **跨底座同名同参铁律**：无论底层是 `cooliebase-all`（`v1.5.0`，Next.js 16 / React 19 + Admin + 2C Portal + `clients/miniapp` + `clients/expo` 四端同源 & 含 `oa/hrm/fms/pms` 等 18 第一方插件）还是 `yudao-quad-terminal`（`v1.2.0`，Java Spring Boot 3 + Vue3 Admin + UniApp + Expo 四端同源 & 19 业务模块），向外部（Coolie 工坊与 AI Agent 数字员工）暴露的 **`.cjs` 脚本路径、CLI 参数、`pnpm run` 命令、全仓 `docs/` 文档归口及 Embedded PostgreSQL 真库测试契约 100% 一致**：
 
 | 优先级 | 统一入口文件 / 脚本 | 统一 `pnpm run` 命令 | 用途与跨底座标准行为 |
 |---|---|---|---|
