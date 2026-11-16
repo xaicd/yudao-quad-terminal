@@ -26,6 +26,12 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: 同步子模块远端分支与标签引用（供 compat 与 jdk-variants 门禁溯源）
+        run: |
+          git -C apps/backend fetch --tags origin "+refs/heads/*:refs/remotes/origin/*"
+          git -C apps/admin fetch origin "+refs/heads/*:refs/remotes/origin/*"
+          git -C apps/miniapp fetch origin "+refs/heads/*:refs/remotes/origin/*"
+
       - name: 安装 Node.js 22
         uses: actions/setup-node@v4
         with:
@@ -36,12 +42,12 @@ jobs:
           corepack enable
           pnpm --version
 
+      - name: 注入声明式子模块差异补丁
+        run: node scripts/submodule-patches.mjs --apply
+
       - name: 安装自有工作区包依赖（供 TypeScript 类型门禁校验）
         run: |
           pnpm --filter @yudao-quad-terminal/app --filter @yudao-quad-terminal/api-client --filter @yudao-quad-terminal/shared-types install --frozen-lockfile
-
-      - name: 注入声明式子模块差异补丁
-        run: node scripts/submodule-patches.mjs --apply
 
       - name: 运行工程快速门禁与下游兼容契约校验
         run: |

@@ -212,6 +212,16 @@ function checkArtifactsAndSubmodules(manifest) {
     if (!sha.ok || !remoteRefs.out) {
       fail(`submodules.${sub.path}: 当前提交 ${sha.out.slice(0, 10)} 不在任何远端分支上 → 别人 clone 会失败`);
     }
+    const recordedTree = git(["ls-tree", "HEAD", sub.path], ROOT);
+    const recordedMatch = recordedTree.ok ? /^160000\s+commit\s+([0-9a-f]{40})\s+/.exec(recordedTree.out) : null;
+    if (recordedMatch && sha.ok && recordedMatch[1] !== sha.out) {
+      const recRemote = git(["branch", "-r", "--contains", recordedMatch[1]], dir);
+      if (!recRemote.out) {
+        fail(
+          `submodules.${sub.path}: 主仓 gitlink (${recordedMatch[1].slice(0, 10)}) 不在远端分支上且与磁盘 HEAD (${sha.out.slice(0, 10)}) 不一致 → CI/clone 会失败`
+        );
+      }
+    }
 
     if (sub.patchesDir) {
       if (!exists(sub.patchesDir)) {
