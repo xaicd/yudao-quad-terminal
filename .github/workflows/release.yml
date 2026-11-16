@@ -26,11 +26,15 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: 同步子模块远端分支与标签引用（供 compat 与 jdk-variants 门禁溯源）
+      - name: 同步子模块完整远端历史与标签引用（供 compat 与 jdk-variants 门禁溯源）
         run: |
-          git -C apps/backend fetch --tags origin "+refs/heads/*:refs/remotes/origin/*"
-          git -C apps/admin fetch origin "+refs/heads/*:refs/remotes/origin/*"
-          git -C apps/miniapp fetch origin "+refs/heads/*:refs/remotes/origin/*"
+          for sub in apps/backend apps/admin apps/miniapp; do
+            if [ "$(git -C "$sub" rev-parse --is-shallow-repository)" = "true" ]; then
+              git -C "$sub" fetch --unshallow --tags origin "+refs/heads/*:refs/remotes/origin/*"
+            else
+              git -C "$sub" fetch --tags origin "+refs/heads/*:refs/remotes/origin/*"
+            fi
+          done
 
       - name: 安装 Node.js 22
         uses: actions/setup-node@v4
@@ -45,10 +49,10 @@ jobs:
       - name: 注入声明式子模块差异补丁
         run: node scripts/submodule-patches.mjs --apply
 
-      - name: 安装自有工作区与 Lite 运行时依赖（供类型检查与脚本单测校验）
+      - name: 安装工作区与 Lite 运行时依赖
         run: |
-          pnpm --filter @yudao-quad-terminal/app --filter @yudao-quad-terminal/api-client --filter @yudao-quad-terminal/shared-types install --frozen-lockfile
-          pnpm --dir deploy/lite/runtime install --frozen-lockfile
+          pnpm install --frozen-lockfile --registry=https://registry.npmjs.org/
+          pnpm --dir deploy/lite/runtime install --frozen-lockfile --registry=https://registry.npmjs.org/
 
       - name: 运行工程快速门禁与下游兼容契约校验
         run: |
