@@ -45,9 +45,10 @@ jobs:
       - name: 注入声明式子模块差异补丁
         run: node scripts/submodule-patches.mjs --apply
 
-      - name: 安装自有工作区包依赖（供 TypeScript 类型门禁校验）
+      - name: 安装自有工作区与 Lite 运行时依赖（供类型检查与脚本单测校验）
         run: |
           pnpm --filter @yudao-quad-terminal/app --filter @yudao-quad-terminal/api-client --filter @yudao-quad-terminal/shared-types install --frozen-lockfile
+          pnpm --dir deploy/lite/runtime install --frozen-lockfile
 
       - name: 运行工程快速门禁与下游兼容契约校验
         run: |
