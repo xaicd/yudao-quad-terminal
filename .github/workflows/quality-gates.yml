@@ -138,7 +138,7 @@ jobs:
         working-directory: deploy/lite/runtime
         run: pnpm install --frozen-lockfile --registry=https://registry.npmjs.org/
 
-      - name: Build fat jar (two-step: plain module jars, then repackage yudao-server)
+      - name: "Build fat jar (two-step: plain module jars, then repackage yudao-server)"
         working-directory: apps/backend
         run: |
           mvn -B clean install -DskipTests -pl yudao-server -am -Dspring-boot.repackage.skip=true
