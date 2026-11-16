@@ -10,7 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 > 🚀 **工业级 AI 原生商业软件四位一体超级基座 (Integrated Quad-Terminal Foundry Base, `v1.2.0`)**  
-> 统一收拢 **Java 微服务后端 (Spring Cloud / JDK 8/17/21) + PC 运营管理后台 (Vue3 Element Plus) + 微信生态端 (Uni-App 小程序/H5) + 原生移动客户端 (Expo SDK 52 / React Native 0.76)** 四大终端形态，内置 CMMI 00~09 全生命周期工程真资产与 OpenWiki 知识大脑（统一归口于 `docs/`），并与姊妹基座 `cooliebase-all` (`v1.5.0`，含 Admin + 2C + `clients/miniapp` + `clients/expo` 四端及 `oa/hrm/fms/pms` 等 18 插件) 保持 100% 同名同参 `.cjs` 工具链契约。
+> 统一收拢 **Java 微服务后端 (Spring Cloud / JDK 8/17/21) + PC 运营管理后台 (Vue3 Element Plus) + 微信生态端 (Uni-App 小程序/H5) + 原生移动客户端 (Expo SDK 52 / React Native 0.76)** 四大终端形态，内置 CMMI 00~09 全生命周期工程真资产与 OpenWiki 知识大脑（统一归口于 `docs/`），并与姊妹基座 `cooliebase-all` (`v1.5.0`，含 `clients/web` + `clients/admin` + `clients/app` + `clients/miniapp` 四端及 `oa/hrm/fms/pms` 等 20 个官方插件) 保持 100% 同名同参 `.cjs` 工具链契约。
 
 ---
 

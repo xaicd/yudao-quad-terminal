@@ -15,7 +15,7 @@
 
 ## 1. 30 秒上手与双支柱架构（与 `cooliebase-all` `v1.5.0` 100% 同名同参）
 
-- **跨底座四端同构认知**：`cooliebase-all`（`v1.5.0`）同样具备 **四大终端**（Admin + 2C Portal + `clients/miniapp` + `clients/expo`）与 **18 个第一方插件**（含 `oa/hrm/fms/pms` 等 20 业务域），与本仓 `yudao-quad-terminal`（`v1.2.0`，19 模块四端架构）暴露 100% 同名同参的 `.cjs` 脚本契约。
+- **跨底座四端同构认知**：`cooliebase-all`（`v1.5.0`）同样具备 **四大终端**（`clients/web` + `clients/admin` + `clients/app` + `clients/miniapp`）与 **20 个官方插件**（含 `oa/hrm/fms/pms` 等 20 业务域），与本仓 `yudao-quad-terminal`（`v1.2.0`，19 物理模块 + `online` 四端架构）暴露 100% 同名同参的 `.cjs` 脚本契约。
 - **支柱一 `harness` (`HARNESS.md` + `scripts/harness.cjs`)**：定义 `pnpm harness <install|check|build|start|health|status|stop|e2e|deliver|pmo>` 标准运行生命周期环节。
 - **支柱二 `speckit` (`scripts/speckit.cjs`) + CMMI 00~09 扩展 (`scripts/cmmi-00-meta.cjs` ~ `scripts/cmmi-09-operations.cjs`)**：通过 `pnpm run speckit -- cmmi <00..09> [docs|check|asset|...]` 统一治理每个 CMMI 环节的宏观过程文档 (`docs/00_meta_standards/`~`docs/09_operations/`) 与特性规格阶段文档 (`docs/specs/<domain>/<name>/`)。
 - **零污染沙箱孵化 + `<500 Tokens` 蓝图一键真库交付**：
