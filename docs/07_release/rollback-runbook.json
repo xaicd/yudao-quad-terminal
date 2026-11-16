@@ -1,6 +1,6 @@
 {
   "project": "yudao-quad-terminal",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "rollbackWindowMinutes": 5,
   "steps": [
     { "order": 1, "action": "停止异常应用实例并切回上一稳定制品", "command": "./deploy/service.sh stop && ./deploy/service.sh start" },

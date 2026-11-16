@@ -2,7 +2,7 @@
   "expo": {
     "name": "{{EXPO_APP_NAME}}",
     "slug": "{{EXPO_APP_SLUG}}",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "runtimeVersion": {
       "policy": "appVersion"

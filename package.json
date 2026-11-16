@@ -1,6 +1,6 @@
 {
   "name": "yudao-quad-terminal",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "scripts": {
     "up": "node scripts/run-all.cjs",
@@ -130,7 +130,8 @@
     "verify:b4": "bash scripts/verify-stage-b4.sh",
     "verify:b5": "bash scripts/verify-stage-b5-cwall.sh",
     "gen:three-role": "node scripts/scaffold-three-role-audit.mjs",
-    "domain:prune": "node scripts/domain-prune.mjs"
+    "domain:prune": "node scripts/domain-prune.mjs",
+    "release:package": "node scripts/build-release-assets.cjs"
   },
   "packageManager": "pnpm@9.15.4"
 }

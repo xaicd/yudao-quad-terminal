@@ -39,7 +39,8 @@ function fallbackFingerprint(verifyOnly = false) {
   if (fs.existsSync(path.join(ROOT, "scripts/release-fingerprint.cjs"))) {
     return runNode("scripts/release-fingerprint.cjs", verifyOnly ? ["--verify"] : []);
   }
-  const targetFiles = ["package.json", "compat-manifest.json", "HARNESS.md", "AGENTS.md"];
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
+  const targetFiles = ["package.json", "compat-manifest.json", "blueprint.template.json", "HARNESS.md", "AGENTS.md"];
   const hashes = {};
   for (const rel of targetFiles) {
     const abs = path.join(ROOT, rel);
@@ -47,7 +48,10 @@ function fallbackFingerprint(verifyOnly = false) {
       hashes[rel] = crypto.createHash("sha256").update(fs.readFileSync(abs)).digest("hex");
     }
   }
-  const fpPath = path.join(ROOT, "docs/07_release_and_deployment/release-fingerprint.json");
+  const releaseDir = fs.existsSync(path.join(ROOT, "docs/07_release"))
+    ? "docs/07_release"
+    : "docs/07_release_and_deployment";
+  const fpPath = path.join(ROOT, releaseDir, "release-fingerprint.json");
   fs.mkdirSync(path.dirname(fpPath), { recursive: true });
   if (verifyOnly && fs.existsSync(fpPath)) {
     const saved = JSON.parse(fs.readFileSync(fpPath, "utf8"));
@@ -62,7 +66,16 @@ function fallbackFingerprint(verifyOnly = false) {
   }
   fs.writeFileSync(
     fpPath,
-    JSON.stringify({ schemaVersion: "1.0.0", generatedAt: new Date().toISOString(), hashes }, null, 2) + "\n",
+    JSON.stringify(
+      {
+        schemaVersion: "1.0.0",
+        version: pkg.version || "1.2.0",
+        generatedAt: new Date().toISOString(),
+        hashes,
+      },
+      null,
+      2
+    ) + "\n",
     "utf8"
   );
   console.log(`✓ [CMMI-07] 已生成发布指纹 -> ${fpPath}`);

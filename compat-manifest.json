@@ -148,7 +148,8 @@
     "compat": "compat:check",
     "launchCheck": "check:all",
     "harnessControls": "harness:controls",
-    "harnessHatch": "harness:hatch"
+    "harnessHatch": "harness:hatch",
+    "release": "release:package"
   },
   "runtime": {
     "lite": {

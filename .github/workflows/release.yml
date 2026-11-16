@@ -1,0 +1,87 @@
+# Release 流水线: 打 Tag (v*) 触发自动化门禁、离线四端骨架归档与 GitHub Releases 发布
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: '发布版本 Tag (例如 v1.2.0)'
+        required: true
+        default: 'v1.2.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Gate Check, Skeleton Archive & GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出源码与只读上游子模块
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: 安装 Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 启用 pnpm (corepack)
+        run: |
+          corepack enable
+          pnpm --version
+
+      - name: 安装自有工作区包依赖（供 TypeScript 类型门禁校验）
+        run: |
+          pnpm --filter @yudao-quad-terminal/app --filter @yudao-quad-terminal/api-client --filter @yudao-quad-terminal/shared-types install --frozen-lockfile
+
+      - name: 注入声明式子模块差异补丁
+        run: node scripts/submodule-patches.mjs --apply
+
+      - name: 运行工程快速门禁与下游兼容契约校验
+        run: |
+          pnpm check
+          pnpm compat:check
+
+      - name: 打包离线四端骨架与发布制品 (Release Assets)
+        id: package
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [ -z "$TAG" ] || [ "$TAG" = "main" ]; then
+            TAG="${{ github.event.inputs.tag_name || 'v1.2.0' }}"
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+          pnpm run release:package -- --tag="${TAG}"
+
+          mkdir -p dist
+          if [ -f "releases/${TAG}.md" ]; then
+            cp "releases/${TAG}.md" dist/RELEASE_NOTES.md
+          else
+            cp docs/07_release/release-notes.md dist/RELEASE_NOTES.md
+          fi
+
+      - name: 发布至 GitHub Releases
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          body_path: dist/RELEASE_NOTES.md
+          files: |
+            dist/release-assets/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+
+      - name: Gitee Releases 同步指引输出
+        run: |
+          echo "=========================================================="
+          echo "✅ Release 制品构建完成: ${{ steps.package.outputs.tag }}"
+          echo "国内 Gitee Releases 同步说明："
+          echo "1. 推送 Tag 至 Gitee: git push gitee ${{ steps.package.outputs.tag }}"
+          echo "2. 上传 dist/release-assets/* 制品与 releases/${{ steps.package.outputs.tag }}.md 说明"
+          echo "=========================================================="

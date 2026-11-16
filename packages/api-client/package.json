@@ -1,6 +1,6 @@
 {
   "name": "@yudao-quad-terminal/api-client",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "private": true,
   "main": "src/generated/index.ts",
   "types": "src/generated/index.ts",

@@ -2,9 +2,9 @@
 # 对标 CMMI 高成熟度工程资产与 Layer B Gate G8-1 规范
 
 platform: "yudao-quad-terminal"
-version: "1.1.0"
+version: "1.2.0"
 architecture: "Java 17 + Spring Boot 3 + MyBatis-Plus + Vue3 Admin + UniApp + Expo"
-lastUpdated: "2026-10-31"
+lastUpdated: "2026-11-16"
 
 # M1: 核心领域实体 (Object Types)
 M1_Objects:
