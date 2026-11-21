@@ -133,5 +133,6 @@
     "domain:prune": "node scripts/domain-prune.mjs",
     "release:package": "node scripts/build-release-assets.cjs"
   },
-  "packageManager": "pnpm@9.15.4"
+  "packageManager": "pnpm@9.15.4",
+  "license": "UNLICENSED"
 }
